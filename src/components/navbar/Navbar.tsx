@@ -1,5 +1,5 @@
 // Navbar.jsx
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import logoImg from "../../assets/images/logo.png";
 import { Link } from "react-router-dom";
 import { NavLink } from '../ui/NavLink';

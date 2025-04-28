@@ -1,4 +1,4 @@
-import React from 'react';
+
 import bannerImg from "../../assets/images/aboutBanner.jpg"
   import coverImg from "../../assets/images/aboutcover.jpg"
 interface AboutProps {}

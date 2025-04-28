@@ -1,4 +1,4 @@
-import React from 'react'
+
 import Banner from './Banner'
 // import SearchFilter from '../Shared/SearchFilter/SearchFilter'
 import CarSearchForm from '../Shared/CarSearchform/CarSearchForm'
@@ -10,7 +10,7 @@ import logoImg from "../../assets/images/logo.png";
 import coverImg from "../../assets/images/cover.jpg";
 
 import { IoShieldCheckmarkOutline } from 'react-icons/io5'
-import Button from '../../components/ui/Button'
+// import Button from '../../components/ui/Button'
 import Services from './Services'
 import Partner from './Partner'
 

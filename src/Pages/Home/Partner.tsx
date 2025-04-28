@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { FaApple, FaLinux } from 'react-icons/fa';
 import { SiBmw, SiSamsung } from 'react-icons/si'; // 🛑 Added SiSamsung
 

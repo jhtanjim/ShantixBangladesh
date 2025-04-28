@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import SelectField from "../../components/ui/SelectField";
 import Button from "../../components/ui/Button";
 
 const AllCar = () => {
+    
   const [searchParams, setSearchParams] = useState({
     make: '',
     model: '',
@@ -110,7 +111,8 @@ const AllCar = () => {
   // Dummy placeholder text for the sidebar
   const placeholderText = Array(20).fill("Lorem Ipsum");
 
-  const handleChange = (e) => {
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
     const { name, value } = e.target;
     setSearchParams(prev => ({
       ...prev,
@@ -118,7 +120,7 @@ const AllCar = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Handle search submission
     console.log('Search params:', searchParams);
@@ -202,7 +204,7 @@ const AllCar = () => {
               
               <div className="text-gray-600 font-medium">Show Results</div>
               
-              <Button type="submit">
+              <Button >
                 Search
               </Button>
               
@@ -292,85 +294,37 @@ const AllCar = () => {
             <div className="space-y-6">
               {carListings.map((car, index) => (
                 <div key={car.id} className={`border bg-white ${index === 1 ? 'ring-2 ring-blue-400' : ''}`}>
-                  <div className="flex flex-col md:flex-row">
-                    {/* Car Image */}
-                  
-      {/* Car Image Section */}
-      <div className="w-[30%] p-4">
-        <img 
-          src={car.imageUrl} 
-          alt={car.title} 
-          className="w-[250px] h-full rounded-lg object-cover"
-        />
-      </div>
-      
-      {/* Car Details Section */}
-      <div className="w-full p-4">
-        <div className="flex justify-between items-start">
-          {/* Car Title */}
-          <h2 className="text-2xl font-bold">{car.title}</h2>
-          
-          {/* Price Information */}
-          <div className="text-right">
-            <p className="text-red-600 font-bold">FOB: {car.price} USD</p>
-            <p className="text-red-600">{car.priceYen} YEN</p>
-          </div>
-        </div>
-        
-        {/* Specs Grid */}
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="bg-gray-100 p-2">
-            <p className="text-xs text-gray-600">Engine Capacity</p>
-            <p className="font-bold text-lg">{car.engineCC}</p>
-          </div>
-          <div className="bg-gray-100 p-2">
-            <p className="text-xs text-gray-600">Engine Capacity</p>
-            <p className="font-bold text-lg">{car.mileage}</p>
-          </div>
-        </div>
-        
-        {/* Availability and Ref */}
-        <div className="mt-2">
-          <p className="text-green-600 font-medium">Now On Sale</p>
-          <p className="text-gray-600 text-sm">Ref#{car.reference}</p>
-        </div>
-        
-        {/* Features Tags */}
-        <div className="flex gap-3 mt-4">
-          <span className="bg-blue-100 text-blue-800 px-4 py-1 rounded-md text-sm">G/hv</span>
-          <span className="bg-yellow-100 text-yellow-800 px-4 py-1 rounded-md text-sm">Automatic</span>
-          <span className="bg-green-100 text-green-800 px-4 py-1 rounded-md text-sm">Right Hand</span>
-          
-          <div className="flex items-center gap-2 ml-4">
-            <button className="flex items-center gap-1 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M9 5.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H8v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H9V5.5z"/>
-                <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-              </svg>
-              <span>Compare</span>
-            </button>
-            <button className="flex items-center gap-1 text-sm ml-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
-              </svg>
-              <span>Add to Wishlist</span>
-            </button>
-          </div>
-        </div>
-        
-        {/* Action Buttons */}
-        <div className="flex gap-3 mt-4 justify-end">
-          <button className="bg-red-600 text-white px-6 py-2 rounded">More Details</button>
-          <button className="bg-red-600 text-white px-6 py-2 rounded">Contact Us</button>
-        </div>
-      </div>
-  
-
-
-
-                    
+                <div className="flex flex-col md:flex-row">
+                  {/* Car Image */}
+                  <div className="w-[30%] p-4">
+                    <img src={car.imageUrl} alt={car.title} className="w-[250px] h-full rounded-lg object-cover" />
+                  </div>
+              
+                  {/* Car Details */}
+                  <div className="w-full md:w-[70%] p-4 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-800 mb-2">{car.title}</h2>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {car.features.map((feature, idx) => (
+                          <span key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">{feature}</span>
+                        ))}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-2">
+                        <p>Engine: {car.engineCC}</p>
+                        <p>Mileage: {car.mileage}</p>
+                      </div>
+                    </div>
+              
+                    {/* Price and Status */}
+                    <div className="mt-4">
+                      <p className="text-red-600 font-bold">{car.originalPrice}</p>
+                      <p className="text-gray-500">{car.discountedPrice}</p>
+                      <p className="text-green-600 font-medium">{car.availability}</p>
+                    </div>
                   </div>
                 </div>
+              </div>
+              
               ))}
             </div>
           </div>
@@ -380,11 +334,16 @@ const AllCar = () => {
         <div className="flex justify-center mt-8">
           <div className="flex items-center gap-1">
             <span className="bg-red-600 text-white px-3 py-1 text-sm">1</span>
-            {[2, 3, 4, 5, 6, 7, 8, 9].map(page => (
-              <span key={`bottom-${page}`} className="bg-gray-200 px-3 py-1 text-sm cursor-pointer hover:bg-gray-300">
-                {page}
-              </span>
-            ))}
+            {[1,2,3,4,5,6,7,8,9].map(page => (
+  <span 
+    key={page} 
+    onClick={() => setCurrentPage(page)}
+    className={`px-3 py-1 text-sm cursor-pointer ${currentPage === page ? 'bg-red-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+  >
+    {page}
+  </span>
+))}
+
             <span className="px-3 py-1 text-sm">...</span>
             <span className="bg-gray-200 px-3 py-1 text-sm cursor-pointer hover:bg-gray-300">Next</span>
           </div>

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import SelectField from "../../../components/ui/SelectField"
 import Button from "../../../components/ui/Button"
@@ -134,7 +132,7 @@ const CarSearchForm = () => {
             
             <div className="text-gray-600 font-medium">Show Results</div>
             
-            <Button type="submit"
+            <Button 
             >
               Search
             </Button>

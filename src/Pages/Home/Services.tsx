@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Check, Lightbulb, DollarSign, HeadphonesIcon, Users, Headset } from 'lucide-react';
 import banner2 from "../../assets/images/Banner2.jpg";
 

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import SectionTitle from "../../../components/ui/SectionTitle";
 import LowCostStockCard from './LowCostStockCard';
 import Button from '../../../components/ui/Button';
