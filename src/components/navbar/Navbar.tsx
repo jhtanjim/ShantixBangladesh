@@ -77,6 +77,7 @@ const Navbar = () => {
               <NavLink href="/inquiry">Inquiry</NavLink>
               <NavLink href="/contactUs">Contact Us</NavLink>
               <NavLink href="/ship-schedule">Ship Schedule</NavLink>
+              <NavLink href="/allCars">All Car</NavLink>
               <Button>My Page</Button>
             </div>
           </div>
@@ -92,6 +93,7 @@ const Navbar = () => {
               <NavLink href="/inquiry">Inquiry</NavLink>
               <NavLink href="/contactUs">Contact Us</NavLink>
               <NavLink href="/ship-schedule">Ship Schedule</NavLink>
+              <NavLink href="/allCars">All Car</NavLink>
               <div className="mt-2">
                 <Button>My Page</Button>
               </div>
