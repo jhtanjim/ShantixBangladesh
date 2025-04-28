@@ -134,8 +134,7 @@ const CarSearchForm = () => {
             
             <div className="text-gray-600 font-medium">Show Results</div>
             
-            <Button
-              type="submit"
+            <Button type="submit"
             >
               Search
             </Button>
