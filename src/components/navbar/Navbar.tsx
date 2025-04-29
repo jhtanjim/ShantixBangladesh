@@ -74,7 +74,7 @@ const Navbar = () => {
               <NavLink href="/allCars">How To Buy</NavLink>
               <NavLink href="/auction">Auction</NavLink>
               <NavLink href="/container">Container</NavLink>
-              <NavLink href="/inquiry">Inquiry</NavLink>
+              <NavLink href="/enquiry">Inquiry</NavLink>
               <NavLink href="/contactUs">Contact Us</NavLink>
               <NavLink href="/ship-schedule">Ship Schedule</NavLink>
               <NavLink href="/allCars">All Car</NavLink>
@@ -90,7 +90,7 @@ const Navbar = () => {
               <NavLink href="/allCars">How To Buy</NavLink>
               <NavLink href="/auction">Auction</NavLink>
               <NavLink href="/container">Container</NavLink>
-              <NavLink href="/inquiry">Inquiry</NavLink>
+              <NavLink href="/enquiry">Inquiry</NavLink>
               <NavLink href="/contactUs">Contact Us</NavLink>
               <NavLink href="/ship-schedule">Ship Schedule</NavLink>
               <NavLink href="/allCars">All Car</NavLink>

@@ -5,6 +5,7 @@ import About from "../Pages/About/About.tsx";
 import ContactUs from "../Pages/ContactUs/ContactUs.tsx";
 import AllCar from "../Pages/AllCar/AllCar.tsx";
 import CarDetails from "../Pages/AllCar/CarDetails.tsx";
+import Enquiry from "../Pages/Enquiry/Enquiry.tsx";
 export const router = createBrowserRouter([
     {
       path: "/",
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
         {
           path:"/carDetails",
           element:<CarDetails/>
+        },
+        {
+          path:"/enquiry",
+          element:<Enquiry/>
         },
       ]
     },
