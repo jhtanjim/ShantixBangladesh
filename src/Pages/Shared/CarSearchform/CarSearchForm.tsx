@@ -74,7 +74,16 @@ const CarSearchForm = () => {
     { value: "rav4", label: "RAV4" },
     { value: "land-cruiser", label: "Land Cruiser" },
   ]
-
+  const countryOptions = [
+    { value: "bangladesh", label: "Bangladesh" },
+    { value: "uk", label: "UK" },
+    { value: "ghana", label: "Ghana" },
+    { value: "tanzania", label: "Tanzania" },
+    { value: "cameroon", label: "Cameroon" },
+    { value: "australia", label: "Australia" },
+    { value: "mongolia", label: "Mongolia" },
+  ]
+  
   const yearOptions = Array.from({ length: 10 }, (_, i) => ({
     value: `${2015 + i}`,
     label: `${2015 + i}`,
@@ -100,7 +109,7 @@ const CarSearchForm = () => {
             <SelectField id="fuel" name="fuel" value={searchParams.fuel} onChange={handleChange} options={[]} placeholder="Select Fuel" />
             <SelectField id="mileageFrom" name="mileageFrom" value={searchParams.mileageFrom} onChange={handleChange} options={[]} placeholder="Mileage From" />
             <SelectField id="mileageTo" name="mileageTo" value={searchParams.mileageTo} onChange={handleChange} options={[]} placeholder="Mileage To" />
-            <SelectField id="country" name="country" value={searchParams.country} onChange={handleChange} options={[]} placeholder="By Country" />
+            <SelectField id="country" name="country" value={searchParams.country} onChange={handleChange} options={countryOptions} placeholder="By Country" />
             <SelectField id="region" name="region" value={searchParams.region} onChange={handleChange} options={[]} placeholder="Select Region" />
             <SelectField id="color" name="color" value={searchParams.color} onChange={handleChange} options={[]} placeholder="Select Color" />
             <SelectField id="drive" name="drive" value={searchParams.drive} onChange={handleChange} options={[]} placeholder="Select Drive" />

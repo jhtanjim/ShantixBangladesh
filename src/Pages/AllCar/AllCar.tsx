@@ -151,6 +151,15 @@ const AllCar = () => {
     e.preventDefault();
     console.log('Search params:', searchParams);
   };
+  const countryOptions = [
+    { value: "bangladesh", label: "Bangladesh" },
+    { value: "uk", label: "UK" },
+    { value: "ghana", label: "Ghana" },
+    { value: "tanzania", label: "Tanzania" },
+    { value: "cameroon", label: "Cameroon" },
+    { value: "australia", label: "Australia" },
+    { value: "mongolia", label: "Mongolia" },
+  ]
 
   const handleReset = () => {
     setSearchParams({
@@ -176,6 +185,10 @@ const AllCar = () => {
     });
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setSearchParams((prev) => ({ ...prev, [name]: value }))
+  }
   const handlePageChange = (page: number) => {
     // Implementation for page change functionality
     console.log(`Navigating to page ${page}`);
@@ -205,7 +218,7 @@ const AllCar = () => {
               <SelectField id="fuel" name="fuel" value={searchParams.fuel} onChange={handleSelectChange} options={[]} placeholder="Select Fuel" />
               <SelectField id="mileageFrom" name="mileageFrom" value={searchParams.mileageFrom} onChange={handleSelectChange} options={[]} placeholder="Mileage From" />
               <SelectField id="mileageTo" name="mileageTo" value={searchParams.mileageTo} onChange={handleSelectChange} options={[]} placeholder="Mileage To" />
-              <SelectField id="country" name="country" value={searchParams.country} onChange={handleSelectChange} options={[]} placeholder="By Country" />
+              <SelectField id="country" name="country" value={searchParams.country} onChange={handleChange} options={countryOptions} placeholder="By Country" />
               <SelectField id="region" name="region" value={searchParams.region} onChange={handleSelectChange} options={[]} placeholder="Select Region" />
               <SelectField id="color" name="color" value={searchParams.color} onChange={handleSelectChange} options={[]} placeholder="Select Color" />
               <SelectField id="drive" name="drive" value={searchParams.drive} onChange={handleSelectChange} options={[]} placeholder="Select Drive" />

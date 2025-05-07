@@ -17,14 +17,14 @@ const Navbar = () => {
       <div className='flex flex-col lg:flex-row lg:h-32'>
         {/* logo section */}
         <div className='flex justify-center lg:justify-end bg-white lg:border-r-3 lg:w-90 border-[#003366] py-2 lg:py-0'>
-          <div>
+         <Link to={"/"}> <div>
             <img
               className='p-2 lg:p-4 lg:my-4'
               style={{ maxWidth: "157.23px", maxHeight: "95px", width: "100%", height: "auto" }}
               src={logoImg}
               alt="Shantix Logo"
             />
-          </div>
+          </div></Link>
         </div>
 
         {/* main content section */}
