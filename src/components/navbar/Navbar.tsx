@@ -70,14 +70,16 @@ const Navbar = () => {
           <div className='hidden lg:flex h-[50%] items-center justify-center px-4'>
             <div className='flex items-center text-lg xl:text-2xl font-semibold space-x-4 xl:space-x-12 text-dark-blue'>
               <NavLink href="/about">About Us</NavLink>
-              <NavLink href="/stock-list">Stock List</NavLink>
+              {/* <NavLink href="/stock-list">Stock List</NavLink> */}
               <NavLink href="/allCars">How To Buy</NavLink>
               <NavLink href="/auction">Auction</NavLink>
-              <NavLink href="/container">Container</NavLink>
+              {/* <NavLink href="/container">Container</NavLink> */}
               <NavLink href="/enquiry">Inquiry</NavLink>
               <NavLink href="/contactUs">Contact Us</NavLink>
               <NavLink href="/ship-schedule">Ship Schedule</NavLink>
               <NavLink href="/allCars">All Car</NavLink>
+              <NavLink href="/carDetails">CarDetails</NavLink>
+              <NavLink href="/carUpload">Car Upload</NavLink>
               <Button>My Page</Button>
             </div>
           </div>
