@@ -1,8 +1,88 @@
 @import "tailwindcss";
 
-@theme{
-  --color-dark-blue:#003366 ;
-  --color-blue:#0072BC ;
-  --color-red :#C9252B ;
-  --color-background:#E5E5E5; 
+:root {
+  --color-dark-blue: #003366;
+  --color-blue: #0072BC;
+  --color-red: #C9252B;
+  --color-background: #E5E5E5;
+}
+
+/* Apply custom colors to Tailwind classes */
+.text-dark-blue {
+  color: var(--color-dark-blue);
+}
+
+.bg-dark-blue {
+  background-color: var(--color-dark-blue);
+}
+
+.text-blue {
+  color: var(--color-blue);
+}
+
+.bg-blue {
+  background-color: var(--color-blue);
+}
+
+.text-red {
+  color: var(--color-red);
+}
+
+.bg-red {
+  background-color: var(--color-red);
+}
+
+.bg-background {
+  background-color: var(--color-background);
+}
+
+/* Border colors */
+.border-dark-blue {
+  border-color: var(--color-dark-blue);
+}
+
+.border-blue {
+  border-color: var(--color-blue);
+}
+
+.border-red {
+  border-color: var(--color-red);
+}
+
+/* Ring focus colors */
+.ring-dark-blue {
+  --tw-ring-color: var(--color-dark-blue);
+}
+
+.ring-blue {
+  --tw-ring-color: var(--color-blue);
+}
+
+.ring-red {
+  --tw-ring-color: var(--color-red);
+}
+
+/* Hover states */
+.hover\:bg-dark-blue:hover {
+  background-color: var(--color-dark-blue);
+}
+
+.hover\:bg-blue:hover {
+  background-color: var(--color-blue);
+}
+
+.hover\:text-dark-blue:hover {
+  color: var(--color-dark-blue);
+}
+
+.hover\:text-blue:hover {
+  color: var(--color-blue);
+}
+
+.hover\:text-red:hover {
+  color: var(--color-red);
+}
+
+.hover\:bg-red-700:hover {
+  background-color: #b01f25; /* Darker shade of red */
 }

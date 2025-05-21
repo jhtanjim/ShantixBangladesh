@@ -7,6 +7,8 @@ import AllCar from "../Pages/AllCar/AllCar.tsx";
 import CarDetails from "../Pages/AllCar/CarDetails.tsx";
 import Enquiry from "../Pages/Enquiry/Enquiry.tsx";
 import CarUpload from "../Pages/Shared/CarUpload/CarUpload.tsx";
+import Login from "../Pages/Auth/Login.tsx";
+import Register from "../Pages/Auth/Register.tsx";
 export const router = createBrowserRouter([
     {
       path: "/",
@@ -40,6 +42,14 @@ export const router = createBrowserRouter([
           path:"/carUpload",
           element:<CarUpload/>
         },
+        {
+  path: "/login",
+  element: <Login />,
+},
+{
+  path: "/register",
+  element: <Register />,
+},
       ]
     },
   ]);
