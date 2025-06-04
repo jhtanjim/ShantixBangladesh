@@ -2,7 +2,8 @@
 
 import React from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, Car, Users, ChevronDown, ChevronRight, Menu } from "lucide-react"
+import { LayoutDashboard, Car, Users, ChevronDown, ChevronRight, Menu, Home } from "lucide-react"
+import { GoListOrdered } from "react-icons/go"
 
 interface AdminSidebarProps {
   isOpen: boolean
@@ -41,6 +42,20 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         { title: "Create User", path: "/admin/users/create" },
       ],
     },
+    {
+      title: "Orders",
+      icon: GoListOrdered,
+      key: "orders",
+    path: "/admin/orders" 
+    },
+    {
+      title: "Back TO Home",
+      icon: Home,
+      key: "home",
+    path: "/" 
+    },
+
+
   ]
 
   return (

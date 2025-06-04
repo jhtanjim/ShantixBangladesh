@@ -29,10 +29,11 @@ export function CarsPage() {
   const [showFilters, setShowFilters] = useState(false)
 
   const { data, isLoading, error, refetch } = useAllCarsAdmin(filters)
+  console.log(data)
   const deleteMutation = useDeleteCar()
   const activateMutation = useActivateCar()
   const deactivateMutation = useDeactivateCar()
-
+console.log(data)
   const handleDelete = (id: string) => {
     deleteMutation.mutate(id, {
       onSuccess: () => {

@@ -16,12 +16,13 @@ interface User {
 
 export function UsersPage() {
   const { data: users = [], isLoading } = useAllUsers();
+  console.log(users)
   const deleteUser = useDeleteUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
 
   const filteredUsers = users.filter(
-    (user) =>
+    (user:User) =>
       `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -67,7 +68,7 @@ export function UsersPage() {
 
       {/* Users Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredUsers.map((user) => (
+        {filteredUsers.map((user:User) => (
           <div key={user.id} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
