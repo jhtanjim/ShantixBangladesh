@@ -13,7 +13,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useShop } from "../../Context/ShopContext";
 import { useCreateOrder } from "../../hooks/useOrders";
-
 // Reusable Button component
 const Button = ({ children, variant = "primary", size = "md", className = "", onClick, disabled, ...props }) => {
   const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
@@ -46,6 +45,8 @@ export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart, cartCount } = useShop();
   console.log(cartItems)
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState(null);
   const { mutate: createOrder, isPending: orderLoading } = useCreateOrder();
   const navigate = useNavigate();
 
@@ -63,33 +64,33 @@ export default function Cart() {
   };
 
   const handleNegotiateOrder = () => {
-    if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      alert("Cart is empty.");
-      return;
+  createOrder(cartItems, {
+    onSuccess: (data) => {
+      console.log('Order created successfully:', data);
+      setCreatedOrder(data.order);
+      setShowOrderSuccess(true);
+      clearCart();
+
+      // Redirect to WhatsApp with order ID
+      const orderId = data.order.id;
+      console.log(data)
+      const whatsappNumber = "880123456789"; // change to your business number
+      const message = `Hello, I just placed an order (ID: ${orderId}). I’d like to negotiate the price. ${data}`;
+
+      window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    },
+    onError: (error) => {
+      console.error('Failed to create order:', error);
+      alert('Failed to create order. Please try again.');
     }
+  });
+};
 
-    const carIdsArray = cartItems.map(item => item.id);
-
-    createOrder(
-      { carIds: carIdsArray },
-      {
-        onSuccess: (order) => {
-          if (order && order.id) {
-            clearCart();
-            const message = encodeURIComponent(
-              `Hi, I just placed an order (ID: ${order.id}). I would like to negotiate the price.`
-            );
-            const phoneNumber = '8801306132745';
-            const url = `https://wa.me/${phoneNumber}?text=${message}`;
-            window.open(url, "_blank");
-          }
-        },
-        onError: (error) => {
-          console.error("Order negotiation failed:", error);
-          alert("Something went wrong while creating the order. Please try again.");
-        }
-      }
-    );
+  const handleOrderSuccessClose = () => {
+    setShowOrderSuccess(false);
+    setCreatedOrder(null);
+    // Navigate to orders page or wherever appropriate
+    navigate('/my-orders');
   };
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
@@ -278,6 +279,49 @@ export default function Cart() {
                 </Button>
                 <Button variant="danger" onClick={handleClearCart}>
                   Clear Cart
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Order Success Modal */}
+        {showOrderSuccess && createdOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle size={32} className="text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">Order Created Successfully!</h3>
+                <p className="text-gray-600 mb-4">
+                  Your order has been created and is now in negotiation status.
+                </p>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Order ID:</span>
+                      <span className="text-gray-600">{createdOrder.id.slice(0, 8)}...</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Status:</span>
+                      <span className="text-orange-600 font-medium">{createdOrder.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Total Price:</span>
+                      <span className="text-gray-900 font-medium">${createdOrder.totalOriginalPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Items:</span>
+                      <span className="text-gray-600">{createdOrder.orderItems.length} car(s)</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mb-6">
+                  We'll contact you soon to discuss the negotiation details.
+                </p>
+                <Button onClick={handleOrderSuccessClose} className="w-full">
+                  View My Orders
                 </Button>
               </div>
             </div>
