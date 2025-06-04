@@ -70,7 +70,6 @@ export default function Cart() {
       setCreatedOrder(data.order);
       setShowOrderSuccess(true);
       clearCart();
-
       // Redirect to WhatsApp with order ID
       const orderId = data.order.id;
       console.log(data)
