@@ -9,7 +9,7 @@ import { useMyOrders, useUploadPayment } from "../../hooks/useOrders"
 
 export default function ProfilePage() {
   const { data: user, isLoading: userLoading, error: userError } = useCurrentUser()
-  console.log(user)
+  // console.log(user)
   const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useMyOrders()
   console.log(ordersData)
   const uploadPaymentMutation = useUploadPayment()

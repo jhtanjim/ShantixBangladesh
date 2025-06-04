@@ -37,6 +37,7 @@ const AdminOrderManagement = () => {
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
+  console.log(ordersData)
   const { data: statsData } = useOrderStats();
   const updateOrderMutation = useUpdateOrderStatus();
   const removeItemMutation = useRemoveOrderItem();

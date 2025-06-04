@@ -73,7 +73,7 @@ export default function Cart() {
       // Redirect to WhatsApp with order ID
       const orderId = data.order.id;
       console.log(data)
-      const whatsappNumber = "880123456789"; // change to your business number
+      const whatsappNumber = "8801752742031"; // change to your business number
       const message = `Hello, I just placed an order (ID: ${orderId}). I’d like to negotiate the price. ${data}`;
 
       window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
