@@ -237,7 +237,6 @@ export default function AllCars() {
             ))}
           </div>
         )}
-
         {/* Load More */}
         <div className="text-center mt-12">
           <Button size="lg" className="px-8">
