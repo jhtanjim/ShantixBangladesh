@@ -21,7 +21,7 @@ export const getMyOrders = async () => {
 
 // Update order status (admin only)
 export const updateOrderStatus = async (id, data) => {
-  const response = await axios.put(`/orders/${id}/status`, data);
+  const response = await axios.patch(`/orders/${id}/status`, data);
   return response.data;
 };
 

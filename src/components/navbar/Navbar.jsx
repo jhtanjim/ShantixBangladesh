@@ -58,10 +58,13 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
+                <Link to={"/profile"}>
+                
+                
                   <span className="flex items-center gap-1">
                     <User size={14} />
                     Welcome, {currentUser?.firstName || "User"}
-                  </span>
+                  </span></Link>
                   <button
                     onClick={handleLogout}
                     className="hover:text-gray-200 transition-colors"
