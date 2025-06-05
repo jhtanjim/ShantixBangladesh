@@ -1,7 +1,6 @@
 
 import Banner from './Banner'
 // import SearchFilter from '../Shared/SearchFilter/SearchFilter'
-import CarSearchForm from '../Shared/CarSearchform/CarSearchForm'
 
 import FixedPriceStock from './FixedPriceStock/FixedPriceStock'
 
@@ -16,6 +15,7 @@ import { IoShieldCheckmarkOutline } from 'react-icons/io5'
 // import Button from '../../components/ui/Button'
 import Services from './Services'
 import Partner from './Partner'
+import CarSearchForm from '../Shared/CarSearchform/CarSearchForm'
 
 const Home = () => {
   return (
