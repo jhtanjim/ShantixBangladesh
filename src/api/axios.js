@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://shantix-corp.com/api/",
+  baseURL: "https://shantix.onrender.com/",
 });
 
 instance.interceptors.request.use(

@@ -1,3 +1,5 @@
+"use client"
+
 import { createContext, useState, useContext, useEffect } from "react"
 
 const ShopContext = createContext()
@@ -55,11 +57,7 @@ export function ShopProvider({ children }) {
       const existingItem = prevItems.find((item) => item.id === car.id)
 
       if (existingItem) {
-        return prevItems.map((item) => 
-          item.id === car.id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        )
+        return prevItems.map((item) => (item.id === car.id ? { ...item, quantity: item.quantity + 1 } : item))
       } else {
         return [...prevItems, { ...car, quantity: 1 }]
       }
@@ -76,11 +74,7 @@ export function ShopProvider({ children }) {
       return
     }
 
-    setCartItems((prevItems) => 
-      prevItems.map((item) => 
-        item.id === carId ? { ...item, quantity } : item
-      )
-    )
+    setCartItems((prevItems) => prevItems.map((item) => (item.id === carId ? { ...item, quantity } : item)))
   }
 
   const clearCart = () => {
@@ -97,7 +91,7 @@ export function ShopProvider({ children }) {
   }
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
-  const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+  const cartTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
 
   // Wishlist functions
   const addToWishlist = (car) => {
@@ -113,6 +107,14 @@ export function ShopProvider({ children }) {
 
   const removeFromWishlist = (carId) => {
     setWishlistItems((prevItems) => prevItems.filter((item) => item.id !== carId))
+  }
+
+  const toggleWishlist = (car) => {
+    if (isInWishlist(car.id)) {
+      removeFromWishlist(car.id)
+    } else {
+      addToWishlist(car)
+    }
   }
 
   const isInWishlist = (carId) => {
@@ -134,6 +136,7 @@ export function ShopProvider({ children }) {
     wishlistItems,
     addToWishlist,
     removeFromWishlist,
+    toggleWishlist,
     isInWishlist,
     wishlistCount,
   }

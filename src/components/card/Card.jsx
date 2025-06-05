@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, ShoppingCart, Eye, Calendar, Fuel, Users, Palette, Star } from "lucide-react"
+import { Heart, ShoppingCart, Eye, Calendar, Fuel, Users, Palette, Star } from 'lucide-react'
+import { Link } from "react-router-dom"
 
 const Card = ({
   id,
@@ -153,12 +154,17 @@ const Card = ({
                 : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
             }`}
           >
+
+
             <ShoppingCart className="w-4 h-4" />
             {isInCart ? "Added" : "Add to Cart"}
           </button>
+                         <Link to={`/cars/${id}`} className="">
+
           <button className="px-3 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium">
             View
           </button>
+          </Link>
         </div>
       </div>
     </div>

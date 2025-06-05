@@ -1,63 +1,57 @@
-import { useState, useMemo } from "react";
-import SelectField from "../../../components/ui/SelectField";
-import Button from "../../../components/ui/Button";
-import { useAllCars } from "../../../hooks/useCars";
-import Card from "../../../components/card/Card";
+"use client"
 
-// Constants
-const initialSearchParams = {
-  make: "",
-  model: "",
-  modelCode: "",
-  yearFrom: "",
-  yearTo: "",
-  priceFrom: "",
-  priceTo: "",
-  type: "",
-  engineCC: "",
-  fuel: "",
-  mileageFrom: "",
-  mileageTo: "",
-  country: "",
-  region: "",
-  color: "",
-  drive: "",
-  transmission: "",
-  stock: "",
-  keywords: ""
-};
+import { useState, useMemo } from "react"
+import { Search, Filter, X, ChevronDown } from "lucide-react"
+import SelectField from "../../../components/ui/SelectField"
+import Button from "../../../components/ui/Button"
+import Input from "../../../components/ui/input"
 
-const getYearOptions = () => {
-  const currentYear = new Date().getFullYear();
-  return Array.from({ length: currentYear - 1979 }, (_, i) => {
-    const year = (currentYear - i).toString();
-    return { value: year, label: year };
-  });
-};
+const CarSearchForm = ({ onSearch, allCars = [] }) => {
+  const [searchParams, setSearchParams] = useState({
+    make: "",
+    model: "",
+    modelCode: "",
+    yearFrom: "",
+    yearTo: "",
+    priceFrom: "",
+    priceTo: "",
+    type: "",
+    engineCC: "",
+    fuel: "",
+    mileageFrom: "",
+    mileageTo: "",
+    country: "",
+    region: "",
+    color: "",
+    drive: "",
+    transmission: "",
+    stock: "",
+    keywords: "",
+  })
 
-const getPriceOptions = () =>
-  Array.from({ length: 200 }, (_, i) => {
-    const price = (500 + i * 500).toString();
-    return { value: price, label: `$${price}` };
-  });
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
-const CarSearchForm = () => {
-  const [searchParams, setSearchParams] = useState(initialSearchParams);
-  const [query, setQuery] = useState("");
-  const { data: results = [], refetch, isLoading } = useAllCars(searchParams);
-
+  // Generate dynamic options from API data
   const dynamicOptions = useMemo(() => {
-    if (!results?.length) return {};
+    if (!allCars?.length) return {}
 
-    const extractOptions = (field, numeric = false) => {
-      const unique = Array.from(
-        new Set(results.map(car => car[field]).filter(Boolean))
-      );
+    const extractOptions = (field, sortNumeric = false) => {
+      const values = allCars
+        .map((car) => car[field])
+        .filter((value) => value && value !== "")
+        .filter((value, index, self) => self.indexOf(value) === index)
 
-      return unique
-        .sort(numeric ? (a, b) => a - b : undefined)
-        .map((value) => ({ value: value.toString(), label: value.toString() }));
-    };
+      if (sortNumeric) {
+        values.sort((a, b) => Number(a) - Number(b))
+      } else {
+        values.sort()
+      }
+
+      return values.map((value) => ({
+        value: value.toString(),
+        label: value.toString(),
+      }))
+    }
 
     return {
       make: extractOptions("make"),
@@ -67,124 +61,268 @@ const CarSearchForm = () => {
       fuel: extractOptions("fuel"),
       country: extractOptions("country"),
       region: extractOptions("region"),
-      color: extractOptions("color"),
+      color: extractOptions("exteriorColor"),
       drive: extractOptions("drive"),
       transmission: extractOptions("transmission"),
       stock: extractOptions("stock"),
       engineCC: extractOptions("engineCC", true),
-      mileage: extractOptions("mileage", true)
-    };
-  }, [results]);
+      year: extractOptions("year", true),
+    }
+  }, [allCars])
 
+  // Filter models based on selected make
   const filteredModels = useMemo(() => {
-    if (!searchParams.make) return dynamicOptions.model || [];
+    if (!searchParams.make || !allCars?.length) return dynamicOptions.model || []
 
-    const models = Array.from(
-      new Set(
-        results
-          .filter((car) => car.make === searchParams.make)
-          .map((car) => car.model)
-          .filter(Boolean)
-      )
-    ).sort();
+    const models = allCars
+      .filter((car) => car.make?.toLowerCase() === searchParams.make.toLowerCase())
+      .map((car) => car.model)
+      .filter((model) => model && model !== "")
+      .filter((model, index, self) => self.indexOf(model) === index)
+      .sort()
 
-    return models.map((model) => ({ value: model, label: model }));
-  }, [searchParams.make, results, dynamicOptions.model]);
+    return models.map((model) => ({ value: model, label: model }))
+  }, [searchParams.make, allCars, dynamicOptions.model])
 
+  // Filter model codes based on selected make and model
   const filteredModelCodes = useMemo(() => {
-    if (!searchParams.make) return dynamicOptions.modelCode || [];
+    if (!searchParams.make || !allCars?.length) return dynamicOptions.modelCode || []
 
-    let filtered = results.filter((car) => car.make === searchParams.make);
+    let filtered = allCars.filter((car) => car.make?.toLowerCase() === searchParams.make.toLowerCase())
+
     if (searchParams.model) {
-      filtered = filtered.filter((car) => car.model === searchParams.model);
+      filtered = filtered.filter((car) => car.model?.toLowerCase() === searchParams.model.toLowerCase())
     }
 
-    const modelCodes = Array.from(
-      new Set(filtered.map((car) => car.modelCode).filter(Boolean))
-    ).sort();
+    const modelCodes = filtered
+      .map((car) => car.modelCode)
+      .filter((code) => code && code !== "")
+      .filter((code, index, self) => self.indexOf(code) === index)
+      .sort()
 
-    return modelCodes.map((code) => ({ value: code, label: code }));
-  }, [searchParams.make, searchParams.model, results, dynamicOptions.modelCode]);
+    return modelCodes.map((code) => ({ value: code, label: code }))
+  }, [searchParams.make, searchParams.model, allCars, dynamicOptions.modelCode])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const updated = { ...searchParams, [name]: value };
+  const handleChange = (name, value) => {
+    const updated = { ...searchParams, [name]: value }
 
+    // Reset dependent fields
     if (name === "make") {
-      updated.model = "";
-      updated.modelCode = "";
+      updated.model = ""
+      updated.modelCode = ""
     } else if (name === "model") {
-      updated.modelCode = "";
+      updated.modelCode = ""
     }
 
-    setSearchParams(updated);
-    if (name === "keywords") setQuery(value);
-  };
+    setSearchParams(updated)
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    refetch();
-  };
+    e.preventDefault()
+    onSearch?.(searchParams)
+  }
 
   const handleReset = () => {
-    setSearchParams(initialSearchParams);
-    setQuery("");
-    refetch();
-  };
+    const resetParams = Object.keys(searchParams).reduce((acc, key) => {
+      acc[key] = ""
+      return acc
+    }, {})
+    setSearchParams(resetParams)
+    onSearch?.(resetParams)
+  }
 
   return (
-    <div className="bg-gray-100 py-6">
-      <div className="container mx-auto px-4">
-        <h1 className="text-2xl md:text-4xl font-bold uppercase text-red-600 mb-6 text-center md:text-start">
-          Find Japanese Used Cars
-        </h1>
+    <div className="bg-gradient-to-br from-gray-50 to-white py-8 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Find Your Perfect Car</h2>
+          <p className="text-gray-600">Search through our extensive collection of quality vehicles</p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
-            <SelectField name="make" value={searchParams.make} onChange={handleChange} options={dynamicOptions.make || []} placeholder="Select Make" />
-            <SelectField name="model" value={searchParams.model} onChange={handleChange} options={filteredModels} placeholder="All Model" />
-            <SelectField name="modelCode" value={searchParams.modelCode} onChange={handleChange} options={filteredModelCodes} placeholder="All Model Code" />
-            <SelectField name="yearFrom" value={searchParams.yearFrom} onChange={handleChange} options={getYearOptions()} placeholder="Year From" />
-            <SelectField name="yearTo" value={searchParams.yearTo} onChange={handleChange} options={getYearOptions()} placeholder="Year To" />
-            <SelectField name="priceFrom" value={searchParams.priceFrom} onChange={handleChange} options={getPriceOptions()} placeholder="Price From" />
-            <SelectField name="priceTo" value={searchParams.priceTo} onChange={handleChange} options={getPriceOptions()} placeholder="Price To" />
-            <SelectField name="type" value={searchParams.type} onChange={handleChange} options={dynamicOptions.type || []} placeholder="Select Type" />
-            <SelectField name="engineCC" value={searchParams.engineCC} onChange={handleChange} options={dynamicOptions.engineCC || []} placeholder="Select Engine CC" />
-            <SelectField name="fuel" value={searchParams.fuel} onChange={handleChange} options={dynamicOptions.fuel || []} placeholder="Select Fuel" />
-            <SelectField name="mileageFrom" value={searchParams.mileageFrom} onChange={handleChange} options={dynamicOptions.mileage || []} placeholder="Mileage From" />
-            <SelectField name="mileageTo" value={searchParams.mileageTo} onChange={handleChange} options={dynamicOptions.mileage || []} placeholder="Mileage To" />
-            <SelectField name="country" value={searchParams.country} onChange={handleChange} options={dynamicOptions.country || []} placeholder="By Country" />
-            <SelectField name="region" value={searchParams.region} onChange={handleChange} options={dynamicOptions.region || []} placeholder="Select Region" />
-            <SelectField name="color" value={searchParams.color} onChange={handleChange} options={dynamicOptions.color || []} placeholder="Select Color" />
-            <SelectField name="drive" value={searchParams.drive} onChange={handleChange} options={dynamicOptions.drive || []} placeholder="Select Drive" />
-            <SelectField name="transmission" value={searchParams.transmission} onChange={handleChange} options={dynamicOptions.transmission || []} placeholder="Transmission" />
-            <SelectField name="stock" value={searchParams.stock} onChange={handleChange} options={dynamicOptions.stock || []} placeholder="Stock" />
-            <input type="text" name="keywords" value={searchParams.keywords} onChange={handleChange} placeholder="Search by Keywords" className="border p-2 rounded w-full bg-white" />
-            <button type="button" className="bg-gray-200 text-black font-medium py-2 px-4 rounded hover:bg-gray-300 w-full">Best Offers</button>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Main Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Input
+              name="keywords"
+              value={searchParams.keywords}
+              onChange={(e) => handleChange("keywords", e.target.value)}
+              placeholder="Search by keywords, make, model, features..."
+              className="pl-12 py-4 text-lg"
+            />
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center justify-center mt-6 p-4">
-            <div className="bg-gray-300 text-black font-medium py-2 px-10 rounded">
-              <h1 className="text-xl font-bold">All ({results.length})</h1>
+          {/* Quick Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <SelectField
+              name="make"
+              value={searchParams.make}
+              onChange={(e) => handleChange("make", e.target.value)}
+              options={dynamicOptions.make}
+              placeholder="Select Make"
+            />
+            <SelectField
+              name="model"
+              value={searchParams.model}
+              onChange={(e) => handleChange("model", e.target.value)}
+              options={filteredModels}
+              placeholder="Select Model"
+            />
+            <SelectField
+              name="yearFrom"
+              value={searchParams.yearFrom}
+              onChange={(e) => handleChange("yearFrom", e.target.value)}
+              options={dynamicOptions.year}
+              placeholder="Year From"
+            />
+            <SelectField
+              name="fuel"
+              value={searchParams.fuel}
+              onChange={(e) => handleChange("fuel", e.target.value)}
+              options={dynamicOptions.fuel}
+              placeholder="Fuel Type"
+            />
+          </div>
+
+          {/* Advanced Filters Toggle */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="inline-flex items-center gap-2 px-6 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              <Filter size={16} />
+              {showAdvanced ? "Hide" : "Show"} Advanced Filters
+              <ChevronDown className={`transform transition-transform ${showAdvanced ? "rotate-180" : ""}`} size={16} />
+            </button>
+          </div>
+
+          {/* Advanced Filters */}
+          {showAdvanced && (
+            <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <SelectField
+                  name="modelCode"
+                  value={searchParams.modelCode}
+                  onChange={(e) => handleChange("modelCode", e.target.value)}
+                  options={filteredModelCodes}
+                  placeholder="Model Code"
+                />
+                <SelectField
+                  name="yearTo"
+                  value={searchParams.yearTo}
+                  onChange={(e) => handleChange("yearTo", e.target.value)}
+                  options={dynamicOptions.year}
+                  placeholder="Year To"
+                />
+                <Input
+                  name="priceFrom"
+                  value={searchParams.priceFrom}
+                  onChange={(e) => handleChange("priceFrom", e.target.value)}
+                  placeholder="Price From"
+                  type="number"
+                />
+                <Input
+                  name="priceTo"
+                  value={searchParams.priceTo}
+                  onChange={(e) => handleChange("priceTo", e.target.value)}
+                  placeholder="Price To"
+                  type="number"
+                />
+                <SelectField
+                  name="type"
+                  value={searchParams.type}
+                  onChange={(e) => handleChange("type", e.target.value)}
+                  options={dynamicOptions.type}
+                  placeholder="Vehicle Type"
+                />
+                <SelectField
+                  name="engineCC"
+                  value={searchParams.engineCC}
+                  onChange={(e) => handleChange("engineCC", e.target.value)}
+                  options={dynamicOptions.engineCC}
+                  placeholder="Engine CC"
+                />
+                <Input
+                  name="mileageFrom"
+                  value={searchParams.mileageFrom}
+                  onChange={(e) => handleChange("mileageFrom", e.target.value)}
+                  placeholder="Mileage From"
+                  type="number"
+                />
+                <Input
+                  name="mileageTo"
+                  value={searchParams.mileageTo}
+                  onChange={(e) => handleChange("mileageTo", e.target.value)}
+                  placeholder="Mileage To"
+                  type="number"
+                />
+                <SelectField
+                  name="country"
+                  value={searchParams.country}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                  options={dynamicOptions.country}
+                  placeholder="Country"
+                />
+                <SelectField
+                  name="region"
+                  value={searchParams.region}
+                  onChange={(e) => handleChange("region", e.target.value)}
+                  options={dynamicOptions.region}
+                  placeholder="Region"
+                />
+                <SelectField
+                  name="color"
+                  value={searchParams.color}
+                  onChange={(e) => handleChange("color", e.target.value)}
+                  options={dynamicOptions.color}
+                  placeholder="Color"
+                />
+                <SelectField
+                  name="drive"
+                  value={searchParams.drive}
+                  onChange={(e) => handleChange("drive", e.target.value)}
+                  options={dynamicOptions.drive}
+                  placeholder="Drive Type"
+                />
+                <SelectField
+                  name="transmission"
+                  value={searchParams.transmission}
+                  onChange={(e) => handleChange("transmission", e.target.value)}
+                  options={dynamicOptions.transmission}
+                  placeholder="Transmission"
+                />
+                <SelectField
+                  name="stock"
+                  value={searchParams.stock}
+                  onChange={(e) => handleChange("stock", e.target.value)}
+                  options={dynamicOptions.stock}
+                  placeholder="Stock"
+                />
+              </div>
             </div>
-            <div className="text-gray-600 font-medium">Show Results</div>
-            <Button type="submit">Search</Button>
-            <Button type="button" onClick={handleReset}>Reset</Button>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button type="submit" className="px-8 py-3 flex items-center justify-center gap-2">
+              <Search size={20} />
+              Search Cars
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReset}
+              className="px-8 py-3 flex items-center justify-center gap-2"
+            >
+              <X size={20} />
+              Reset Filters
+            </Button>
           </div>
         </form>
-
-        {isLoading ? (
-          <p className="text-center mt-6">Loading cars...</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {results.map((car, index) => (
-              <Card key={index} car={car} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CarSearchForm;
+export default CarSearchForm
