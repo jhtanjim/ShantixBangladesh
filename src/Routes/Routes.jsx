@@ -12,7 +12,6 @@ import UpdateProfile from "../Pages/Profile/UpdateProfile.jsx";
 import { AdminLayout } from "../layout/AdminLayout.jsx";
 import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard.jsx";
 import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage.jsx";
-import { CreateCarPage } from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
 import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage.jsx";
 import { UsersPage } from "../Pages/DashBoard/Admin/users/UsersPage.jsx";
 import { CreateUserPage } from "../Pages/DashBoard/Admin/users/CreateUserPage.jsx";
@@ -23,6 +22,7 @@ import Cart from "../components/ui/Cart.jsx";
 import Wishlist from "../components/ui/wishlist.jsx";
 import Home from "../Pages/Home/Home.jsx";
 import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
+import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -101,7 +101,7 @@ export const router = createBrowserRouter([
       { path: "cars", element: <CarsPage /> },
           { path: "cars/:id", element: <CarDetailsPage /> }, 
 
-      { path: "cars/create", element: <CreateCarPage /> },
+      { path: "cars/create", element: <CreateCarPage/> },
       { path: "cars/edit/:id", element: <EditCarPage /> },
       { path: "users", element: <UsersPage /> },
       { path: "users/create", element: <CreateUserPage /> },
