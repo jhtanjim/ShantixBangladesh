@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ShoppingCart, Check, Heart, Eye, Star, Calendar, Fuel, Palette, Users } from 'lucide-react'
 import Button from './Button'
 import { useShop } from '../../Context/ShopContext'
 import { Link } from 'react-router-dom'
 
 const CarCard = ({ car }) => {
-  const { addToCart, toggleWishlist, isInCart, isInWishlist } = useShop()
+  const { addToCart, toggleWishlist, isInCart, isInWishlist, exchangeRate } = useShop()
   const [addingToCart, setAddingToCart] = useState(false)
   const [addingToWishlist, setAddingToWishlist] = useState(false)
 
@@ -38,6 +38,12 @@ const CarCard = ({ car }) => {
   const handleViewDetails = () => {
     // Handle navigation to car details
     console.log('View details for car:', car.id)
+  }
+
+  // Format yen price with dynamic exchange rate
+  const formatYenPrice = (usdPrice) => {
+    if (!usdPrice || !exchangeRate) return 'N/A'
+    return `¥${(usdPrice * exchangeRate).toLocaleString()}`
   }
 
   return (
@@ -87,10 +93,8 @@ const CarCard = ({ car }) => {
 
           {/* Image Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-
            <Link to={`/cars/${car.id}`} className="">
             <Button 
-             
               className="bg-blue text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
             >
               <Eye size={16} />
@@ -108,13 +112,18 @@ const CarCard = ({ car }) => {
               <h3 className="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                 {car.title || `${car.make} ${car.model}` || 'Car Title'}
               </h3>
-              <div className="text-right ml-4">
+              <div className="text-right ml-4 mt-8 ">
                 <div className="text-2xl font-bold text-red-600">
                   ${car.price?.toLocaleString() || 'N/A'}
                 </div>
-                {car.price && (
+                {car.price && exchangeRate && (
                   <div className="text-sm text-gray-500">
-                    ¥{(car.price * 150).toLocaleString()}
+                    {formatYenPrice(car.price)}
+                  </div>
+                )}
+                {car.price && !exchangeRate && (
+                  <div className="text-sm text-gray-400">
+                    Exchange rate loading...
                   </div>
                 )}
               </div>

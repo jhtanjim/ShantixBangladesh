@@ -30,7 +30,7 @@ import Button from "../../components/ui/Button"
 
 const CarDetailsPage = () => {
   const { id } = useParams()
-  const { addToCart, isInCart } = useShop()
+  const { addToCart, isInCart, formatYenPrice, exchangeRateLoading } = useShop()
   const [addingToCart, setAddingToCart] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
@@ -84,6 +84,9 @@ const CarDetailsPage = () => {
   }
 
   const allImages = car ? [car.mainImage, ...(car.gallery || [])].filter(Boolean) : []
+
+  // Get yen price from API
+  const yenPrice = car ? formatYenPrice(car.price) : null
 
   if (isLoading) {
     return (
@@ -150,7 +153,15 @@ const CarDetailsPage = () => {
             <div className="mt-4 md:mt-0 text-right">
               <div className="text-sm text-gray-300 mb-1">Starting from</div>
               <div className="text-4xl font-bold text-white">${car.price?.toLocaleString()}</div>
-              <div className="text-lg text-gray-300">¥{((car.price || 0) * 150).toLocaleString()}</div>
+              <div className="text-lg text-gray-300">
+                {exchangeRateLoading ? (
+                  <span className="animate-pulse">Loading yen price...</span>
+                ) : yenPrice ? (
+                  `¥${yenPrice.toLocaleString()}`
+                ) : (
+                  "¥Price unavailable"
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -326,14 +337,22 @@ const CarDetailsPage = () => {
               <div className="text-center mb-6">
                 <div className="text-sm opacity-90 mb-2">Total Price</div>
                 <div className="text-4xl font-bold mb-2">${car.price?.toLocaleString()}</div>
-                <div className="text-lg opacity-90">¥{((car.price || 0) * 150).toLocaleString()}</div>
+                <div className="text-lg opacity-90">
+                  {exchangeRateLoading ? (
+                    <span className="animate-pulse">Loading yen price...</span>
+                  ) : yenPrice ? (
+                    `¥${yenPrice.toLocaleString()}`
+                  ) : (
+                    "¥Price unavailable"
+                  )}
+                </div>
               </div>
 
               <Button
                 className={`w-full py-4 text-lg font-semibold flex items-center justify-center gap-3 ${
                   isInCart(car.id)
                     ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-white hover:bg-gray-100 text-red-600"
+                    : "bg-green hover:bg-green-500 text-red-600"
                 }`}
                 onClick={handleAddToCart}
                 disabled={addingToCart || !car.isActive}

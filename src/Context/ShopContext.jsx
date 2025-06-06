@@ -8,6 +8,8 @@ export function ShopProvider({ children }) {
   const [cartItems, setCartItems] = useState([])
   const [wishlistItems, setWishlistItems] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [exchangeRate, setExchangeRate] = useState(null)
+  const [exchangeRateLoading, setExchangeRateLoading] = useState(true)
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -27,6 +29,42 @@ export function ShopProvider({ children }) {
     } finally {
       setIsLoaded(true)
     }
+  }, [])
+
+  // Fetch exchange rate on component mount and periodically
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        // Using exchangerate-api.com (free tier: 1,500 requests/month)
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD')
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        
+        if (data.rates && data.rates.JPY) {
+          setExchangeRate(data.rates.JPY)
+        } else {
+          throw new Error('Invalid exchange rate data')
+        }
+        
+      } catch (error) {
+        console.error('Failed to fetch exchange rate:', error)
+        // Fallback to a recent approximate rate if API fails
+        setExchangeRate(150)
+      } finally {
+        setExchangeRateLoading(false)
+      }
+    }
+
+    fetchExchangeRate()
+
+    // Update exchange rate every 30 minutes
+    const interval = setInterval(fetchExchangeRate, 30 * 60 * 1000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   // Save cart to localStorage whenever cartItems changes
@@ -123,6 +161,12 @@ export function ShopProvider({ children }) {
 
   const wishlistCount = wishlistItems.length
 
+  // Exchange rate helper function
+  const formatYenPrice = (usdPrice) => {
+    if (!usdPrice || !exchangeRate) return null
+    return Math.round(usdPrice * exchangeRate)
+  }
+
   const value = {
     cartItems,
     addToCart,
@@ -139,6 +183,9 @@ export function ShopProvider({ children }) {
     toggleWishlist,
     isInWishlist,
     wishlistCount,
+    exchangeRate,
+    exchangeRateLoading,
+    formatYenPrice,
   }
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>

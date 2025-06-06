@@ -1,19 +1,13 @@
 "use client"
 
-import { Filter, Grid, List, ShoppingCart, SortAsc } from "lucide-react"
-import { useMemo, useState } from "react"
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/input";
-import { useShop } from "../../Context/ShopContext";
-
-import CarCard from "../../components/ui/CarCard";
-import SelectField from "../../components/ui/SelectField";
-import { useAllCars } from "../../hooks/useCars";
+import { Grid, List, ShoppingCart, SortAsc, ChevronLeft, ChevronRight } from "lucide-react"
+import { useMemo, useState, useCallback } from "react"
+import { useAllCars } from "../../hooks/useCars"
 import CarSearchForm from "../Shared/CarSearchform/CarSearchForm";
+import CarCard from "../../components/ui/CarCard";
 
 export default function AllCars() {
-  const { cartCount } = useShop()
-
+  // State management
   const [searchParams, setSearchParams] = useState({
     make: "",
     model: "",
@@ -39,10 +33,13 @@ export default function AllCars() {
   const [currentPage, setCurrentPage] = useState(1)
   const [viewType, setViewType] = useState("grid")
   const [sortBy, setSortBy] = useState("default")
-  const [showFilters, setShowFilters] = useState(true)
   const [itemsPerPage] = useState(10)
 
-  // Get all cars data
+  // Shopping cart and wishlist state
+  const [cart, setCart] = useState([])
+  const [wishlist, setWishlist] = useState([])
+
+  // Get all cars data from API
   const { data: allCars = [], isLoading, isError } = useAllCars()
 
   // Filter and sort cars based on search parameters
@@ -50,16 +47,25 @@ export default function AllCars() {
     if (!allCars.length) return []
 
     const filtered = allCars.filter((car) => {
-      // Title/Keywords search
+      // Keywords search
       if (searchParams.keywords) {
         const keywords = searchParams.keywords.toLowerCase()
-        const titleMatch = car.title?.toLowerCase().includes(keywords)
-        const makeMatch = car.make?.toLowerCase().includes(keywords)
-        const modelMatch = car.model?.toLowerCase().includes(keywords)
-        const featuresMatch = car.features?.some((feature) => feature.name?.toLowerCase().includes(keywords))
-        if (!titleMatch && !makeMatch && !modelMatch && !featuresMatch) {
-          return false
-        }
+        const searchableText = [
+          car.title,
+          car.make,
+          car.model,
+          car.modelCode,
+          car.type,
+          car.fuel,
+          car.exteriorColor,
+          car.transmission,
+          ...(car.features || []).map((f) => f.name || f),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+
+        if (!searchableText.includes(keywords)) return false
       }
 
       // Make filter
@@ -99,7 +105,7 @@ export default function AllCars() {
       }
 
       // Engine CC filter
-      if (searchParams.engineCC && car.engineCC !== searchParams.engineCC) {
+      if (searchParams.engineCC && car.engineCC?.toString() !== searchParams.engineCC) {
         return false
       }
 
@@ -158,10 +164,19 @@ export default function AllCars() {
         filtered.sort((a, b) => (b.price || 0) - (a.price || 0))
         break
       case "newest":
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         break
-      case "year":
+      case "year-new":
         filtered.sort((a, b) => (b.year || 0) - (a.year || 0))
+        break
+      case "year-old":
+        filtered.sort((a, b) => (a.year || 0) - (b.year || 0))
+        break
+      case "mileage-low":
+        filtered.sort((a, b) => (a.mileage || 0) - (b.mileage || 0))
+        break
+      case "mileage-high":
+        filtered.sort((a, b) => (b.mileage || 0) - (a.mileage || 0))
         break
       default:
         // Keep original order
@@ -177,55 +192,33 @@ export default function AllCars() {
   const endIndex = startIndex + itemsPerPage
   const currentCars = filteredAndSortedCars.slice(startIndex, endIndex)
 
-  // Generate dynamic options from actual data
-  const makeOptions = useMemo(() => {
-    const makes = [...new Set(allCars.map((car) => car.make).filter(Boolean))]
-    return makes.map((make) => ({ value: make.toLowerCase(), label: make }))
-  }, [allCars])
+  // Cart and wishlist functions
+  const addToCart = useCallback((car) => {
+    setCart((prev) => (prev.find((item) => item.id === car.id) ? prev : [...prev, car]))
+  }, [])
 
-  const modelOptions = useMemo(() => {
-    const models = [...new Set(allCars.map((car) => car.model).filter(Boolean))]
-    return models.map((model) => ({
-      value: model.toLowerCase(),
-      label: model,
-    }))
-  }, [allCars])
+  const toggleWishlist = useCallback((car) => {
+    setWishlist((prev) =>
+      prev.find((item) => item.id === car.id) ? prev.filter((item) => item.id !== car.id) : [...prev, car],
+    )
+  }, [])
 
-  const fuelOptions = useMemo(() => {
-    const fuels = [...new Set(allCars.map((car) => car.fuel).filter(Boolean))]
-    return fuels.map((fuel) => ({ value: fuel.toLowerCase(), label: fuel }))
-  }, [allCars])
+  const isInCart = useCallback((carId) => cart.some((item) => item.id === carId), [cart])
+  const isInWishlist = useCallback((carId) => wishlist.some((item) => item.id === carId), [wishlist])
 
-  const colorOptions = useMemo(() => {
-    const colors = [...new Set(allCars.map((car) => car.exteriorColor).filter(Boolean))]
-    return colors.map((color) => ({
-      value: color.toLowerCase(),
-      label: color,
-    }))
-  }, [allCars])
+  // Handle search from CarSearchForm component
+  const handleSearchFromForm = useCallback((formSearchParams) => {
+    setSearchParams(formSearchParams)
+    setCurrentPage(1)
+  }, [])
 
-  const yearOptions = useMemo(() => {
-    const years = [...new Set(allCars.map((car) => car.year).filter(Boolean))].sort((a, b) => b - a)
-    return years.map((year) => ({
-      value: year.toString(),
-      label: year.toString(),
-    }))
-  }, [allCars])
-
-  const handleSelectChange = (e) => {
-    const { name, value } = e.target
-    setSearchParams((prev) => ({ ...prev, [name]: value }))
-    setCurrentPage(1) // Reset to first page when filters change
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setSearchParams((prev) => ({ ...prev, [name]: value }))
-    setCurrentPage(1) // Reset to first page when filters change
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy)
     setCurrentPage(1)
   }
 
@@ -254,218 +247,111 @@ export default function AllCars() {
     setCurrentPage(1)
   }
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  // Generate pagination numbers
+  const getPaginationNumbers = () => {
+    const delta = 2
+    const range = []
+    const rangeWithDots = []
 
-  // Handle search from CarSearchForm component
-  const handleSearchFromForm = (formSearchParams) => {
-    setSearchParams(formSearchParams)
-    setCurrentPage(1)
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i)
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...")
+    } else {
+      rangeWithDots.push(1)
+    }
+
+    rangeWithDots.push(...range)
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages)
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages)
+    }
+
+    return rangeWithDots
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--color-background)" }}>
-      {cartCount > 0 && (
+    <div className="min-h-screen bg-gray-50">
+      {/* Cart indicator */}
+      {cart.length > 0 && (
         <div className="fixed top-20 right-4 z-40">
           <a
             href="/cart"
-            className="text-white rounded-full px-4 py-2 shadow-lg flex items-center gap-2 hover:opacity-90 transition-colors"
-            style={{ backgroundColor: "var(--color-red)" }}
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-2 shadow-lg flex items-center gap-2 transition-colors"
           >
             <ShoppingCart size={20} />
-            <span className="font-bold">{cartCount}</span>
+            <span className="font-bold">{cart.length}</span>
             <span className="text-sm hidden sm:inline">items</span>
           </a>
         </div>
       )}
 
-      <div
-        className="text-white py-12"
-        style={{ background: `linear-gradient(to right, var(--color-dark-blue), var(--color-blue))` }}
-      >
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Find Your Perfect Car</h1>
-          <p className="text-xl opacity-90 mb-8">Browse our extensive collection of quality vehicles</p>
+          <p className="text-xl opacity-90 mb-2">Browse our extensive collection of quality vehicles</p>
+          <p className="text-lg opacity-75">
+            {isLoading ? "Loading..." : `${filteredAndSortedCars.length} cars available`}
+          </p>
         </div>
       </div>
 
+      {/* Search Form */}
       <CarSearchForm onSearch={handleSearchFromForm} allCars={allCars} />
 
-      <div className="bg-white shadow-lg border-b sticky top-16 z-30">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-4">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              <Filter size={20} />
-              <span className="font-medium">Filters</span>
-            </button>
-
-            <div className="text-gray-600">
-              <span className="font-medium">{filteredAndSortedCars.length}</span> cars found
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Controls Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedCars.length)} of{" "}
+              {filteredAndSortedCars.length} cars
             </div>
           </div>
 
-          {showFilters && (
-            <form onSubmit={handleSubmit} className="pb-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-6">
-                <SelectField
-                  name="make"
-                  value={searchParams.make}
-                  onChange={handleSelectChange}
-                  options={makeOptions}
-                  placeholder="Select Make"
-                />
-                <SelectField
-                  name="model"
-                  value={searchParams.model}
-                  onChange={handleSelectChange}
-                  options={modelOptions}
-                  placeholder="All Models"
-                />
-                <SelectField
-                  name="yearFrom"
-                  value={searchParams.yearFrom}
-                  onChange={handleSelectChange}
-                  options={yearOptions}
-                  placeholder="Year From"
-                />
-                <SelectField
-                  name="yearTo"
-                  value={searchParams.yearTo}
-                  onChange={handleSelectChange}
-                  options={yearOptions}
-                  placeholder="Year To"
-                />
-                <Input
-                  name="priceFrom"
-                  value={searchParams.priceFrom}
-                  onChange={handleInputChange}
-                  placeholder="Price From"
-                  type="number"
-                />
-                <Input
-                  name="priceTo"
-                  value={searchParams.priceTo}
-                  onChange={handleInputChange}
-                  placeholder="Price To"
-                  type="number"
-                />
-                <SelectField
-                  name="fuel"
-                  value={searchParams.fuel}
-                  onChange={handleSelectChange}
-                  options={fuelOptions}
-                  placeholder="Select Fuel"
-                />
-                <SelectField
-                  name="color"
-                  value={searchParams.color}
-                  onChange={handleSelectChange}
-                  options={colorOptions}
-                  placeholder="Select Color"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Input
-                  name="keywords"
-                  value={searchParams.keywords}
-                  onChange={handleInputChange}
-                  placeholder="Search by keywords, make, model, features..."
-                  className="md:col-span-2"
-                />
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">
-                    Search
-                  </Button>
-                  <Button type="button" variant="outline" onClick={handleReset}>
-                    Reset
-                  </Button>
-                </div>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          {/* Pagination */}
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const page = i + 1
-              return (
-                <button
-                  key={page}
-                  className={`px-3 py-2 text-sm rounded transition-colors ${
-                    currentPage === page ? "text-white" : "bg-white border border-gray-300 hover:bg-gray-50"
-                  }`}
-                  style={currentPage === page ? { backgroundColor: "var(--color-red)" } : {}}
-                  onClick={() => handlePageChange(page)}
-                >
-                  {page}
-                </button>
-              )
-            })}
-            {totalPages > 5 && (
-              <>
-                <span className="px-3 py-2 text-sm text-gray-500">...</span>
-                <button
-                  className="bg-white border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50 transition-colors rounded"
-                  onClick={() => handlePageChange(totalPages)}
-                >
-                  {totalPages}
-                </button>
-              </>
-            )}
-            {currentPage < totalPages && (
-              <button
-                className="bg-white border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50 transition-colors rounded"
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Next
-              </button>
-            )}
-          </div>
-
           <div className="flex items-center gap-4">
+            {/* View Toggle */}
             <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1">
               <button
                 onClick={() => setViewType("list")}
                 className={`p-2 rounded transition-colors ${
-                  viewType === "list" ? "text-white" : "text-gray-600 hover:bg-gray-100"
+                  viewType === "list" ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
-                style={viewType === "list" ? { backgroundColor: "var(--color-blue)" } : {}}
               >
                 <List size={16} />
               </button>
               <button
                 onClick={() => setViewType("grid")}
                 className={`p-2 rounded transition-colors ${
-                  viewType === "grid" ? "text-white" : "text-gray-600 hover:bg-gray-100"
+                  viewType === "grid" ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
-                style={viewType === "grid" ? { backgroundColor: "var(--color-blue)" } : {}}
               >
                 <Grid size={16} />
               </button>
             </div>
 
+            {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
               <SortAsc size={16} className="text-gray-500" />
               <select
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
               >
-                <option value="default">Sort By: Default</option>
+                <option value="default">Default</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="newest">Newest First</option>
-                <option value="year">Year</option>
+                <option value="year-new">Year: Newest First</option>
+                <option value="year-old">Year: Oldest First</option>
+                <option value="mileage-low">Mileage: Low to High</option>
+                <option value="mileage-high">Mileage: High to Low</option>
+                <option value="newest">Recently Added</option>
               </select>
             </div>
           </div>
@@ -473,37 +359,90 @@ export default function AllCars() {
 
         {/* Car Listings */}
         {isLoading ? (
-          <div className="text-center text-gray-600 py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            Loading cars...
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading cars...</p>
           </div>
         ) : isError ? (
-          <div className="text-center text-red-500 py-12">
-            <div className="text-lg font-medium mb-2">Failed to load cars</div>
-            <div className="text-sm text-gray-500">Please try again later</div>
+          <div className="text-center py-16">
+            <div className="text-lg font-medium mb-2 text-red-600">Failed to load cars</div>
+            <p className="text-gray-500">Please try again later</p>
           </div>
         ) : filteredAndSortedCars.length === 0 ? (
-          <div className="text-center text-gray-600 py-12">
-            <div className="text-lg font-medium mb-2">No cars found</div>
-            <div className="text-sm text-gray-500">Try adjusting your search filters</div>
-            <Button onClick={handleReset} className="mt-4">
-              Reset Filters
-            </Button>
+          <div className="text-center py-16">
+            <div className="text-lg font-medium mb-2 text-gray-600">No cars found</div>
+            <p className="text-gray-500 mb-4">Try adjusting your search filters</p>
+            <button
+              onClick={handleReset}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Clear All Filters
+            </button>
           </div>
         ) : (
           <div className="space-y-8">
             {currentCars.map((car) => (
-              <CarCard key={car.id} car={car} />
+              <CarCard
+                key={car.id}
+                car={car}
+                onAddToCart={addToCart}
+                onToggleWishlist={toggleWishlist}
+                isInCart={isInCart(car.id)}
+                isInWishlist={isInWishlist(car.id)}
+              />
             ))}
           </div>
         )}
 
-        {/* Show More Button - only if there are more pages */}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+
+            {getPaginationNumbers().map((page, index) => (
+              <button
+                key={index}
+                onClick={() => typeof page === "number" && handlePageChange(page)}
+                disabled={page === "..."}
+                className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                  currentPage === page
+                    ? "bg-red-600 text-white"
+                    : page === "..."
+                      ? "text-gray-400 cursor-default"
+                      : "border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Load More Button - only if there are more pages */}
         {currentPage < totalPages && currentCars.length > 0 && (
-          <div className="text-center mt-12">
-            <Button size="lg" className="px-8" onClick={() => handlePageChange(currentPage + 1)}>
+          <div className="text-center mt-8">
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+            >
               Load More Cars
-            </Button>
+            </button>
           </div>
         )}
       </div>

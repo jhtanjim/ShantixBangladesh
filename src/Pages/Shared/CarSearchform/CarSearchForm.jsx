@@ -1,10 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Search, Filter, X, ChevronDown } from "lucide-react"
-import SelectField from "../../../components/ui/SelectField"
-import Button from "../../../components/ui/Button"
-import Input from "../../../components/ui/input"
+import { useState, useMemo, useEffect } from "react"
+import { Search, X, Filter, ChevronDown, ChevronUp } from "lucide-react"
 
 const CarSearchForm = ({ onSearch, allCars = [] }) => {
   const [searchParams, setSearchParams] = useState({
@@ -31,14 +28,14 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
 
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // Generate dynamic options from API data
+  // Generate dynamic options from real car data
   const dynamicOptions = useMemo(() => {
-    if (!allCars?.length) return {}
+    if (!allCars.length) return {}
 
     const extractOptions = (field, sortNumeric = false) => {
       const values = allCars
         .map((car) => car[field])
-        .filter((value) => value && value !== "")
+        .filter((value) => value && value !== "" && value !== null && value !== undefined)
         .filter((value, index, self) => self.indexOf(value) === index)
 
       if (sortNumeric) {
@@ -48,7 +45,7 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
       }
 
       return values.map((value) => ({
-        value: value.toString(),
+        value: value.toString().toLowerCase(),
         label: value.toString(),
       }))
     }
@@ -66,13 +63,19 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
       transmission: extractOptions("transmission"),
       stock: extractOptions("stock"),
       engineCC: extractOptions("engineCC", true),
-      year: extractOptions("year", true),
     }
+  }, [allCars])
+
+  // Generate year options from car data
+  const yearOptions = useMemo(() => {
+    if (!allCars.length) return []
+    const years = [...new Set(allCars.map((car) => car.year).filter(Boolean))].sort((a, b) => b - a)
+    return years.map((year) => ({ value: year.toString(), label: year.toString() }))
   }, [allCars])
 
   // Filter models based on selected make
   const filteredModels = useMemo(() => {
-    if (!searchParams.make || !allCars?.length) return dynamicOptions.model || []
+    if (!searchParams.make || !allCars.length) return dynamicOptions.model || []
 
     const models = allCars
       .filter((car) => car.make?.toLowerCase() === searchParams.make.toLowerCase())
@@ -81,12 +84,12 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
       .filter((model, index, self) => self.indexOf(model) === index)
       .sort()
 
-    return models.map((model) => ({ value: model, label: model }))
+    return models.map((model) => ({ value: model.toLowerCase(), label: model }))
   }, [searchParams.make, allCars, dynamicOptions.model])
 
   // Filter model codes based on selected make and model
   const filteredModelCodes = useMemo(() => {
-    if (!searchParams.make || !allCars?.length) return dynamicOptions.modelCode || []
+    if (!searchParams.make || !allCars.length) return dynamicOptions.modelCode || []
 
     let filtered = allCars.filter((car) => car.make?.toLowerCase() === searchParams.make.toLowerCase())
 
@@ -100,7 +103,7 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
       .filter((code, index, self) => self.indexOf(code) === index)
       .sort()
 
-    return modelCodes.map((code) => ({ value: code, label: code }))
+    return modelCodes.map((code) => ({ value: code.toLowerCase(), label: code }))
   }, [searchParams.make, searchParams.model, allCars, dynamicOptions.modelCode])
 
   const handleChange = (name, value) => {
@@ -117,48 +120,61 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
     setSearchParams(updated)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onSearch?.(searchParams)
-  }
-
   const handleReset = () => {
     const resetParams = Object.keys(searchParams).reduce((acc, key) => {
       acc[key] = ""
       return acc
     }, {})
     setSearchParams(resetParams)
-    onSearch?.(resetParams)
+    onSearch(resetParams)
   }
 
+  // Auto-search when params change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onSearch(searchParams)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [searchParams, onSearch])
+
+  const SelectField = ({ name, value, onChange, options = [], placeholder, className = "" }) => (
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white text-sm ${className}`}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  )
+
+  const Input = ({ name, value, onChange, placeholder, type = "text", className = "" }) => (
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm ${className}`}
+    />
+  )
+
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-white py-8 border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Find Your Perfect Car</h2>
-          <p className="text-gray-600">Search through our extensive collection of quality vehicles</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Main Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <Input
-              name="keywords"
-              value={searchParams.keywords}
-              onChange={(e) => handleChange("keywords", e.target.value)}
-              placeholder="Search by keywords, make, model, features..."
-              className="pl-12 py-4 text-lg"
-            />
-          </div>
-
-          {/* Quick Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="bg-white shadow-lg border-b sticky top-0 z-30">
+      <div className="container mx-auto px-4 py-6">
+        <div className="space-y-4">
+          {/* Main Search Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             <SelectField
               name="make"
               value={searchParams.make}
               onChange={(e) => handleChange("make", e.target.value)}
-              options={dynamicOptions.make}
+              options={dynamicOptions.make || []}
               placeholder="Select Make"
             />
             <SelectField
@@ -172,35 +188,69 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
               name="yearFrom"
               value={searchParams.yearFrom}
               onChange={(e) => handleChange("yearFrom", e.target.value)}
-              options={dynamicOptions.year}
+              options={yearOptions}
               placeholder="Year From"
             />
             <SelectField
-              name="fuel"
-              value={searchParams.fuel}
-              onChange={(e) => handleChange("fuel", e.target.value)}
-              options={dynamicOptions.fuel}
-              placeholder="Fuel Type"
+              name="yearTo"
+              value={searchParams.yearTo}
+              onChange={(e) => handleChange("yearTo", e.target.value)}
+              options={yearOptions}
+              placeholder="Year To"
+            />
+            <Input
+              name="priceFrom"
+              value={searchParams.priceFrom}
+              onChange={(e) => handleChange("priceFrom", e.target.value)}
+              placeholder="Price From"
+              type="number"
+            />
+            <Input
+              name="priceTo"
+              value={searchParams.priceTo}
+              onChange={(e) => handleChange("priceTo", e.target.value)}
+              placeholder="Price To"
+              type="number"
             />
           </div>
 
-          {/* Advanced Filters Toggle */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="inline-flex items-center gap-2 px-6 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
-            >
-              <Filter size={16} />
-              {showAdvanced ? "Hide" : "Show"} Advanced Filters
-              <ChevronDown className={`transform transition-transform ${showAdvanced ? "rotate-180" : ""}`} size={16} />
-            </button>
+          {/* Keywords Search */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input
+                name="keywords"
+                value={searchParams.keywords}
+                onChange={(e) => handleChange("keywords", e.target.value)}
+                placeholder="Search by keywords (make, model, features...)"
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+              >
+                <Filter size={16} />
+                Advanced
+                {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+              >
+                <X size={16} />
+                Reset
+              </button>
+            </div>
           </div>
 
           {/* Advanced Filters */}
           {showAdvanced && (
-            <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 <SelectField
                   name="modelCode"
                   value={searchParams.modelCode}
@@ -209,39 +259,39 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
                   placeholder="Model Code"
                 />
                 <SelectField
-                  name="yearTo"
-                  value={searchParams.yearTo}
-                  onChange={(e) => handleChange("yearTo", e.target.value)}
-                  options={dynamicOptions.year}
-                  placeholder="Year To"
-                />
-                <Input
-                  name="priceFrom"
-                  value={searchParams.priceFrom}
-                  onChange={(e) => handleChange("priceFrom", e.target.value)}
-                  placeholder="Price From"
-                  type="number"
-                />
-                <Input
-                  name="priceTo"
-                  value={searchParams.priceTo}
-                  onChange={(e) => handleChange("priceTo", e.target.value)}
-                  placeholder="Price To"
-                  type="number"
-                />
-                <SelectField
                   name="type"
                   value={searchParams.type}
                   onChange={(e) => handleChange("type", e.target.value)}
-                  options={dynamicOptions.type}
+                  options={dynamicOptions.type || []}
                   placeholder="Vehicle Type"
                 />
                 <SelectField
-                  name="engineCC"
-                  value={searchParams.engineCC}
-                  onChange={(e) => handleChange("engineCC", e.target.value)}
-                  options={dynamicOptions.engineCC}
-                  placeholder="Engine CC"
+                  name="fuel"
+                  value={searchParams.fuel}
+                  onChange={(e) => handleChange("fuel", e.target.value)}
+                  options={dynamicOptions.fuel || []}
+                  placeholder="Fuel Type"
+                />
+                <SelectField
+                  name="transmission"
+                  value={searchParams.transmission}
+                  onChange={(e) => handleChange("transmission", e.target.value)}
+                  options={dynamicOptions.transmission || []}
+                  placeholder="Transmission"
+                />
+                <SelectField
+                  name="color"
+                  value={searchParams.color}
+                  onChange={(e) => handleChange("color", e.target.value)}
+                  options={dynamicOptions.color || []}
+                  placeholder="Color"
+                />
+                <SelectField
+                  name="drive"
+                  value={searchParams.drive}
+                  onChange={(e) => handleChange("drive", e.target.value)}
+                  options={dynamicOptions.drive || []}
+                  placeholder="Drive Type"
                 />
                 <Input
                   name="mileageFrom"
@@ -257,69 +307,10 @@ const CarSearchForm = ({ onSearch, allCars = [] }) => {
                   placeholder="Mileage To"
                   type="number"
                 />
-                <SelectField
-                  name="country"
-                  value={searchParams.country}
-                  onChange={(e) => handleChange("country", e.target.value)}
-                  options={dynamicOptions.country}
-                  placeholder="Country"
-                />
-                <SelectField
-                  name="region"
-                  value={searchParams.region}
-                  onChange={(e) => handleChange("region", e.target.value)}
-                  options={dynamicOptions.region}
-                  placeholder="Region"
-                />
-                <SelectField
-                  name="color"
-                  value={searchParams.color}
-                  onChange={(e) => handleChange("color", e.target.value)}
-                  options={dynamicOptions.color}
-                  placeholder="Color"
-                />
-                <SelectField
-                  name="drive"
-                  value={searchParams.drive}
-                  onChange={(e) => handleChange("drive", e.target.value)}
-                  options={dynamicOptions.drive}
-                  placeholder="Drive Type"
-                />
-                <SelectField
-                  name="transmission"
-                  value={searchParams.transmission}
-                  onChange={(e) => handleChange("transmission", e.target.value)}
-                  options={dynamicOptions.transmission}
-                  placeholder="Transmission"
-                />
-                <SelectField
-                  name="stock"
-                  value={searchParams.stock}
-                  onChange={(e) => handleChange("stock", e.target.value)}
-                  options={dynamicOptions.stock}
-                  placeholder="Stock"
-                />
               </div>
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button type="submit" className="px-8 py-3 flex items-center justify-center gap-2">
-              <Search size={20} />
-              Search Cars
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleReset}
-              className="px-8 py-3 flex items-center justify-center gap-2"
-            >
-              <X size={20} />
-              Reset Filters
-            </Button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   )

@@ -19,7 +19,9 @@ import {
   Calendar,
   FileText,
   Phone,
-  Mail
+  Mail,
+  Copy,
+  Check
 } from 'lucide-react';
 import { 
   useOrderStats, 
@@ -34,6 +36,7 @@ const AdminOrderManagement = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [copiedOrderId, setCopiedOrderId] = useState(null);
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
@@ -68,7 +71,24 @@ const statusConfig = {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
+ const copyToClipboard = async (orderId) => {
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopiedOrderId(orderId);
+      setTimeout(() => setCopiedOrderId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = orderId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedOrderId(orderId);
+      setTimeout(() => setCopiedOrderId(null), 2000);
+    }
+  };
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderMutation.mutateAsync({
@@ -255,9 +275,19 @@ const statusConfig = {
                 return (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.id.substring(0, 8)}...
-                      </div>
+                      
+ <div 
+                            className="text-sm font-medium text-gray-900 font-mono cursor-pointer hover:text-blue-600 flex items-center gap-1"
+                            onClick={() => copyToClipboard(order.id)}
+                            title="Click to copy Order ID"
+                          >
+                            {order.id.substring(0, 8)}...
+                            {copiedOrderId === order.id ? (
+                              <Check className="h-3 w-3 text-green-600" />
+                            ) : (
+                              <Copy className="h-3 w-3 text-gray-400 hover:text-blue-600" />
+                            )}
+                          </div>
                       <div className="text-sm text-gray-500">
                         Updated: {formatDate(order.updatedAt)}
                       </div>

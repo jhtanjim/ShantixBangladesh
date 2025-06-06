@@ -1,6 +1,5 @@
-
-import  { useState } from "react"
-import { ArrowLeft, Plus, X, Car, Image, Settings, Info } from "lucide-react"
+import { useState } from "react"
+import { ArrowLeft, Plus, X, Car, Image, Settings, Info, Trash2 } from "lucide-react"
 import { useCreateCar } from "../../../../hooks/useCars"
 import Swal from "sweetalert2"
 import { useNavigate } from "react-router-dom"
@@ -32,7 +31,7 @@ export default function CreateCarPage() {
     stock: "",
     keywords: "",
     isActive: true,
-    features: ""
+    features: [] // Changed to array
   })
 
   const [galleryPreviews, setGalleryPreviews] = useState([])
@@ -88,14 +87,52 @@ export default function CreateCarPage() {
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index))
   }
 
+  // Feature management functions
+  const addFeature = () => {
+    setFormData(prev => ({
+      ...prev,
+      features: [...prev.features, { type: "", name: "" }]
+    }))
+  }
+
+  const updateFeature = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.map((feature, i) => 
+        i === index ? { ...feature, [field]: value } : feature
+      )
+    }))
+  }
+
+  const removeFeature = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleSubmit = async () => {
     try {
       // Validation
-      if (!formData.title || !formData.make || !formData.model || !formData.fuel || !formData.exteriorColor || !formData.mainImage) {
+      const requiredFields = ['title', 'make', 'model', 'fuel', 'exteriorColor']
+      const missingFields = requiredFields.filter(field => !formData[field])
+      
+      if (missingFields.length > 0 || !formData.mainImage) {
         await Swal.fire({
           icon: 'error',
           title: 'Missing Information',
-          text: 'Please fill in all required fields and upload a main image',
+          text:` Please fill in: ${missingFields.join(', ')}${!formData.mainImage ? ', Main Image' : ''}`,
+          confirmButtonColor: '#3B82F6'
+        })
+        return
+      }
+      
+      // Validate features
+      if (formData.features.some(feature => !feature.type || !feature.name)) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Invalid Features',
+          text: 'Please complete all feature entries or remove empty ones',
           confirmButtonColor: '#3B82F6'
         })
         return
@@ -104,18 +141,30 @@ export default function CreateCarPage() {
       // Create FormData for file upload
       const submitData = new FormData()
       
-      // Add all form fields
+      // Add all form fields with proper type conversion
       Object.keys(formData).forEach(key => {
         if (key === 'galleryImages') {
-          formData.galleryImages.forEach((file, index) => {
-            submitData.append(`galleryImages`, file)
+          // Add each gallery image separately
+          formData.galleryImages.forEach((file) => {
+            submitData.append('galleryImages', file)
           })
         } else if (key === 'mainImage') {
+          // Add main image if exists
           if (formData.mainImage) {
             submitData.append('mainImage', formData.mainImage)
           }
-        } else {
-          submitData.append(key, formData[key])
+        } else if (key === 'features') {
+          // Convert features array to JSON string
+          submitData.append('features', JSON.stringify(formData.features))
+        } else if (key === 'year' || key === 'seats' || key === 'price') {
+          // Ensure numeric fields are sent as numbers
+          submitData.append(key, Number(formData[key]))
+        } else if (key === 'isActive') {
+          // Ensure boolean field is sent as boolean
+          submitData.append(key, Boolean(formData[key]))
+        } else if (formData[key] !== null && formData[key] !== '') {
+          // Add other fields as strings
+          submitData.append(key, String(formData[key]))
         }
       })
       
@@ -130,14 +179,14 @@ export default function CreateCarPage() {
             timer: 2000,
             timerProgressBar: true
           })
-         navigate('/admin/cars')
+          navigate('/admin/cars')
         },
         onError: async (error) => {
           console.error("Error creating car:", error)
           await Swal.fire({
             icon: 'error',
             title: 'Creation Failed',
-            text: 'Failed to create car. Please try again.',
+            text: error?.response?.data?.message || 'Failed to create car. Please try again.',
             confirmButtonColor: '#EF4444'
           })
         }
@@ -166,7 +215,7 @@ export default function CreateCarPage() {
     })
 
     if (result.isConfirmed) {
-     navigate('/admin/cars')
+      navigate('/admin/cars')
     }
   }
 
@@ -187,10 +236,10 @@ export default function CreateCarPage() {
       })
 
       if (result.isConfirmed) {
-       navigate('/admin/cars')
+        navigate('/admin/cars')
       }
     } else {
-     navigate('/admin/cars')
+      navigate('/admin/cars')
     }
   }
 
@@ -198,6 +247,7 @@ export default function CreateCarPage() {
   const transmissionTypes = ["Manual", "Automatic", "CVT", "Semi-Automatic"]
   const driveTypes = ["Front Wheel Drive", "Rear Wheel Drive", "All Wheel Drive", "4WD"]
   const carTypes = ["Sedan", "Hatchback", "SUV", "Crossover", "Coupe", "Convertible", "Wagon", "Pickup", "Van", "Truck"]
+  const featureTypes = ["Safety", "Interior", "Exterior", "Technology", "Performance", "Comfort", "Entertainment"]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -291,7 +341,7 @@ export default function CreateCarPage() {
                 <input
                   type="number"
                   value={formData.year}
-                  onChange={(e) => handleInputChange('year', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange('year', parseInt(e.target.value) || new Date().getFullYear())}
                   min="1900"
                   max={new Date().getFullYear() + 1}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
@@ -319,7 +369,7 @@ export default function CreateCarPage() {
                 <input
                   type="number"
                   value={formData.price}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
                   min="0"
                   step="0.01"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
@@ -400,7 +450,7 @@ export default function CreateCarPage() {
                 <input
                   type="number"
                   value={formData.seats}
-                  onChange={(e) => handleInputChange('seats', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange('seats', parseInt(e.target.value) || 5)}
                   min="1"
                   max="9"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
@@ -487,18 +537,71 @@ export default function CreateCarPage() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
-
-              <div className="md:col-span-2 lg:col-span-3">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Features</label>
-                <textarea
-                  value={formData.features}
-                  onChange={(e) => handleInputChange('features', e.target.value)}
-                  placeholder="Air conditioning, GPS navigation, backup camera, leather seats, sunroof, Bluetooth connectivity"
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200 resize-none"
-                />
-              </div>
             </div>
+          </div>
+
+          {/* Features Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl mr-4">
+                  <Settings className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">Features</h2>
+              </div>
+              <button
+                type="button"
+                onClick={addFeature}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Feature
+              </button>
+            </div>
+
+            {formData.features.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No features added yet. Click "Add Feature" to get started.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex gap-4 items-center p-4 bg-gray-50 rounded-xl">
+                    <div className="flex-1">
+                      <select
+                        value={feature.type}
+                        onChange={(e) => updateFeature(index, 'type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Select Category</option>
+                        {featureTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-2">
+                      <input
+                        type="text"
+                        value={feature.name}
+                        onChange={(e) => updateFeature(index, 'name', e.target.value)}
+                        placeholder="Feature name (e.g., ABS Brakes, Leather Seats)"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFeature(index)}
+                      className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Images */}
@@ -555,7 +658,7 @@ export default function CreateCarPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Gallery Images (Max 10)</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-colors">
+<div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-colors">
                   <div className="space-y-1 text-center">
                     <Image className="mx-auto h-12 w-12 text-gray-400" />
                     <div className="flex text-sm text-gray-600">
@@ -575,14 +678,14 @@ export default function CreateCarPage() {
                 </div>
 
                 {galleryPreviews.length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {galleryPreviews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        <img src={preview} alt={`Gallery ${index + 1}`} className="h-24 w-full object-cover rounded-lg" />
+                      <div key={index} className="relative">
+                        <img src={preview} alt={`Gallery ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
                         <button
                           type="button"
                           onClick={() => removeGalleryImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -594,49 +697,52 @@ export default function CreateCarPage() {
             </div>
           </div>
 
-          {/* Active Status */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">Listing Status</h3>
-                <p className="text-gray-600">Make this car visible to customers</p>
+          {/* Status */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center mb-6">
+              <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl mr-4">
+                <Settings className="h-6 w-6 text-white" />
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <h2 className="text-2xl font-bold text-gray-800">Status</h2>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={formData.isActive}
+                onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="isActive" className="ml-3 text-sm font-medium text-gray-700">
+                Car is active and visible to customers
               </label>
             </div>
           </div>
 
-          {/* Submit Buttons */}
-          <div className="flex gap-4 pt-6">
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-4 pt-6">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
+            >
+              Cancel
+            </button>
             <button
               type="button"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Creating...
                 </div>
               ) : (
-                "Create Car"
+                'Create Car'
               )}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={isLoading}
-            className="flex-1 bg-gray-200 text-gray-700 py-4 px-8 rounded-xl hover:bg-gray-300 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
-            >
-              Cancel
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Package, Calendar, CreditCard, MapPin, FileText } from 'lucide-react'
+import Swal from 'sweetalert2'
 
 const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
   const getStatusColor = (status) => {
@@ -40,6 +41,17 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
     })
   }
 
+  const copyOrderId = (id) => {
+    navigator.clipboard.writeText(id)
+    Swal.fire({
+      icon: 'success',
+      title: 'Copied!',
+      text: `Order ID ${id} copied to clipboard.`,
+      timer: 1500,
+      showConfirmButton: false,
+    })
+  }
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-shadow p-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -49,14 +61,17 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3
+                className="text-xl font-bold text-blue-600 cursor-pointer hover:underline"
+                onClick={() => copyOrderId(order.id)}
+                title="Click to copy full Order ID"
+              >
                 Order #{order.id.slice(0, 8)}...
               </h3>
               <p className="text-gray-600">{order.orderItems?.length || 0} item(s)</p>
             </div>
           </div>
 
-          {/* Customer Information */}
           {order.user && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm font-semibold text-blue-800">Customer Information:</p>
@@ -69,7 +84,6 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
             </div>
           )}
 
-          {/* Order Items */}
           {order.orderItems && order.orderItems.length > 0 && (
             <div className="space-y-3">
               {order.orderItems.map((item) => (
@@ -78,9 +92,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                     src={item.car.mainImage}
                     alt={item.car.title}
                     className="w-16 h-12 object-cover rounded-md"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                    }}
+                    onError={(e) => { e.target.style.display = 'none' }}
                   />
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900">{item.car.title}</h4>
@@ -151,41 +163,18 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
             {formatStatus(order.status)}
           </div>
 
+          <a
+            href={`https://wa.me/8801234567890?text=${encodeURIComponent(`Hello, I have a question about Order ID: ${order.id}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center text-sm font-medium px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            Chat on WhatsApp
+          </a>
+
           <div className="flex flex-col gap-2 w-full">
-            <label className="text-sm font-semibold text-gray-700">Payment Screenshot</label>
-            {order.paymentScreenshot ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <FileText className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-700 flex-1">Payment uploaded</span>
-                </div>
-                <img
-                  src={order.paymentScreenshot}
-                  alt="Payment screenshot"
-                  className="w-full h-32 object-cover rounded-lg border"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileUpload(order.id, file)
-                  }}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={uploadPaymentMutation.isPending}
-                />
-                <p className="text-xs text-gray-500">Upload PDF, JPG, or PNG (Max 5MB)</p>
-                {uploadPaymentMutation.isPending && (
-                  <p className="text-xs text-blue-600">Uploading...</p>
-                )}
-              </div>
-            )}
+            {/* You can add payment screenshot upload logic here */}
+            ...
           </div>
         </div>
       </div>

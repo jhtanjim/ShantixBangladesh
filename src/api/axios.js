@@ -1,5 +1,5 @@
 import axios from "axios";
-
+//https://shantix-corp.com/api
 const instance = axios.create({
   baseURL: "https://shantix.onrender.com/",
 });

@@ -43,9 +43,9 @@ const CurrencyToggle = ({ currency, onCurrencyChange }) => {
 }
 
 // Price Display Component
-const PriceDisplay = ({ amount, currency, className = "", showBothCurrencies = false }) => {
+const PriceDisplay = ({ amount, currency, className = "", showBothCurrencies = false, exchangeRate, exchangeRateLoading }) => {
   const usdAmount = amount
-  const jpyAmount = amount * 150 // Exchange rate
+  const jpyAmount = exchangeRate ? Math.round(amount * exchangeRate) : Math.round(amount * 150) // fallback
 
   if (showBothCurrencies) {
     return (
@@ -54,7 +54,11 @@ const PriceDisplay = ({ amount, currency, className = "", showBothCurrencies = f
           {currency === "USD" ? `$${usdAmount.toLocaleString()}` : `¥${jpyAmount.toLocaleString()}`}
         </div>
         <div className="text-sm text-gray-500">
-          {currency === "USD" ? `≈ ¥${jpyAmount.toLocaleString()}` : `≈ $${usdAmount.toLocaleString()}`}
+          {exchangeRateLoading ? (
+            <span className="animate-pulse">Loading exchange rate...</span>
+          ) : (
+            currency === "USD" ? `≈ ¥${jpyAmount.toLocaleString()}` : `≈ $${usdAmount.toLocaleString()}`
+          )}
         </div>
       </div>
     )
@@ -68,7 +72,17 @@ const PriceDisplay = ({ amount, currency, className = "", showBothCurrencies = f
 }
 
 export default function Cart() {
-  const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart, cartCount } = useShop()
+  const { 
+    cartItems, 
+    removeFromCart, 
+    updateQuantity, 
+    cartTotal, 
+    clearCart, 
+    cartCount,
+    exchangeRate,
+    exchangeRateLoading
+  } = useShop()
+  
   const [currency, setCurrency] = useState("USD") // Default currency
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showOrderSuccess, setShowOrderSuccess] = useState(false)
@@ -120,6 +134,21 @@ export default function Cart() {
 
   const goBack = () => {
     window.history.back()
+  }
+
+  // Helper function to get converted price
+  const getConvertedPrice = (usdPrice) => {
+    if (currency === "USD") return usdPrice
+    return exchangeRate ? Math.round(usdPrice * exchangeRate) : Math.round(usdPrice * 150)
+  }
+
+  // Helper function to get exchange rate display
+  const getExchangeRateDisplay = (usdAmount) => {
+    if (exchangeRateLoading) return "Loading..."
+    const jpyAmount = exchangeRate ? Math.round(usdAmount * exchangeRate) : Math.round(usdAmount * 150)
+    return currency === "USD" 
+      ? `≈ ¥${jpyAmount.toLocaleString()} JPY`
+      : `≈ $${usdAmount.toLocaleString()} USD`
   }
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
@@ -178,6 +207,11 @@ export default function Cart() {
                   <h2 className="text-xl font-bold text-gray-900">Cart Items</h2>
                   <div className="text-sm text-gray-600">
                     Prices in {currency === "USD" ? "US Dollars" : "Japanese Yen"}
+                    {exchangeRateLoading && (
+                      <div className="text-xs text-blue-600 mt-1 animate-pulse">
+                        Loading exchange rates...
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -242,11 +276,18 @@ export default function Cart() {
                             <PriceDisplay
                               amount={item.price * item.quantity}
                               currency={currency}
+                              exchangeRate={exchangeRate}
+                              exchangeRateLoading={exchangeRateLoading}
                               className="text-2xl font-bold mb-1"
                               style={{ color: "var(--color-red)" }}
                             />
                             <div className="text-sm text-gray-500 mb-2">
-                              <PriceDisplay amount={item.price} currency={currency} /> each
+                              <PriceDisplay 
+                                amount={item.price} 
+                                currency={currency}
+                                exchangeRate={exchangeRate}
+                                exchangeRateLoading={exchangeRateLoading}
+                              /> each
                             </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
@@ -277,7 +318,12 @@ export default function Cart() {
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({cartCount} items)</span>
                   <span className="font-medium">
-                    <PriceDisplay amount={cartTotal} currency={currency} />
+                    <PriceDisplay 
+                      amount={cartTotal} 
+                      currency={currency}
+                      exchangeRate={exchangeRate}
+                      exchangeRateLoading={exchangeRateLoading}
+                    />
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-600">
@@ -291,12 +337,15 @@ export default function Cart() {
                 <hr className="border-gray-200" />
                 <div className="flex justify-between text-2xl font-bold text-gray-900">
                   <span>Total</span>
-                  <PriceDisplay amount={cartTotal} currency={currency} />
+                  <PriceDisplay 
+                    amount={cartTotal} 
+                    currency={currency}
+                    exchangeRate={exchangeRate}
+                    exchangeRateLoading={exchangeRateLoading}
+                  />
                 </div>
                 <div className="text-center text-sm text-gray-500">
-                  {currency === "USD"
-                    ? `≈ ¥${(cartTotal * 150).toLocaleString()} JPY`
-                    : `≈ $${cartTotal.toLocaleString()} USD`}
+                  {getExchangeRateDisplay(cartTotal)}
                 </div>
               </div>
 
@@ -373,6 +422,8 @@ export default function Cart() {
                       <PriceDisplay
                         amount={createdOrder.totalOriginalPrice}
                         currency={currency}
+                        exchangeRate={exchangeRate}
+                        exchangeRateLoading={exchangeRateLoading}
                         className="text-gray-900 font-medium"
                       />
                     </div>
