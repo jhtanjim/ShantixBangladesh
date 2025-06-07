@@ -23,6 +23,7 @@ import Wishlist from "../components/ui/wishlist.jsx";
 import Home from "../Pages/Home/Home.jsx";
 import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
 import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
+import CarFormPage from "../Pages/DashBoard/Admin/cars/CarFormPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -102,6 +103,7 @@ export const router = createBrowserRouter([
           { path: "cars/:id", element: <CarDetailsPage /> }, 
 
       { path: "cars/create", element: <CreateCarPage/> },
+      { path: "cars/carFormPage", element: <CarFormPage/> },
       { path: "cars/edit/:id", element: <EditCarPage /> },
       { path: "users", element: <UsersPage /> },
       { path: "users/create", element: <CreateUserPage /> },

@@ -75,7 +75,8 @@ const SearchFilter = ({ carsResponse = [], onFilteredResults }) => {
       { value: 'hybrid', label: 'Hybrid' },
       { value: 'electric', label: 'Electric' },
       { value: 'diesel', label: 'Diesel' },
-      { value: 'lpg', label: 'LPG' }
+      { value: 'lpg', label: 'LPG' },
+      { value: 'Petrol', label: 'Petrol' }
     ],
     transmissions: [
       { value: 'automatic', label: 'Automatic' },

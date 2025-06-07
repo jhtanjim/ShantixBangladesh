@@ -31,6 +31,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
       items: [
         { title: "All Cars", path: "/admin/cars" },
         { title: "Create Car", path: "/admin/cars/create" },
+       
       ],
     },
     {

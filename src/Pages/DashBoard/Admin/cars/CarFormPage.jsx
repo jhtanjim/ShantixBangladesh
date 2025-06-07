@@ -1,91 +1,84 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
-import { ArrowLeft, Plus, X, AlertCircle, Car, Info, Settings, ImageIcon, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, X, Car, ImageIcon, Settings, Info, Trash2, AlertCircle } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useCar, useUpdateCar } from "../../../../hooks/useCars"
-import type { CarFeature } from "../../../../api/carService"
+import { useCreateCar, useUpdateCar, useCar } from "../../../../hooks/useCars"
+import Swal from "sweetalert2"
 
-// Define the options arrays
-const carTypes = ["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Wagon", "Truck", "Van"]
-const fuelTypes = ["Gasoline", "Diesel", "Hybrid", "Electric", "CNG", "LPG"]
-const transmissionTypes = ["Manual", "Automatic", "CVT", "Semi-Automatic"]
-const driveTypes = ["FWD", "RWD", "AWD", "4WD"]
-const featureTypes = ["Safety", "Special", "Exterior", "Interior"]
-
-export function EditCarPage() {
+export default function CarFormPage() {
   const navigate = useNavigate()
   const params = useParams()
-  const carId = params.id as string
-  const isEditMode = Boolean(carId)
+  const carId = params.id
+  const isEditMode = !!carId
 
-  const { data: car, isLoading, error } = useCar(carId)
-  const updateMutation = useUpdateCar()
+  // Hooks
+  const { data: car, isLoading: loadingCar, error: loadError } = useCar(carId, { enabled: isEditMode })
+  const { mutate: createCar, isLoading: creating } = useCreateCar()
+  const { mutate: updateCar, isLoading: updating } = useUpdateCar()
 
-  // Complete formData state with all required fields
+  const isLoading = creating || updating
+
   const [formData, setFormData] = useState({
     title: "",
+    mainImage: null, // File object for create, string URL for edit
+    galleryImages: [], // Array of File objects for create, string URLs for edit
+    year: new Date().getFullYear(),
+    fuel: "",
+    exteriorColor: "",
+    seats: 5,
+    price: 0,
     make: "",
     model: "",
     modelCode: "",
     type: "",
-    mainImage: null as File | null,
-    gallery: [] as File[],
-    year: new Date().getFullYear(),
-    fuel: "",
     engineCC: "",
-    transmission: "",
-    drive: "",
-    exteriorColor: "",
-    color: "", // interior color
-    seats: 5,
     mileage: "",
-    stock: "",
     country: "",
     region: "",
+    color: "",
+    drive: "",
+    transmission: "",
+    stock: "",
     keywords: "",
-    price: 0,
     isActive: true,
-    features: [] as CarFeature[],
+    features: [],
   })
 
-  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+  const [galleryPreviews, setGalleryPreviews] = useState([])
+  const [mainImagePreview, setMainImagePreview] = useState(null)
+  const [newGalleryFiles, setNewGalleryFiles] = useState([]) // For edit mode - new files to upload
 
+  // Load existing car data for edit mode
   useEffect(() => {
-    if (car) {
+    if (car && isEditMode) {
       setFormData({
         title: car.title || "",
+        mainImage: car.mainImage || null,
+        galleryImages: car.gallery || [],
+        year: car.year || new Date().getFullYear(),
+        fuel: car.fuel || "",
+        exteriorColor: car.exteriorColor || "",
+        seats: car.seats || 5,
+        price: car.price || 0,
         make: car.make || "",
         model: car.model || "",
         modelCode: car.modelCode || "",
         type: car.type || "",
-        mainImage: null, // File objects can't be restored from API
-        gallery: [],
-        year: car.year || new Date().getFullYear(),
-        fuel: car.fuel || "",
         engineCC: car.engineCC || "",
-        transmission: car.transmission || "",
-        drive: car.drive || "",
-        exteriorColor: car.exteriorColor || "",
-        color: car.color || "",
-        seats: car.seats || 5,
         mileage: car.mileage || "",
-        stock: car.stock || "",
         country: car.country || "",
         region: car.region || "",
+        color: car.color || "",
+        drive: car.drive || "",
+        transmission: car.transmission || "",
+        stock: car.stock || "",
         keywords: car.keywords || "",
-        price: car.price || 0,
         isActive: car.isActive !== undefined ? car.isActive : true,
-        // Clean features by only keeping type and name properties
-        features: (car.features || []).map((feature) => ({
-          type: feature.type || "",
-          name: feature.name || "",
-        })),
+        features: car.features || [],
       })
 
-      // Set image previews if editing existing car
+      // Set previews for existing images
       if (car.mainImage) {
         setMainImagePreview(car.mainImage)
       }
@@ -93,63 +86,85 @@ export function EditCarPage() {
         setGalleryPreviews(car.gallery)
       }
     }
-  }, [car])
+  }, [car, isEditMode])
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }))
   }
 
-  const handleBackClick = () => {
-    navigate("/admin/cars")
-  }
-
-  const handleCancel = () => {
-    navigate("/admin/cars")
-  }
-
-  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleMainImageChange = (e) => {
+    const file = e.target.files[0]
     if (file) {
       setFormData((prev) => ({ ...prev, mainImage: file }))
       const reader = new FileReader()
-      reader.onload = (e) => {
-        setMainImagePreview(e.target?.result as string)
-      }
+      reader.onload = (e) => setMainImagePreview(e.target.result)
       reader.readAsDataURL(file)
     }
   }
 
-  const handleGalleryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const maxImages = 10
-    const allowedFiles = files.slice(0, maxImages - formData.gallery.length)
+  const handleGalleryImagesChange = (e) => {
+    const files = Array.from(e.target.files)
+    const currentCount = isEditMode
+      ? formData.galleryImages.length + newGalleryFiles.length
+      : formData.galleryImages.length
 
-    setFormData((prev) => ({
-      ...prev,
-      gallery: [...prev.gallery, ...allowedFiles],
-    }))
+    if (files.length + currentCount > 10) {
+      Swal.fire({
+        icon: "warning",
+        title: "Too Many Images",
+        text: "Maximum 10 gallery images allowed",
+        confirmButtonColor: "#3B82F6",
+      })
+      return
+    }
 
-    // Create previews
-    allowedFiles.forEach((file) => {
+    if (isEditMode) {
+      // In edit mode, add to new files array
+      setNewGalleryFiles((prev) => [...prev, ...files])
+    } else {
+      // In create mode, add to main array
+      const newImages = [...formData.galleryImages, ...files]
+      setFormData((prev) => ({ ...prev, galleryImages: newImages }))
+    }
+
+    // Create previews for new files
+    files.forEach((file) => {
       const reader = new FileReader()
       reader.onload = (e) => {
-        setGalleryPreviews((prev) => [...prev, e.target?.result as string])
+        setGalleryPreviews((prev) => [...prev, e.target.result])
       }
       reader.readAsDataURL(file)
     })
   }
 
-  const removeGalleryImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      gallery: prev.gallery.filter((_, i) => i !== index),
-    }))
+  const removeGalleryImage = (index) => {
+    if (isEditMode) {
+      const existingCount = formData.galleryImages.length
+      if (index < existingCount) {
+        // Removing existing image
+        setFormData((prev) => ({
+          ...prev,
+          galleryImages: prev.galleryImages.filter((_, i) => i !== index),
+        }))
+      } else {
+        // Removing new file
+        const newFileIndex = index - existingCount
+        setNewGalleryFiles((prev) => prev.filter((_, i) => i !== newFileIndex))
+      }
+    } else {
+      // Create mode
+      setFormData((prev) => ({
+        ...prev,
+        galleryImages: prev.galleryImages.filter((_, i) => i !== index),
+      }))
+    }
     setGalleryPreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Feature management functions
   const addFeature = () => {
     setFormData((prev) => ({
       ...prev,
@@ -157,129 +172,236 @@ export function EditCarPage() {
     }))
   }
 
-  const removeFeature = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index),
-    }))
-  }
-
-  const updateFeature = (index: number, field: keyof CarFeature, value: string) => {
+  const updateFeature = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
       features: prev.features.map((feature, i) => (i === index ? { ...feature, [field]: value } : feature)),
     }))
   }
 
-  const handleSubmit = async () => {
-    // Basic validation
-    if (!formData.title.trim()) {
-      alert("Please enter a car title")
-      return
-    }
-    if (!formData.make.trim()) {
-      alert("Please enter the car make")
-      return
-    }
-    if (!formData.model.trim()) {
-      alert("Please enter the car model")
-      return
-    }
-    if (!formData.fuel) {
-      alert("Please select a fuel type")
-      return
-    }
-    if (!formData.exteriorColor.trim()) {
-      alert("Please enter the exterior color")
-      return
-    }
-    if (!isEditMode && !formData.mainImage) {
-      alert("Please upload a main image")
-      return
-    }
-
-    try {
-      // Create FormData for file upload
-      const submitData = new FormData()
-
-      // Add all form fields
-    // Replace the gallery handling section in your handleSubmit function
-// Change "gallery" to whatever your backend expects
-
-Object.keys(formData).forEach((key) => {
-  if (key === "gallery") {
-    // Option A: Send with same field name multiple times
-    formData.gallery.forEach((file) => {
-      submitData.append("galleryImages", file)
-    })
-    
-    // Option B: Send with indexed field names
-    // formData.gallery.forEach((file, index) => {
-    //   submitData.append(`gallery[${index}]`, file)
-    // })
-    
-    // Option C: Send with numbered field names
-    // formData.gallery.forEach((file, index) => {
-    //   submitData.append(`gallery${index}`, file)
-    // })
-  } else if (key === "mainImage") {
-    if (formData.mainImage) {
-      submitData.append("mainImage", formData.mainImage)
-    }
-  } else if (key === "features") {
-    submitData.append("features", JSON.stringify(formData.features))
-  } else if (key === "year" || key === "seats" || key === "price") {
-    submitData.append(key, String(formData[key]))
-  } else if (key === "isActive") {
-    submitData.append(key, String(formData[key]))
-  } else if (formData[key] !== null && formData[key] !== "") {
-    submitData.append(key, String(formData[key]))
+  const removeFeature = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }))
   }
-})
 
-      if (isEditMode) {
-        await updateMutation.mutateAsync({ id: carId, data: submitData })
-        alert("Car updated successfully")
-      } else {
-        // You'll need a createCar mutation for new cars
-        // await createMutation.mutateAsync(carData)
-        alert("Car created successfully")
+  const handleSubmit = async () => {
+    try {
+      // Validation
+      const requiredFields = ["title", "make", "model", "fuel", "exteriorColor"]
+      const missingFields = requiredFields.filter((field) => !formData[field])
+
+      if (missingFields.length > 0 || (!isEditMode && !formData.mainImage)) {
+        await Swal.fire({
+          icon: "error",
+          title: "Missing Information",
+          text: `Please fill in: ${missingFields.join(", ")}${!isEditMode && !formData.mainImage ? ", Main Image" : ""}`,
+          confirmButtonColor: "#3B82F6",
+        })
+        return
       }
 
-      navigate("/admin/cars")
+      // Validate features
+      if (formData.features.some((feature) => !feature.type || !feature.name)) {
+        await Swal.fire({
+          icon: "error",
+          title: "Invalid Features",
+          text: "Please complete all feature entries or remove empty ones",
+          confirmButtonColor: "#3B82F6",
+        })
+        return
+      }
+
+      if (isEditMode) {
+        // Update mode - send JSON data
+        const updateData = {
+          ...formData,
+          galleryImages: undefined, // Remove file objects
+          mainImage: typeof formData.mainImage === "string" ? formData.mainImage : undefined,
+          gallery: formData.galleryImages.filter((img) => typeof img === "string"), // Keep existing URLs
+          features: formData.features.filter((f) => f.type && f.name),
+        }
+
+        updateCar(
+          { id: carId, data: updateData },
+          {
+            onSuccess: async () => {
+              await Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Car updated successfully!",
+                confirmButtonColor: "#10B981",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+              })
+              navigate("/admin/cars")
+            },
+            onError: async (error) => {
+              console.error("Error updating car:", error)
+              await Swal.fire({
+                icon: "error",
+                title: "Update Failed",
+                text: error?.response?.data?.message || "Failed to update car. Please try again.",
+                confirmButtonColor: "#EF4444",
+              })
+            },
+          },
+        )
+      } else {
+        // Create mode - use FormData for file upload
+        const submitData = new FormData()
+
+        // Add all form fields with proper type conversion
+        Object.keys(formData).forEach((key) => {
+          if (key === "galleryImages") {
+            // Add each gallery image separately
+            formData.galleryImages.forEach((file) => {
+              submitData.append("galleryImages", file)
+            })
+          } else if (key === "mainImage") {
+            // Add main image if exists
+            if (formData.mainImage) {
+              submitData.append("mainImage", formData.mainImage)
+            }
+          } else if (key === "features") {
+            // Convert features array to JSON string
+            submitData.append("features", JSON.stringify(formData.features))
+          } else if (key === "year" || key === "seats" || key === "price") {
+            // Ensure numeric fields are sent as numbers
+            submitData.append(key, Number(formData[key]))
+          } else if (key === "isActive") {
+            // Ensure boolean field is sent as boolean
+            submitData.append(key, Boolean(formData[key]))
+          } else if (formData[key] !== null && formData[key] !== "") {
+            // Add other fields as strings
+            submitData.append(key, String(formData[key]))
+          }
+        })
+
+        createCar(submitData, {
+          onSuccess: async () => {
+            await Swal.fire({
+              icon: "success",
+              title: "Success!",
+              text: "Car created successfully!",
+              confirmButtonColor: "#10B981",
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true,
+            })
+            navigate("/admin/cars")
+          },
+          onError: async (error) => {
+            console.error("Error creating car:", error)
+            await Swal.fire({
+              icon: "error",
+              title: "Creation Failed",
+              text: error?.response?.data?.message || "Failed to create car. Please try again.",
+              confirmButtonColor: "#EF4444",
+            })
+          },
+        })
+      }
     } catch (error) {
-      console.error("Failed to save car:", error)
-      alert("Failed to save car. Please try again.")
+      console.error("Error submitting form:", error)
+      await Swal.fire({
+        icon: "error",
+        title: "Unexpected Error",
+        text: "An unexpected error occurred. Please try again.",
+        confirmButtonColor: "#EF4444",
+      })
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-6 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">Loading car details...</p>
-      </div>
-    )
+  const handleCancel = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "All unsaved changes will be lost!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "Yes, cancel",
+      cancelButtonText: "Continue editing",
+    })
+
+    if (result.isConfirmed) {
+      navigate("/admin/cars")
+    }
   }
 
-  if (error) {
+  const handleBackClick = async () => {
+    // Check if form has any changes
+    const hasChanges = isEditMode
+      ? formData.title !== (car?.title || "") ||
+        formData.make !== (car?.make || "") ||
+        formData.model !== (car?.model || "") ||
+        newGalleryFiles.length > 0 ||
+        typeof formData.mainImage !== "string"
+      : formData.title || formData.make || formData.model || formData.mainImage || formData.galleryImages.length > 0
+
+    if (hasChanges) {
+      const result = await Swal.fire({
+        title: "Unsaved Changes",
+        text: "You have unsaved changes. Are you sure you want to go back?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#EF4444",
+        cancelButtonColor: "#6B7280",
+        confirmButtonText: "Yes, go back",
+        cancelButtonText: "Stay here",
+      })
+
+      if (result.isConfirmed) {
+        navigate("/admin/cars")
+      }
+    } else {
+      navigate("/admin/cars")
+    }
+  }
+
+  // Loading state for edit mode
+  if (isEditMode && loadingCar) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center">
-          <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
-          <span className="text-red-800">
-            Error loading car details: {error?.message || "Unknown error"}
-            <button
-              className="ml-2 underline text-blue-600 hover:text-blue-800"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </button>
-          </span>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading car details...</p>
         </div>
       </div>
     )
   }
+
+  // Error state for edit mode
+  if (isEditMode && loadError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-center">
+            <AlertCircle className="h-6 w-6 text-red-600 mr-3" />
+            <div>
+              <h3 className="text-red-800 font-semibold">Error loading car details</h3>
+              <p className="text-red-700">{loadError?.message || "Unknown error occurred"}</p>
+              <button
+                className="mt-2 text-blue-600 hover:text-blue-800 underline"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const fuelTypes = ["Petrol", "Diesel", "Hybrid", "Electric", "CNG", "LPG"]
+  const transmissionTypes = ["Manual", "Automatic", "CVT", "Semi-Automatic"]
+  const driveTypes = ["Front Wheel Drive", "Rear Wheel Drive", "All Wheel Drive", "4WD"]
+  const carTypes = ["Sedan", "Hatchback", "SUV", "Crossover", "Coupe", "Convertible", "Wagon", "Pickup", "Van", "Truck"]
+  const featureTypes = ["Safety", "Interior", "Exterior", "Technology", "Performance", "Comfort", "Entertainment"]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -391,6 +513,7 @@ Object.keys(formData).forEach((key) => {
                   value={formData.type}
                   onChange={(e) => handleInputChange("type", e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+                  required
                 >
                   <option value="">Select type</option>
                   {carTypes.map((type) => (
@@ -682,9 +805,6 @@ Object.keys(formData).forEach((key) => {
                       onClick={() => {
                         setMainImagePreview(null)
                         setFormData((prev) => ({ ...prev, mainImage: null }))
-                        // Reset file input
-                        const fileInput = document.getElementById("mainImageInput") as HTMLInputElement
-                        if (fileInput) fileInput.value = ""
                       }}
                       className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                     >
@@ -694,21 +814,23 @@ Object.keys(formData).forEach((key) => {
                 ) : (
                   <div className="text-center">
                     <ImageIcon className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-600 mb-4">Click to upload main image</p>
+                    <p className="text-gray-600 mb-2">Upload main car image</p>
                     <input
-                      id="mainImageInput"
                       type="file"
                       accept="image/*"
                       onChange={handleMainImageChange}
-                      className="hidden"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
                     />
-                    <label
-                      htmlFor="mainImageInput"
-                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl hover:from-pink-600 hover:to-rose-700 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl"
-                    >
-                      <Plus className="h-5 w-5 mr-2" />
-                      Choose Image
-                    </label>
+                  </div>
+                )}
+                {mainImagePreview && (
+                  <div className="mt-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleMainImageChange}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+                    />
                   </div>
                 )}
               </div>
@@ -717,64 +839,62 @@ Object.keys(formData).forEach((key) => {
             {/* Gallery Images */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-4">Gallery Images (Max 10)</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-                {galleryPreviews.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview || "/placeholder.svg"}
-                      alt={`Gallery ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeGalleryImage(index)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-
-                {galleryPreviews.length < 10 && (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center h-32 hover:border-pink-400 transition-colors duration-200">
-                    <input
-                      id="galleryInput"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleGalleryImagesChange}
-                      className="hidden"
-                    />
-                    <label htmlFor="galleryInput" className="cursor-pointer text-center">
-                      <Plus className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">Add Images</p>
-                    </label>
-                  </div>
-                )}
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-pink-400 transition-colors duration-200 mb-4">
+                <div className="text-center">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-gray-600 mb-2">Upload additional car images</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryImagesChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+                  />
+                </div>
               </div>
-              <p className="text-sm text-gray-500">{galleryPreviews.length}/10 images uploaded</p>
+
+              {galleryPreviews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {galleryPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview || "/placeholder.svg"}
+                        alt={`Gallery ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-pink-400 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-4 pb-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               type="button"
               onClick={handleCancel}
-              className="px-8 py-4 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-semibold"
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold text-lg"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={updateMutation.isPending}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              disabled={isLoading}
+              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl flex items-center justify-center min-w-[200px]"
             >
-              {updateMutation.isPending ? (
+              {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Saving...
+                  {isEditMode ? "Updating..." : "Creating..."}
                 </>
               ) : (
                 <>{isEditMode ? "Update Car" : "Create Car"}</>
