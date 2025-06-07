@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Search, X, RotateCcw } from 'lucide-react'
 import Card from '../../../components/card/Card'
-import Input from '../../../components/ui/Input'
+import Input from '../../../components/ui/input'
 import SelectField from '../../../components/ui/SelectField'
 import Button from '../../../components/ui/Button'
 
