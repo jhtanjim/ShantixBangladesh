@@ -3,22 +3,25 @@ import { useState, useEffect } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "../../api/auth"
 import { useNavigate } from "react-router-dom"
-import { Check, Eye, EyeOff, Globe, Mail, Lock, Phone, User } from "lucide-react"
+import { Check, Eye, EyeOff, Globe, Mail, Lock, Phone, User, Building } from "lucide-react"
 import logoImg from "../../assets/images/logo.png"; 
 import { toast } from "react-hot-toast"
+
 const Register = () => {
   const navigate = useNavigate()
   const [form, setForm] = useState({ 
-    firstName: "", 
-    lastName: "", 
+    fullName: "",
     email: "", 
     password: "", 
+    confirmPassword: "",
     phone: "",
     country: "",
+    companyName: "",
     confirmCheckbox: false
   })
   const [countries, setCountries] = useState([])
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loadingCountries, setLoadingCountries] = useState(true)
 
   // Fetch countries from REST Countries API
@@ -59,8 +62,6 @@ const Register = () => {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
-
-
       toast.success("Registration successful!")
       navigate("/login")
     },
@@ -71,12 +72,20 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
     if (!form.confirmCheckbox) {
       toast.error("Please confirm that you agree to the terms and conditions")
       return
-      
     }
-    mutation.mutate(form)
+    
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+    
+    // Create the data object to send to API (excluding confirmPassword)
+    const { confirmPassword, ...registrationData } = form
+    mutation.mutate(registrationData)
   }
 
   const handleInputChange = (field, value) => {
@@ -87,17 +96,15 @@ const Register = () => {
     <div 
       className="min-h-screen flex items-center justify-center px-4 py-8"
       style={{
-               background: '#003366'
-
+        background: '#003366'
       }}
     >
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 ">
-                    <span className="text-3xl"><img src={logoImg} alt="" /></span>
-                  </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Join CarHub</h1>
+            <span className="text-3xl"><img src={logoImg} alt="" /></span>
+          </div>
           <p className="text-blue-200">Create your account to get started</p>
         </div>
 
@@ -105,40 +112,21 @@ const Register = () => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                <div className="relative group">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    value={form.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <div className="relative group">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={form.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
-                    required
-                  />
-                </div>
+            {/* Full Name Field */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <div className="relative group">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={form.fullName}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                  required
+                />
               </div>
             </div>
 
@@ -209,6 +197,23 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Company Name Field (Optional) */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Company Name <span className="text-gray-400 text-xs">(Optional)</span>
+              </label>
+              <div className="relative group">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Enter your company name"
+                  value={form.companyName}
+                  onChange={(e) => handleInputChange('companyName', e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                />
+              </div>
+            </div>
+
             {/* Password Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -232,6 +237,38 @@ const Register = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+            </div>
+
+            {/* Confirm Password Field */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Re-type Password
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={form.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${
+                    form.confirmPassword && form.password !== form.confirmPassword 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300'
+                  }`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+              )}
             </div>
 
             {/* Confirmation Checkbox */}
@@ -279,10 +316,10 @@ const Register = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={mutation.isPending || !form.confirmCheckbox}
+              disabled={mutation.isPending || !form.confirmCheckbox || (form.password !== form.confirmPassword)}
               className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden"
               style={{
-                background: form.confirmCheckbox 
+                background: (form.confirmCheckbox && form.password === form.confirmPassword)
                   ? 'linear-gradient(135deg, #0072BC 0%, #003366 100%)' 
                   : '#9CA3AF'
               }}
@@ -295,7 +332,7 @@ const Register = () => {
               ) : (
                 <span className="relative z-10">Register</span>
               )}
-              {form.confirmCheckbox && !mutation.isPending && (
+              {(form.confirmCheckbox && form.password === form.confirmPassword) && !mutation.isPending && (
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
               )}
             </button>
