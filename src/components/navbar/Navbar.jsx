@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 
-export default function Navbar() {
+const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { token, logout, user } = useAuth();
@@ -58,13 +58,12 @@ export default function Navbar() {
 
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
-                <Link to={"/profile"}>
-                
-                
-                  <span className="flex items-center gap-1">
-                    <User size={14} />
-                    Welcome, {currentUser?.firstName || "User"}
-                  </span></Link>
+                  <Link to={"/profile"}>
+                    <span className="flex items-center gap-1">
+                      <User size={14} />
+                      Welcome, {currentUser?.firstName || "User"}
+                    </span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="hover:text-gray-200 transition-colors"
@@ -129,11 +128,12 @@ export default function Navbar() {
                 </span>
               )}
             </a>
-
+<Link to="/profile" className="hidden lg:block p-2 text-gray-700 hover:text-blue-600 transition-colors">
+            
             <button className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-              My Page
+             My Page
             </button>
-
+</Link>
             <button
               onClick={toggleMenu}
               className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -171,4 +171,6 @@ export default function Navbar() {
       )}
     </header>
   );
-}
+};
+
+export default Navbar;

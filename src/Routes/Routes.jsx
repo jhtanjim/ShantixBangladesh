@@ -23,6 +23,7 @@ import Wishlist from "../components/ui/wishlist.jsx";
 import Home from "../Pages/Home/Home.jsx";
 import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
 import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
+import UnderConstruction from "../components/UnderConstruction/UnderConstruction.JSX";
 
 export const router = createBrowserRouter([
   {
@@ -91,7 +92,9 @@ export const router = createBrowserRouter([
       //   path: "myPage",
       //   element: <MyPage />,
       // },
+      { path: "*", element: <UnderConstruction /> },
     ],
+
   },
 
   {

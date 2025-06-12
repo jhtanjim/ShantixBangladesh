@@ -41,7 +41,7 @@ export default function AllCars() {
 
   // Get all cars data from API
   const { data: allCars = [], isLoading, isError } = useAllCars()
-
+console.log(allCars)
   // Filter and sort cars based on search parameters
   const filteredAndSortedCars = useMemo(() => {
     if (!allCars.length) return []

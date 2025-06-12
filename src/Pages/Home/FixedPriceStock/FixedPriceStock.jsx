@@ -3,6 +3,7 @@ import Button from "../../../components/ui/Button";
 import Card from "../../../components/card/Card";
 import { useShop } from "../../../Context/ShopContext";
 import { useAllCars } from "../../../hooks/useCars";
+import { Link } from "react-router-dom";
 
 const FixedPriceStock = () => {
   const {
@@ -66,8 +67,9 @@ const FixedPriceStock = () => {
       )}
 
       <div className="text-center mt-8">
-        <Button>View All Stock</Button>
-      </div>
+<Link to={"/allCars"}>
+          <Button>View All Stock</Button>
+        </Link>      </div>
     </div>
   );
 };
