@@ -89,6 +89,12 @@ export default function Cart() {
   const [createdOrder, setCreatedOrder] = useState(null)
   const { mutate: createOrder, isPending: orderLoading } = useCreateOrder()
 
+  // Insurance cost constant
+  const INSURANCE_COST = 500
+
+  // Calculate total with insurance
+  const totalWithInsurance = cartTotal + INSURANCE_COST
+
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 1) {
       removeFromCart(itemId)
@@ -326,26 +332,30 @@ export default function Cart() {
                     />
                   </span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
-                  <span className="text-green-600 font-medium">Free</span>
-                </div>
+             
                 <div className="flex justify-between text-gray-600">
                   <span>Insurance</span>
-                  <span className="text-green-600 font-medium">Included</span>
+                  <span className="font-medium">
+                    <PriceDisplay 
+                      amount={INSURANCE_COST} 
+                      currency={currency}
+                      exchangeRate={exchangeRate}
+                      exchangeRateLoading={exchangeRateLoading}
+                    />
+                  </span>
                 </div>
                 <hr className="border-gray-200" />
                 <div className="flex justify-between text-2xl font-bold text-gray-900">
                   <span>Total</span>
                   <PriceDisplay 
-                    amount={cartTotal} 
+                    amount={totalWithInsurance} 
                     currency={currency}
                     exchangeRate={exchangeRate}
                     exchangeRateLoading={exchangeRateLoading}
                   />
                 </div>
                 <div className="text-center text-sm text-gray-500">
-                  {getExchangeRateDisplay(cartTotal)}
+                  {getExchangeRateDisplay(totalWithInsurance)}
                 </div>
               </div>
 

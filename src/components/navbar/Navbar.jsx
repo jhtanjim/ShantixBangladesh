@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, Heart, Menu, X, Phone, Clock, User } from "lucide-react";
 import { useShop } from "../../Context/ShopContext";
 import logoImg from "../../assets/images/logo.png";
@@ -12,15 +12,30 @@ const Navbar = () => {
   const { token, logout, user } = useAuth();
   const navigate = useNavigate();
 
-  const isAuthenticated = Boolean(token);
-  const currentUser = user;
+  // Force re-render when auth state changes
+  const [authState, setAuthState] = useState({
+    isAuthenticated: Boolean(token),
+    currentUser: user
+  });
+
+  useEffect(() => {
+    setAuthState({
+      isAuthenticated: Boolean(token),
+      currentUser: user
+    });
+  }, [token, user]);
 
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const handleLogout = () => {
-    logout(); // Assuming this clears token/user
+    logout();
     toast.success("Successfully logged out");
-    navigate("/"); // Redirect to home or login page
+    navigate("/");
+    // Force update auth state immediately
+    setAuthState({
+      isAuthenticated: false,
+      currentUser: null
+    });
   };
 
   const navLinks = [
@@ -31,8 +46,9 @@ const Navbar = () => {
     { href: "/container", label: "Container" },
     { href: "/enquiry", label: "Inquiry" },
     { href: "/contact", label: "Contact Us" },
-    { href: "/ship-schedule", label: "Ship Schedule" },
+    { href: "/shipSchedule", label: "Ship Schedule" },
     { href: "/allCars", label: "All Cars" },
+    { href: "/admin", label: "Admin" },
   ];
 
   return (
@@ -42,7 +58,7 @@ const Navbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-2 gap-2">
             <div className="text-center lg:text-left">
-              <span className="text-lg font-semibold">1 USD = 148.13 JPY</span>
+              <span className="text-lg font-semibold">1 USD = 142.08 JPY</span>
             </div>
 
             <div className="flex items-center justify-center gap-2">
@@ -56,13 +72,11 @@ const Navbar = () => {
                 +88-34-777-0000
               </a>
 
-              {isAuthenticated ? (
+              {authState.isAuthenticated ? (
                 <div className="flex items-center gap-3">
-                  <Link to={"/profile"}>
-                    <span className="flex items-center gap-1">
-                      <User size={14} />
-                      Welcome, {currentUser?.firstName || "User"}
-                    </span>
+                  <Link to="/profile" className="flex items-center gap-1 hover:text-gray-200 transition-colors">
+                    <User size={14} />
+                    Welcome, {authState.currentUser?.firstName || "User"}
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -98,42 +112,43 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
-                href={link.href}
+                to={link.href}
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group"
               >
                 {link.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-              </a>
+              </Link>
             ))}
           </nav>
 
           {/* Icons & Mobile Menu Toggle */}
           <div className="flex items-center gap-4">
-            <a href="/wishlist" className="relative p-2 text-gray-700 hover:text-red-600 transition-colors">
+            <Link to="/wishlist" className="relative p-2 text-gray-700 hover:text-red-600 transition-colors">
               <Heart size={24} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {wishlistCount}
                 </span>
               )}
-            </a>
+            </Link>
 
-            <a href="/cart" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <Link to="/cart" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
               <ShoppingCart size={24} />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {cartCount}
                 </span>
               )}
-            </a>
-<Link to="/profile" className="hidden lg:block p-2 text-gray-700 hover:text-blue-600 transition-colors">
-            
-            <button className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-             My Page
-            </button>
-</Link>
+            </Link>
+
+            <Link to="/profile" className="hidden lg:block">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                My Page
+              </button>
+            </Link>
+
             <button
               onClick={toggleMenu}
               className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -150,20 +165,22 @@ const Navbar = () => {
           <div className="container mx-auto px-4 py-4">
             <nav className="space-y-4">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.href}
-                  href={link.href}
+                  to={link.href}
                   className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
 
               <div className="pt-4 border-t border-gray-200">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                  My Page
-                </button>
+                <Link to="/profile">
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    My Page
+                  </button>
+                </Link>
               </div>
             </nav>
           </div>

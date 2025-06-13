@@ -15,8 +15,8 @@ export default function CreateCarPage() {
     year: new Date().getFullYear(),
     fuel: "",
     exteriorColor: "",
-    seats: 5,
-    price: 0,
+    seats: "",
+    price: "",
     make: "",
     model: "",
     modelCode: "",
@@ -369,7 +369,7 @@ export default function CreateCarPage() {
                 <input
                   type="number"
                   value={formData.price}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value) )}
                   min="0"
                   step="0.01"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"

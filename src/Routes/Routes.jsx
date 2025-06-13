@@ -24,6 +24,7 @@ import Home from "../Pages/Home/Home.jsx";
 import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
 import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
 import UnderConstruction from "../components/UnderConstruction/UnderConstruction.JSX";
+import AdminRoute from "./AdminRoute.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
         path: "/cars/:id",
         element: <CarDetails />,
       },
+      {
+  path: "/cart",
+  element: <Cart />,
+},
       {
   path: "/cart",
   element: <Cart />,
@@ -99,7 +104,9 @@ export const router = createBrowserRouter([
 
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element:    
+        <AdminLayout />
+      ,
     children: [
       { index: true, element: <Dashboard /> },
       { path: "cars", element: <CarsPage /> },

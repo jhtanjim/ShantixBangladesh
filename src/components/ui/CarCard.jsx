@@ -41,10 +41,11 @@ const CarCard = ({ car }) => {
   }
 
   // Format yen price with dynamic exchange rate
-  const formatYenPrice = (usdPrice) => {
-    if (!usdPrice || !exchangeRate) return 'N/A'
-    return `¥${(usdPrice * exchangeRate).toLocaleString()}`
-  }
+const formatYenPrice = (usdPrice) => {
+  if (!usdPrice || !exchangeRate) return 'N/A'
+  return `¥${Math.round(usdPrice * exchangeRate).toLocaleString()}`
+}
+
 
   return (
     <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
