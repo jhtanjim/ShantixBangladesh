@@ -23,7 +23,7 @@ import Wishlist from "../components/ui/wishlist.jsx";
 import Home from "../Pages/Home/Home.jsx";
 import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
 import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
-import UnderConstruction from "../components/UnderConstruction/UnderConstruction.JSX";
+import UnderConstruction from "../components/UnderConstruction/UnderConstruction.jsx";
 import AdminRoute from "./AdminRoute.jsx";
 import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule.jsx";
 
