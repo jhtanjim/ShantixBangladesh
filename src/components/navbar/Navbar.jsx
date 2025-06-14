@@ -5,13 +5,14 @@ import logoImg from "../../assets/images/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
+import useUserRole from "../../hooks/useUserRole";
 
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { token, logout, user } = useAuth();
   const navigate = useNavigate();
-
+const { isAdmin } = useUserRole();
   // Force re-render when auth state changes
   const [authState, setAuthState] = useState({
     isAuthenticated: Boolean(token),
@@ -48,7 +49,8 @@ const Navbar = () => {
     { href: "/contact", label: "Contact Us" },
     { href: "/shipSchedule", label: "Ship Schedule" },
     { href: "/allCars", label: "All Cars" },
-    { href: "/admin", label: "Admin" },
+    
+    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   return (
@@ -114,7 +116,8 @@ const Navbar = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                to={link.href}
+                to={{ pathname: link.href }}
+                
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group"
               >
                 {link.label}

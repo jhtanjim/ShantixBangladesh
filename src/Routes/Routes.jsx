@@ -25,6 +25,7 @@ import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage.jsx";
 import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
 import UnderConstruction from "../components/UnderConstruction/UnderConstruction.JSX";
 import AdminRoute from "./AdminRoute.jsx";
+import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
+      },
+      {
+        path: "/shipSchedule",
+        element: <ShipSchedule />,
       },
      
       {
@@ -105,7 +110,9 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     element:    
+    <AdminRoute>
         <AdminLayout />
+        </AdminRoute>
       ,
     children: [
       { index: true, element: <Dashboard /> },
