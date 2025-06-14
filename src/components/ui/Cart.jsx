@@ -168,7 +168,7 @@ export default function Cart() {
               <p className="text-gray-600 mb-8 text-lg">
                 Looks like you haven't added any cars to your cart yet. Browse our collection and find your perfect car!
               </p>
-              <Button size="lg" className="px-8" onClick={() => (window.location.href = "/cars")}>
+              <Button size="lg" className="px-8" onClick={() => (window.location.href = "/allCars")}>
                 Browse Cars
               </Button>
             </div>

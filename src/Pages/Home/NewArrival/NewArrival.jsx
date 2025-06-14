@@ -45,8 +45,10 @@ const NewArrival = () => {
 
       {!isLoading && !error && (
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {latestCars.map((car) => (
-         <Card
+            
+          {latestCars.slice(0, 9).map((car) => (
+
+            <Card
               key={car.id}
               id={car.id}
               imageUrl={car.mainImage}

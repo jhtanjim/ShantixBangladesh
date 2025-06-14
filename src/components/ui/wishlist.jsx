@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Heart, ShoppingCart, Trash2, ArrowLeft, Grid, List } from 'lucide-react'
 import { useShop } from "../../Context/ShopContext"
+import { Link } from "react-router-dom"
 
 export default function Wishlist() {
   const { wishlistItems, removeFromWishlist, addToCart, isInCart, wishlistCount } = useShop()
@@ -27,9 +28,11 @@ export default function Wishlist() {
               <p className="text-gray-600 mb-8 text-lg">
                 Save your favorite cars to your wishlist and never lose track of them!
               </p>
-              <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors">
-                Browse Cars
-              </button>
+              <Link to="/allCars" className="inline-block">
+                <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors">
+                  Browse Cars
+                </button>
+              </Link>
             </div>
           </div>
         </div>

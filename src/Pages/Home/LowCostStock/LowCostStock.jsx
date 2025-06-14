@@ -47,8 +47,8 @@ const LowCostStock = () => {
 
       {!isLoading && !error && (
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {sortedCars.map((car) => (
-             <Card
+          {sortedCars.slice(0, 10).map((car) => (
+            <Card
               key={car.id}
               id={car.id}
               imageUrl={car.mainImage}
