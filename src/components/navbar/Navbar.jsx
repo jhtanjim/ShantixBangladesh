@@ -42,7 +42,7 @@ const { isAdmin } = useUserRole();
   const navLinks = [
     { href: "/about", label: "About Us" },
     { href: "/stock-list", label: "Stock List" },
-    { href: "/how-to-buy", label: "How To Buy" },
+    { href: "/howToBuy", label: "How To Buy" },
     { href: "/auction", label: "Auction" },
     { href: "/container", label: "Container" },
     { href: "/enquiry", label: "Inquiry" },

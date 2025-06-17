@@ -3,8 +3,8 @@
 import { Grid, List, ShoppingCart, SortAsc, ChevronLeft, ChevronRight } from "lucide-react"
 import { useMemo, useState, useCallback } from "react"
 import { useAllCars } from "../../hooks/useCars"
-import CarSearchForm from "../Shared/CarSearchform/CarSearchForm";
-import CarCard from "../../components/ui/CarCard";
+import CarSearchForm from "../Shared/CarSearchform/CarSearchForm"
+import CarCard from "../../components/ui/CarCard"
 
 export default function AllCars() {
   // State management
@@ -31,7 +31,7 @@ export default function AllCars() {
   })
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [viewType, setViewType] = useState("grid")
+  const [viewType, setViewType] = useState("list") // "list" or "grid"
   const [sortBy, setSortBy] = useState("default")
   const [itemsPerPage] = useState(10)
 
@@ -41,7 +41,8 @@ export default function AllCars() {
 
   // Get all cars data from API
   const { data: allCars = [], isLoading, isError } = useAllCars()
-console.log(allCars)
+  console.log(allCars)
+
   // Filter and sort cars based on search parameters
   const filteredAndSortedCars = useMemo(() => {
     if (!allCars.length) return []
@@ -291,11 +292,11 @@ console.log(allCars)
       )}
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-12">
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Find Your Perfect Car</h1>
-          <p className="text-xl opacity-90 mb-2">Browse our extensive collection of quality vehicles</p>
-          <p className="text-lg opacity-75">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Find Your Perfect Car</h1>
+          <p className="text-lg sm:text-xl opacity-90 mb-2">Browse our extensive collection of quality vehicles</p>
+          <p className="text-base sm:text-lg opacity-75">
             {isLoading ? "Loading..." : `${filteredAndSortedCars.length} cars available`}
           </p>
         </div>
@@ -305,9 +306,9 @@ console.log(allCars)
       <CarSearchForm onSearch={handleSearchFromForm} allCars={allCars} />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-600">
               Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedCars.length)} of{" "}
@@ -315,7 +316,7 @@ console.log(allCars)
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
             {/* View Toggle */}
             <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1">
               <button
@@ -337,10 +338,10 @@ console.log(allCars)
             </div>
 
             {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <SortAsc size={16} className="text-gray-500" />
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+              <SortAsc size={16} className="text-gray-500 hidden sm:block" />
               <select
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 w-full sm:w-auto"
                 value={sortBy}
                 onChange={(e) => handleSortChange(e.target.value)}
               >
@@ -380,30 +381,34 @@ console.log(allCars)
             </button>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div
+            className={`${viewType === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4 sm:gap-6" : "space-y-4 sm:space-y-6"}`}
+          >
             {currentCars.map((car) => (
-              <CarCard
-                key={car.id}
-                car={car}
-                onAddToCart={addToCart}
-                onToggleWishlist={toggleWishlist}
-                isInCart={isInCart(car.id)}
-                isInWishlist={isInWishlist(car.id)}
-              />
+              <div key={car.id} className={`${viewType === "list" ? "w-full" : ""}`}>
+                <CarCard
+                  car={car}
+                  onAddToCart={addToCart}
+                  onToggleWishlist={toggleWishlist}
+                  isInCart={isInCart(car.id)}
+                  isInWishlist={isInWishlist(car.id)}
+                  viewType={viewType}
+                />
+              </div>
             ))}
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-12">
+          <div className="flex flex-wrap justify-center items-center gap-2 mt-8 sm:mt-12">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={16} />
-              Previous
+              <span className="hidden sm:inline">Previous</span>
             </button>
 
             {getPaginationNumbers().map((page, index) => (
@@ -428,7 +433,7 @@ console.log(allCars)
               disabled={currentPage === totalPages}
               className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -436,10 +441,10 @@ console.log(allCars)
 
         {/* Load More Button - only if there are more pages */}
         {currentPage < totalPages && currentCars.length > 0 && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-6 sm:mt-8">
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
               Load More Cars
             </button>

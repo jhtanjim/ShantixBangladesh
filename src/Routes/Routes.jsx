@@ -26,6 +26,7 @@ import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage.jsx";
 import UnderConstruction from "../components/UnderConstruction/UnderConstruction.jsx";
 import AdminRoute from "./AdminRoute.jsx";
 import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule.jsx";
+import HowToBuy from "../Pages/HowToBuy/HowToBuy.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
       {
         path: "/shipSchedule",
         element: <ShipSchedule />,
+      },
+      {
+        path: "/howToBuy",
+        element: <HowToBuy />,
       },
      
       {

@@ -131,7 +131,7 @@ const formatYenPrice = (usdPrice) => {
             </div>
 
             {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
+            {/* <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star 
@@ -142,7 +142,7 @@ const formatYenPrice = (usdPrice) => {
                 ))}
               </div>
               <span className="text-sm text-gray-600">(4.0)</span>
-            </div>
+            </div> */}
 
             {/* Specs Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
