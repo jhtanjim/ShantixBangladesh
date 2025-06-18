@@ -49,6 +49,8 @@ const { isAdmin } = useUserRole();
     { href: "/contact", label: "Contact Us" },
     { href: "/shipSchedule", label: "Ship Schedule" },
     { href: "/allCars", label: "All Cars" },
+    { href: "/admin", label: "Admin" },
+    
     
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
