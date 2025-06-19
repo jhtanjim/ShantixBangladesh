@@ -1,28 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  ShoppingCart, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Filter,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  User,
-  Car,
-  MessageSquare,
-  Upload,
-  Package,
-  Calendar,
-  FileText,
-  Phone,
-  Mail,
-  Copy,
-  Check
-} from 'lucide-react';
+import { ShoppingCart, Eye, Edit, Trash2, Search, Filter, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, User, Car, MessageSquare, Upload, Package, Calendar, FileText, Phone, Mail, Copy, Check, Anchor } from 'lucide-react';
 import { 
   useOrderStats, 
   useUpdateOrderStatus, 
@@ -51,13 +28,21 @@ const statusConfig = {
   NEGOTIATING: { color: 'yellow', icon: MessageSquare, label: 'Negotiating' },
   CONFIRMED: { color: 'blue', icon: AlertCircle, label: 'Confirmed' },
   PENDING_PAYMENT: { color: 'orange', icon: DollarSign, label: 'Payment Pending' },
-  PAYMENT_UPLOADED: { color: 'amber', icon: Upload, label: 'Payment Uploaded' }, // ✅ added
+  PAYMENT_UPLOADED: { color: 'amber', icon: Upload, label: 'Payment Uploaded' },
   PAID: { color: 'green', icon: CheckCircle, label: 'Paid' },
   SHIPPING: { color: 'purple', icon: Package, label: 'Shipped' },
   DELIVERED: { color: 'emerald', icon: CheckCircle, label: 'Delivered' },
   CANCELLED: { color: 'red', icon: XCircle, label: 'Cancelled' }
 };
 
+const portOptions = [
+  { value: 'mongla', label: 'Mongla Port' },
+  { value: 'chittagong', label: 'Chittagong Port' },
+  { value: 'payra', label: 'Payra Port' },
+  { value: 'bondor', label: 'Bondor Port' },
+  { value: 'dhaka', label: 'Dhaka Port' },
+  { value: 'sylhet', label: 'Sylhet Port' }
+];
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -100,6 +85,17 @@ const statusConfig = {
     }
   };
 
+  const handlePortUpdate = async (orderId, newPort) => {
+    try {
+      await updateOrderMutation.mutateAsync({
+        orderId,
+        statusData: { port: newPort }
+      });
+    } catch (error) {
+      console.error('Failed to update order port:', error);
+    }
+  };
+
   const handlePriceUpdate = async (orderId, newPrice) => {
     try {
       await updateOrderMutation.mutateAsync({
@@ -127,7 +123,8 @@ const statusConfig = {
       negotiatedPrice: order.negotiatedPrice || order.totalOriginalPrice,
       notes: order.notes || '',
       trackingInfo: order.trackingInfo || '',
-      estimatedDelivery: order.estimatedDelivery || ''
+      estimatedDelivery: order.estimatedDelivery || '',
+      port: order.port || 'mongla'
     });
     setShowEditModal(true);
   };
@@ -141,7 +138,8 @@ const statusConfig = {
           negotiatedPrice: editingOrder.negotiatedPrice,
           notes: editingOrder.notes,
           trackingInfo: editingOrder.trackingInfo,
-          estimatedDelivery: editingOrder.estimatedDelivery
+          estimatedDelivery: editingOrder.estimatedDelivery,
+          port: editingOrder.port
         }
       });
       setShowEditModal(false);
@@ -165,6 +163,11 @@ const statusConfig = {
       counts[status] = orders.filter(order => order.status === status).length;
     });
     return counts;
+  };
+
+  const getPortLabel = (portValue) => {
+    const port = portOptions.find(p => p.value === portValue);
+    return port ? port.label : 'Not Selected';
   };
 
   const statusCounts = getStatusCounts();
@@ -263,6 +266,7 @@ const statusConfig = {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Port</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -341,6 +345,18 @@ const statusConfig = {
                         ))}
                       </select>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={order.port || 'mongla'}
+                        onChange={(e) => handlePortUpdate(order.id, e.target.value)}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 bg-blue-100 text-blue-800 focus:ring-2 focus:ring-blue-500"
+                        disabled={updateOrderMutation.isPending}
+                      >
+                        {portOptions.map((port) => (
+                          <option key={port.value} value={port.value}>{port.label}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>
@@ -403,6 +419,10 @@ const statusConfig = {
                       <p className="text-gray-900 capitalize">{statusConfig[selectedOrder.status]?.label}</p>
                     </div>
                     <div>
+                      <label className="text-sm font-medium text-gray-500">Port</label>
+                      <p className="text-gray-900">{getPortLabel(selectedOrder.port)}</p>
+                    </div>
+                    <div>
                       <label className="text-sm font-medium text-gray-500">Created Date</label>
                       <p className="text-gray-900">{formatDate(selectedOrder.createdAt)}</p>
                     </div>
@@ -439,7 +459,7 @@ const statusConfig = {
                   {selectedOrder.orderItems?.map((item) => (
                     <div key={item.id} className="border rounded-lg p-4 flex items-center space-x-4">
                       <img 
-                        src={item.car?.mainImage} 
+                        src={item.car?.mainImage || "/placeholder.svg"} 
                         alt={item.car?.title}
                         className="w-16 h-16 object-cover rounded"
                       />
@@ -497,7 +517,7 @@ const statusConfig = {
                     <div>
                       <label className="text-sm font-medium text-gray-500">Payment Screenshot</label>
                       <img 
-                        src={selectedOrder.paymentScreenshot} 
+                        src={selectedOrder.paymentScreenshot || "/placeholder.svg"} 
                         alt="Payment screenshot"
                         className="mt-2 max-w-sm rounded border"
                       />
@@ -529,6 +549,22 @@ const statusConfig = {
                     <option key={status} value={status}>{config.label}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                <div className="relative">
+                  <Anchor className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <select
+                    value={editingOrder.port || 'mongla'}
+                    onChange={(e) => setEditingOrder({...editingOrder, port: e.target.value})}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {portOptions.map((port) => (
+                      <option key={port.value} value={port.value}>{port.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               <div>
