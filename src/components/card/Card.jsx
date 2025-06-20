@@ -105,7 +105,7 @@ const Card = ({
           </h3>
           
           {/* Rating Stars */}
-          <div className="flex items-center gap-1 mt-1">
+          {/* <div className="flex items-center gap-1 mt-1">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
@@ -113,7 +113,7 @@ const Card = ({
               />
             ))}
             <span className="text-xs text-gray-500 ml-1">(4.0)</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Car Details Grid */}

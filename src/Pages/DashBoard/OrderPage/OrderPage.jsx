@@ -85,11 +85,12 @@ const portOptions = [
     }
   };
 
-  const handlePortUpdate = async (orderId, newPort) => {
+  const handlePortUpdate = async (orderId, newPort,newStatus) => {
     try {
+      
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { port: newPort }
+        statusData: {status: newStatus , port: newPort }
       });
     } catch (error) {
       console.error('Failed to update order port:', error);
@@ -348,7 +349,7 @@ const portOptions = [
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={order.port || 'mongla'}
-                        onChange={(e) => handlePortUpdate(order.id, e.target.value)}
+                        onChange={(e) => handlePortUpdate(order.id, e.target.value,order.status)}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 bg-blue-100 text-blue-800 focus:ring-2 focus:ring-blue-500"
                         disabled={updateOrderMutation.isPending}
                       >

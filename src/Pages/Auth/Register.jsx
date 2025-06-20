@@ -84,7 +84,7 @@ const Register = () => {
     }
     
     // Create the data object to send to API (excluding confirmPassword)
-    const { confirmPassword, ...registrationData } = form
+    const { confirmPassword,confirmCheckbox, ...registrationData } = form
     mutation.mutate(registrationData)
   }
 
