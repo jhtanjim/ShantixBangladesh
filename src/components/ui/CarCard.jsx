@@ -85,7 +85,7 @@ const formatYenPrice = (usdPrice) => {
             <img
               src={car.mainImage || '/placeholder.svg?height=300&width=400'}
               alt={car.title || 'Car image'}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
               onError={(e) => {
                 e.target.src = '/placeholder.svg?height=300&width=400'
               }}

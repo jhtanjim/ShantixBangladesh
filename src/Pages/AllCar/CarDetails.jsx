@@ -46,22 +46,22 @@ const CarDetailsPage = () => {
 
   const getFeatureIcon = (type) => {
     const icons = {
-      Safety: <Shield size={16} className="text-blue-600" />,
-      Interior: <Car size={16} className="text-purple-600" />,
-      Exterior: <Sparkles size={16} className="text-green-600" />,
-      Special: <Settings size={16} className="text-orange-600" />,
+      Safety: <Shield size={18} className="text-[#0072BC]" />,
+      Interior: <Car size={18} className="text-[#003366]" />,
+      Exterior: <Sparkles size={18} className="text-[#0072BC]" />,
+      Special: <Settings size={18} className="text-[#C9252B]" />,
     }
-    return icons[type] || <Star size={16} className="text-gray-600" />
+    return icons[type] || <Star size={18} className="text-[#003366]" />
   }
 
   const getFeatureColor = (type) => {
     const colors = {
-      Safety: "bg-blue-50 border-blue-200 text-blue-800",
-      Interior: "bg-purple-50 border-purple-200 text-purple-800",
-      Exterior: "bg-green-50 border-green-200 text-green-800",
-      Special: "bg-orange-50 border-orange-200 text-orange-800",
+      Safety: "bg-blue-50 border-[#0072BC]/20 text-[#003366]",
+      Interior: "bg-gray-50 border-[#003366]/20 text-[#003366]",
+      Exterior: "bg-blue-50 border-[#0072BC]/20 text-[#003366]",
+      Special: "bg-red-50 border-[#C9252B]/20 text-[#003366]",
     }
-    return colors[type] || "bg-gray-50 border-gray-200 text-gray-800"
+    return colors[type] || "bg-gray-50 border-gray-200 text-[#003366]"
   }
 
   const allImages = car ? [car.mainImage, ...(car.gallery || [])].filter(Boolean) : []
@@ -69,10 +69,10 @@ const CarDetailsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <div className="text-xl text-gray-600">Loading car details...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#E5E5E5' }}>
+        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: '#0072BC' }}></div>
+          <div className="text-xl font-medium" style={{ color: '#003366' }}>Loading car details...</div>
         </div>
       </div>
     )
@@ -80,12 +80,15 @@ const CarDetailsPage = () => {
 
   if (isError || !car) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#E5E5E5' }}>
+        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
           <div className="text-6xl mb-4">🚗</div>
-          <div className="text-xl text-red-600 mb-4">Car not found</div>
+          <div className="text-xl mb-4 font-medium" style={{ color: '#C9252B' }}>Car not found</div>
           <Link to="/cars">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2">
+            <button 
+              className="px-6 py-3 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#0072BC' }}
+            >
               <ArrowLeft size={16} />
               Back to Cars
             </button>
@@ -96,63 +99,70 @@ const CarDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* Navigation */}
-          <div className="mb-4 sm:mb-6">
-            <Link to="/cars">
-              <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                <ArrowLeft size={16} />
-                <span className="hidden sm:inline">Back to Cars</span>
-              </button>
-            </Link>
-          </div>
-
-          {/* Car Title & Price */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 capitalize">{car.title}</h1>
-              <div className="flex flex-wrap items-center gap-3">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    car.isActive ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                  }`}
-                >
-                  {car.isActive ? "Available" : "Sold Out"}
-                </span>
-                <span className="text-gray-300 text-sm">Listed {new Date(car.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div className="text-left lg:text-right">
-              <div className="text-sm text-gray-300 mb-1">Starting from</div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-                ${car.price?.toLocaleString()}
-              </div>
-              <div className="text-base sm:text-lg text-gray-300">
-                {exchangeRateLoading ? (
-                  <span className="animate-pulse">Loading yen price...</span>
-                ) : yenPrice ? (
-                  `¥${yenPrice.toLocaleString()}`
-                ) : (
-                  "¥Price unavailable"
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#E5E5E5' }}>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link to="/cars">
+            <button 
+              className="px-4 py-2 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#003366' }}
+            >
+              <ArrowLeft size={16} />
+              <span className="hidden sm:inline">Back to Cars</span>
+            </button>
+          </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Images & Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Car Title & Status */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2 capitalize" style={{ color: '#003366' }}>
+                    {car.title}
+                  </h1>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        car.isActive 
+                          ? "bg-green-100 text-green-700" 
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {car.isActive ? "Available" : "Sold Out"}
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                      Listed {new Date(car.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 mb-1">Price</div>
+                  <div className="text-3xl font-bold" style={{ color: '#C9252B' }}>
+                    ${car.price?.toLocaleString()}
+                  </div>
+                  <div className="text-lg" style={{ color: '#0072BC' }}>
+                    {exchangeRateLoading ? (
+                      <span className="animate-pulse">Loading...</span>
+                    ) : yenPrice ? (
+                      `¥${yenPrice.toLocaleString()}`
+                    ) : (
+                      "¥Price unavailable"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Image Gallery */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="relative">
-                {/* Main Image */}
                 <div className="aspect-video relative overflow-hidden">
                   <img
                     src={allImages[selectedImageIndex] || "/placeholder.svg?height=600&width=800"}
@@ -160,41 +170,38 @@ const CarDetailsPage = () => {
                     className="w-full h-full object-cover"
                   />
 
-                  {/* Image Navigation */}
                   {allImages.length > 1 && (
                     <>
                       <button
                         onClick={() => setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1))}
-                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-colors"
                       >
                         <ChevronLeft size={20} />
                       </button>
                       <button
                         onClick={() => setSelectedImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0))}
-                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-colors"
                       >
                         <ChevronRight size={20} />
                       </button>
 
-                      {/* Image Counter */}
-                      <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                      <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
                         {selectedImageIndex + 1} / {allImages.length}
                       </div>
                     </>
                   )}
                 </div>
 
-                {/* Thumbnail Gallery */}
                 {allImages.length > 1 && (
-                  <div className="p-3 sm:p-4 bg-gray-50">
+                  <div className="p-4 bg-gray-50">
                     <div className="flex gap-2 overflow-x-auto">
                       {allImages.map((image, index) => (
                         <button
                           key={index}
                           onClick={() => setSelectedImageIndex(index)}
-                          className={`flex-shrink-0 w-16 sm:w-20 h-12 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                             selectedImageIndex === index
-                              ? "border-red-500 ring-2 ring-red-200"
+                              ? "border-[#0072BC] ring-2 ring-[#0072BC]/20"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
@@ -212,50 +219,50 @@ const CarDetailsPage = () => {
             </div>
 
             {/* Specifications */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center">
-                <Car className="mr-2 sm:mr-3 text-red-600" size={20} />
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-2xl font-bold mb-6 flex items-center" style={{ color: '#003366' }}>
+                <Car className="mr-3" style={{ color: '#0072BC' }} size={24} />
                 Specifications
               </h2>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                <div className="text-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg lg:rounded-xl border border-blue-200">
-                  <Calendar className="mx-auto mb-2 sm:mb-3 text-blue-600" size={24} />
-                  <h3 className="font-semibold text-blue-800 mb-1 text-sm sm:text-base">Year</h3>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900">{car.year}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <Calendar className="mx-auto mb-3" style={{ color: '#0072BC' }} size={28} />
+                  <h3 className="font-semibold mb-2 text-gray-600">Year</h3>
+                  <p className="text-2xl font-bold" style={{ color: '#003366' }}>{car.year}</p>
                 </div>
 
-                <div className="text-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg lg:rounded-xl border border-green-200">
-                  <Fuel className="mx-auto mb-2 sm:mb-3 text-green-600" size={24} />
-                  <h3 className="font-semibold text-green-800 mb-1 text-sm sm:text-base">Fuel</h3>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900">{car.fuel}</p>
+                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <Fuel className="mx-auto mb-3" style={{ color: '#0072BC' }} size={28} />
+                  <h3 className="font-semibold mb-2 text-gray-600">Fuel</h3>
+                  <p className="text-2xl font-bold" style={{ color: '#003366' }}>{car.fuel}</p>
                 </div>
 
-                <div className="text-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg lg:rounded-xl border border-purple-200">
-                  <Palette className="mx-auto mb-2 sm:mb-3 text-purple-600" size={24} />
-                  <h3 className="font-semibold text-purple-800 mb-1 text-sm sm:text-base">Color</h3>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900 capitalize">
+                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <Palette className="mx-auto mb-3" style={{ color: '#0072BC' }} size={28} />
+                  <h3 className="font-semibold mb-2 text-gray-600">Color</h3>
+                  <p className="text-2xl font-bold capitalize" style={{ color: '#003366' }}>
                     {car.exteriorColor}
                   </p>
                 </div>
 
-                <div className="text-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg lg:rounded-xl border border-orange-200">
-                  <Users className="mx-auto mb-2 sm:mb-3 text-orange-600" size={24} />
-                  <h3 className="font-semibold text-orange-800 mb-1 text-sm sm:text-base">Seats</h3>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-900">{car.seats}</p>
+                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <Users className="mx-auto mb-3" style={{ color: '#0072BC' }} size={28} />
+                  <h3 className="font-semibold mb-2 text-gray-600">Seats</h3>
+                  <p className="text-2xl font-bold" style={{ color: '#003366' }}>{car.seats}</p>
                 </div>
               </div>
             </div>
 
             {/* Features */}
             {car.features && car.features.length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center">
-                  <Star className="mr-2 sm:mr-3 text-red-600" size={20} />
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center" style={{ color: '#003366' }}>
+                  <Star className="mr-3" style={{ color: '#C9252B' }} size={24} />
                   Features & Equipment
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {["Safety", "Interior", "Exterior", "Special"].map((type) => {
                     const typeFeatures = car.features.filter((feature) => feature.type === type)
                     if (typeFeatures.length === 0) return null
@@ -263,17 +270,20 @@ const CarDetailsPage = () => {
                     return (
                       <div
                         key={type}
-                        className={`p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 ${getFeatureColor(type)}`}
+                        className={`p-6 rounded-xl border-2 ${getFeatureColor(type)}`}
                       >
-                        <div className="flex items-center mb-3 sm:mb-4">
+                        <div className="flex items-center mb-4">
                           {getFeatureIcon(type)}
-                          <h3 className="font-bold text-base sm:text-lg ml-2">{type}</h3>
+                          <h3 className="font-bold text-lg ml-2" style={{ color: '#003366' }}>{type}</h3>
                         </div>
                         <ul className="space-y-2">
                           {typeFeatures.map((feature) => (
-                            <li key={feature.id} className="flex items-center text-sm sm:text-base">
-                              <div className="w-2 h-2 bg-current rounded-full mr-3 opacity-60 flex-shrink-0"></div>
-                              <span className="font-medium">{feature.name}</span>
+                            <li key={feature.id} className="flex items-start">
+                              <div 
+                                className="w-2 h-2 rounded-full mr-3 mt-2 flex-shrink-0" 
+                                style={{ backgroundColor: '#0072BC' }}
+                              ></div>
+                              <span className="font-medium text-gray-700">{feature.name}</span>
                             </li>
                           ))}
                         </ul>
@@ -285,14 +295,16 @@ const CarDetailsPage = () => {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Purchase & Contact */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Price & Purchase */}
-            <div className="bg-gradient-to-br from-red-600 to-red-700 text-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 sticky top-4">
+            {/* Purchase Card */}
+            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
               <div className="text-center mb-6">
-                <div className="text-sm opacity-90 mb-2">Total Price</div>
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">${car.price?.toLocaleString()}</div>
-                <div className="text-base sm:text-lg opacity-90">
+                <div className="text-sm text-gray-500 mb-2">Total Price</div>
+                <div className="text-4xl font-bold mb-2" style={{ color: '#C9252B' }}>
+                  ${car.price?.toLocaleString()}
+                </div>
+                <div className="text-lg" style={{ color: '#0072BC' }}>
                   {exchangeRateLoading ? (
                     <span className="animate-pulse">Loading yen price...</span>
                   ) : yenPrice ? (
@@ -304,11 +316,12 @@ const CarDetailsPage = () => {
               </div>
 
               <button
-                className={`w-full py-3 sm:py-4 text-base sm:text-lg font-semibold flex items-center justify-center gap-3 rounded-lg transition-colors ${
+                className={`w-full py-4 text-lg font-semibold flex items-center justify-center gap-3 rounded-lg transition-all ${
                   isInCart(car.id)
                     ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-white hover:bg-gray-100 text-red-600"
+                    : "text-white hover:opacity-90"
                 }`}
+                style={!isInCart(car.id) ? { backgroundColor: '#0072BC' } : {}}
                 onClick={handleAddToCart}
                 disabled={addingToCart || !car.isActive}
               >
@@ -331,72 +344,72 @@ const CarDetailsPage = () => {
               </button>
 
               {!car.isActive && (
-                <div className="mt-4 p-3 bg-red-800 rounded-lg text-center">
+                <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center border border-red-200">
                   <span className="text-sm font-medium">This vehicle is no longer available</span>
                 </div>
               )}
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8">
-              <h3 className="text-lg sm:text-xl font-bold mb-2">Contact Dealer</h3>
-              <h4 className="text-xl sm:text-2xl font-bold text-blue-600 mb-4 sm:mb-6">SHANTIX Corporation</h4>
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-lg font-bold mb-2" style={{ color: '#003366' }}>Contact Dealer</h3>
+              <h4 className="text-2xl font-bold mb-6" style={{ color: '#0072BC' }}>SHANTIX Corporation</h4>
 
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <div className="bg-blue-100 p-2 sm:p-3 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  <div className="p-3 rounded-lg mr-4 flex-shrink-0" style={{ backgroundColor: '#E5E5E5' }}>
+                    <MapPin className="h-5 w-5" style={{ color: '#0072BC' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Locations</p>
-                    <p className="text-gray-600 text-xs sm:text-sm">Dhaka, Bangladesh</p>
-                    <p className="text-gray-600 text-xs sm:text-sm">Chattogram, Bangladesh</p>
+                    <p className="font-semibold mb-1" style={{ color: '#003366' }}>Locations</p>
+                    <p className="text-gray-600 text-sm">Dhaka, Bangladesh</p>
+                    <p className="text-gray-600 text-sm">Chattogram, Bangladesh</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="bg-green-100 p-2 sm:p-3 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  <div className="p-3 rounded-lg mr-4 flex-shrink-0" style={{ backgroundColor: '#E5E5E5' }}>
+                    <Phone className="h-5 w-5" style={{ color: '#0072BC' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Phone</p>
-                    <p className="text-gray-600 text-xs sm:text-sm">+81-45-936-0776</p>
-                    <p className="text-gray-600 text-xs sm:text-sm">+81-45-932-2376</p>
+                    <p className="font-semibold mb-1" style={{ color: '#003366' }}>Phone</p>
+                    <p className="text-gray-600 text-sm">+81-45-936-0776</p>
+                    <p className="text-gray-600 text-sm">+81-45-932-2376</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="bg-purple-100 p-2 sm:p-3 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                  <div className="p-3 rounded-lg mr-4 flex-shrink-0" style={{ backgroundColor: '#E5E5E5' }}>
+                    <Mail className="h-5 w-5" style={{ color: '#0072BC' }} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Email</p>
-                    <p className="text-gray-600 text-xs sm:text-sm">sales@shantix.info</p>
+                    <p className="font-semibold mb-1" style={{ color: '#003366' }}>Email</p>
+                    <p className="text-gray-600 text-sm">sales@shantix.info</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-xs sm:text-sm text-gray-500 mb-1">Reference ID</p>
-                <p className="font-mono text-base sm:text-lg font-bold text-gray-900">
+                <p className="text-sm text-gray-500 mb-1">Reference ID</p>
+                <p className="font-mono text-lg font-bold" style={{ color: '#003366' }}>
                   #{car.id.slice(0, 8).toUpperCase()}
                 </p>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-              <h3 className="font-bold mb-4 text-base sm:text-lg">Quick Actions</h3>
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="font-bold mb-4" style={{ color: '#003366' }}>Quick Actions</h3>
               <div className="space-y-3">
                 <Link to="/cars" className="block">
-                  <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 sm:py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                  <button className="w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-opacity hover:opacity-90" style={{ backgroundColor: '#E5E5E5', color: '#003366' }}>
                     <ArrowLeft size={16} />
                     Back to Listings
                   </button>
                 </Link>
 
                 <Link to="/cart" className="block">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                  <button className="w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-white font-medium transition-opacity hover:opacity-90" style={{ backgroundColor: '#0072BC' }}>
                     <ShoppingCart size={16} />
                     View Cart
                   </button>
