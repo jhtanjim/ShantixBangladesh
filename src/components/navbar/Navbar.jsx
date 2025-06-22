@@ -5,14 +5,15 @@ import logoImg from "../../assets/images/logo.png";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
-import useUserRole from "../../hooks/useUserRole";
+import useUsersRole from "../../hooks/useUsersRole";
 
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { token, logout, user } = useAuth();
+  const { isAdmin } = useUsersRole(); // Use the hook to check admin role
   const navigate = useNavigate();
-const { isAdmin } = useUserRole();
+  
   // Force re-render when auth state changes
   const [authState, setAuthState] = useState({
     isAuthenticated: Boolean(token),
@@ -39,7 +40,8 @@ const { isAdmin } = useUserRole();
     });
   };
 
-  const navLinks = [
+  // Filter nav links based on user role
+  const baseNavLinks = [
     { href: "/about", label: "About Us" },
     { href: "/stock-list", label: "Stock List" },
     { href: "/howToBuy", label: "How To Buy" },
@@ -49,11 +51,12 @@ const { isAdmin } = useUserRole();
     { href: "/contact", label: "Contact Us" },
     { href: "/shipSchedule", label: "Ship Schedule" },
     { href: "/allCars", label: "All Cars" },
-    { href: "/admin", label: "Admin" },
-    
-    
-    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
+
+  // Add admin link only if user is admin
+  const navLinks = isAdmin() 
+    ? [...baseNavLinks, { href: "/admin", label: "Admin" }]
+    : baseNavLinks;
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">

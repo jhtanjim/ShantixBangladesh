@@ -341,7 +341,7 @@ const Enquiry = () => {
             </div>
             
             <div>
-              <h3 className="font-medium mb-2">Why Buy only through JapaneseCarTrade.com?</h3>
+              <h3 className="font-medium mb-2">Why Buy only through shantix-corp.com?</h3>
               <div className="flex items-center">
                 <div className="w-24 h-24 relative">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"></div>

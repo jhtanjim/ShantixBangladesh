@@ -4,8 +4,8 @@ import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "../../api/auth"
 import { useNavigate } from "react-router-dom"
 import { Check, Eye, EyeOff, Globe, Mail, Lock, Phone, User, Building } from "lucide-react"
-import logoImg from "../../assets/images/logo.png"; 
-import { toast } from "react-hot-toast"
+import logoImg from "../../assets/images/logo.png"
+import Swal from 'sweetalert2'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -62,11 +62,27 @@ const Register = () => {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
-      toast.success("Registration successful!")
-      navigate("/login")
+      Swal.fire({
+        title: 'Success!',
+        text: 'Registration successful!',
+        icon: 'success',
+        confirmButtonText: 'Continue',
+        confirmButtonColor: '#0072BC',
+        showConfirmButton: true,
+        timer: 3000,
+        timerProgressBar: true
+      }).then(() => {
+        navigate("/login")
+      })
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || "Registration failed")
+      Swal.fire({
+        title: 'Registration Failed',
+        text: error?.response?.data?.message || "Registration failed. Please try again.",
+        icon: 'error',
+        confirmButtonText: 'Try Again',
+        confirmButtonColor: '#0072BC'
+      })
     },
   })
 
@@ -74,17 +90,29 @@ const Register = () => {
     e.preventDefault()
     
     if (!form.confirmCheckbox) {
-      toast.error("Please confirm that you agree to the terms and conditions")
+      Swal.fire({
+        title: 'Terms & Conditions',
+        text: 'Please confirm that you agree to the terms and conditions',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#0072BC'
+      })
       return
     }
     
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match")
+      Swal.fire({
+        title: 'Password Mismatch',
+        text: 'Passwords do not match. Please check and try again.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#0072BC'
+      })
       return
     }
     
     // Create the data object to send to API (excluding confirmPassword)
-    const { confirmPassword,confirmCheckbox, ...registrationData } = form
+    const { confirmPassword, confirmCheckbox, ...registrationData } = form
     mutation.mutate(registrationData)
   }
 

@@ -4,29 +4,58 @@ import { useState } from "react"
 import { useAuth } from "../../Context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
-import logoImg from "../../assets/images/logo.png"; 
-import { toast } from "react-hot-toast"
+import logoImg from "../../assets/images/logo.png"
+import Swal from "sweetalert2"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError("")
+    
     try {
       await login(formData)
-      toast.success("Login successful!")
-      // Redirect to home or dashboard after successful login
-
+      
+      // Success alert with SweetAlert
+      await Swal.fire({
+        icon: 'success',
+        title: 'Login Successful!',
+        text: 'Welcome back to Shantix',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        background: '#ffffff',
+        color: '#374151',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl',
+          title: 'text-xl font-bold',
+          content: 'text-gray-600'
+        }
+      })
+      
       navigate("/")
     } catch (error) {
-      setError("Login failed! Please check your credentials.")
+      // Error alert with SweetAlert
+      await Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: 'Please check your email and password and try again.',
+        confirmButtonText: 'Try Again',
+        confirmButtonColor: '#0072BC',
+        background: '#ffffff',
+        color: '#374151',
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl',
+          title: 'text-xl font-bold text-red-600',
+          content: 'text-gray-600',
+          confirmButton: 'rounded-xl px-6 py-2 font-semibold'
+        }
+      })
     } finally {
       setLoading(false)
     }
@@ -34,8 +63,67 @@ export default function LoginPage() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
-    if (error) setError("")
+  }
+
+  const handleForgotPassword = async () => {
+    const { value: email } = await Swal.fire({
+      title: 'Reset Password',
+      text: 'Enter your email address to receive a password reset link',
+      input: 'email',
+      inputPlaceholder: 'Enter your email',
+      showCancelButton: true,
+      confirmButtonText: 'Send Reset Link',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0072BC',
+      cancelButtonColor: '#6B7280',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please enter your email address'
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return 'Please enter a valid email address'
+        }
+      },
+      customClass: {
+        popup: 'rounded-2xl shadow-2xl',
+        title: 'text-xl font-bold',
+        content: 'text-gray-600',
+        input: 'rounded-xl border-2 border-gray-300 focus:border-blue-500',
+        confirmButton: 'rounded-xl px-6 py-2 font-semibold',
+        cancelButton: 'rounded-xl px-6 py-2 font-semibold'
+      }
+    })
+
+    if (email) {
+      // Show loading
+      Swal.fire({
+        title: 'Sending...',
+        text: 'Please wait while we send the reset link',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+
+      // Simulate API call
+      setTimeout(async () => {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Reset Link Sent!',
+          text: `A password reset link has been sent to ${email}`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#0072BC',
+          customClass: {
+            popup: 'rounded-2xl shadow-2xl',
+            title: 'text-xl font-bold text-green-600',
+            content: 'text-gray-600',
+            confirmButton: 'rounded-xl px-6 py-2 font-semibold'
+          }
+        })
+      }, 2000)
+    }
   }
 
   return (
@@ -52,7 +140,7 @@ export default function LoginPage() {
             <span className="text-3xl"><img src={logoImg} alt="" /></span>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-blue-200">Sign in to your CarHub account</p>
+          <p className="text-blue-200">Sign in to your Shantix account</p>
         </div>
 
         {/* Form Card */}
@@ -63,13 +151,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-pulse">
-                <p className="text-red-600 text-sm font-medium">{error}</p>
-              </div>
-            )}
-
             {/* Email Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -117,7 +198,7 @@ export default function LoginPage() {
             <div className="text-right">
               <button
                 type="button"
-                onClick={() => alert("Forgot password feature coming soon!")}
+                onClick={handleForgotPassword}
                 className="text-sm font-medium hover:underline transition-colors"
                 style={{ color: '#0072BC' }}
               >
@@ -180,7 +261,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-blue-200 text-sm">
-          <p>© 2025 CarHub. All rights reserved.</p>
+          <p>© 2025 Shantix. All rights reserved.</p>
         </div>
       </div>
     </div>

@@ -1,29 +1,13 @@
-
-"use client"
-
-import { useEffect, useState } from "react"
-import { useAuth } from "../Context/AuthContext"
-
+import React from 'react'
+import { useAuth } from '../Context/AuthContext'
 
 const useUserRole = () => {
   const { user } = useAuth()
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user || !user.role) {
-      setIsAdmin(false)
-      setIsLoading(false)
-      return
-    }
-
-    setIsAdmin(user.role === "ADMIN")
-  
-    setIsLoading(false)
-  }, [user])
-
-  return { isAdmin, isLoading }
+  return (
+    <div>
+      {/* You can return something meaningful here, or convert this to a hook that returns data */}
+    </div>
+  )
 }
 
 export default useUserRole
