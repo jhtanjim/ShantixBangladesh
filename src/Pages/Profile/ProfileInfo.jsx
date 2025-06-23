@@ -12,11 +12,29 @@ const ProfileInfo = ({ user, updateUserMutation }) => {
   const [updateError, setUpdateError] = useState("")
   const [updateSuccess, setUpdateSuccess] = useState("")
 
+  // Helper functions to split and combine names
+  const splitFullName = (fullName) => {
+    if (!fullName) return { firstName: "", lastName: "" }
+    const names = fullName.trim().split(' ')
+    if (names.length === 1) {
+      return { firstName: names[0], lastName: "" }
+    }
+    return {
+      firstName: names[0],
+      lastName: names.slice(1).join(' ') // Handle multiple last names
+    }
+  }
+
+  const combineNames = (firstName, lastName) => {
+    return `${firstName.trim()} ${lastName.trim()}`.trim()
+  }
+
   useEffect(() => {
     if (user) {
+      const { firstName, lastName } = splitFullName(user.fullName)
       setFormData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
+        firstName,
+        lastName,
         phone: user.phone || "",
       })
     }
@@ -34,16 +52,18 @@ const ProfileInfo = ({ user, updateUserMutation }) => {
       setUpdateError("")
       setUpdateSuccess("")
       
-      if (!formData.firstName.trim() || !formData.lastName.trim()) {
-        setUpdateError("First name and last name are required")
+      if (!formData.firstName.trim()) {
+        setUpdateError("First name is required")
         return
       }
+
+      // Combine names back to fullName for API
+      const fullName = combineNames(formData.firstName, formData.lastName)
 
       await updateUserMutation.mutateAsync({
         id: user.id,
         data: {
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
+          fullName: fullName,
           phone: formData.phone.trim(),
         }
       })
@@ -58,14 +78,18 @@ const ProfileInfo = ({ user, updateUserMutation }) => {
 
   const handleCancel = () => {
     setIsEditing(false)
+    const { firstName, lastName } = splitFullName(user.fullName)
     setFormData({
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
+      firstName,
+      lastName,
       phone: user.phone || "",
     })
     setUpdateError("")
     setUpdateSuccess("")
   }
+
+  // Get current names for display
+  const currentNames = splitFullName(user.fullName)
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border-0 overflow-hidden">
@@ -74,12 +98,12 @@ const ProfileInfo = ({ user, updateUserMutation }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-4 border-white text-2xl font-bold">
-              {user.firstName?.[0] || ''}
-              {user.lastName?.[0] || ''}
+              {currentNames.firstName?.[0] || ''}
+              {currentNames.lastName?.[0] || ''}
             </div>
             <div>
               <h2 className="text-2xl font-bold">
-                {user.firstName} {user.lastName}
+                {user.fullName}
               </h2>
               <p className="text-blue-100">{user.email}</p>
             </div>
@@ -148,6 +172,17 @@ const ProfileInfo = ({ user, updateUserMutation }) => {
                 isEditing ? "bg-white border-gray-300" : "bg-gray-50 border-gray-200 text-gray-600"
               }`}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Country</label>
+            <input
+              type="text"
+              value={user.country || ""}
+              disabled
+              className="w-full px-4 py-3 border rounded-lg bg-gray-100 text-gray-600 border-gray-200"
+            />
+            <p className="text-xs text-gray-500">Country information from your account</p>
           </div>
 
           <div className="flex gap-4 pt-4">

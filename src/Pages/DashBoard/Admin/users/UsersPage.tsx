@@ -43,13 +43,13 @@ export function UsersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Users</h1>
           <p className="text-gray-600">Manage user accounts</p>
         </div>
-        <Link
+        {/* <Link
           to="/admin/users/create"
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add User
-        </Link>
+        </Link> */}
       </div>
 
       {/* Search */}

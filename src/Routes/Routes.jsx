@@ -9,7 +9,6 @@ import Register from "../Pages/Auth/Register";
 import Profile from "../Pages/Profile/Profile";
 import UserProfile from "../Pages/Profile/UserProfile";
 import UpdateProfile from "../Pages/Profile/UpdateProfile";
-import { AdminLayout } from "../layout/AdminLayout";
 import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
 import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
 import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage";
@@ -27,6 +26,7 @@ import UnderConstruction from "../components/UnderConstruction/UnderConstruction
 import AdminRoute from "./AdminRoute";
 import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
 import HowToBuy from "../Pages/HowToBuy/HowToBuy";
+import AdminLayout from "../layout/AdminLayout";
 
 export const router = createBrowserRouter([
   {

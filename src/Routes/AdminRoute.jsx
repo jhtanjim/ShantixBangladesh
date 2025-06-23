@@ -127,7 +127,7 @@ const AdminRoute = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin header */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg">
+      {/* <div className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -144,7 +144,7 @@ const AdminRoute = ({ children }) => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
       <div className="flex-1">{children}</div>
