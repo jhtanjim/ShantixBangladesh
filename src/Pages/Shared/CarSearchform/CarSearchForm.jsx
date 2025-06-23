@@ -27,70 +27,6 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
     keywords: "",
   })
 
-  // Predefined options for select fields
-  const yearOptions = [
-    { value: "", label: "Any Year" },
-    { value: "2024", label: "2024" },
-    { value: "2023", label: "2023" },
-    { value: "2022", label: "2022" },
-    { value: "2021", label: "2021" },
-    { value: "2020", label: "2020" },
-    { value: "2019", label: "2019" },
-    { value: "2018", label: "2018" },
-    { value: "2017", label: "2017" },
-    { value: "2016", label: "2016" },
-    { value: "2015", label: "2015" },
-    { value: "2014", label: "2014" },
-    { value: "2013", label: "2013" },
-    { value: "2012", label: "2012" },
-    { value: "2011", label: "2011" },
-    { value: "2010", label: "2010" },
-    { value: "2009", label: "2009" },
-    { value: "2008", label: "2008" },
-    { value: "2007", label: "2007" },
-    { value: "2006", label: "2006" },
-    { value: "2005", label: "2005" }
-  ]
-
-  const priceOptions = [
-    { value: "", label: "Any Price" },
-    { value: "5000", label: "$5,000" },
-    { value: "10000", label: "$10,000" },
-    { value: "15000", label: "$15,000" },
-    { value: "20000", label: "$20,000" },
-    { value: "25000", label: "$25,000" },
-    { value: "30000", label: "$30,000" },
-    { value: "35000", label: "$35,000" },
-    { value: "40000", label: "$40,000" },
-    { value: "45000", label: "$45,000" },
-    { value: "50000", label: "$50,000" },
-    { value: "60000", label: "$60,000" },
-    { value: "70000", label: "$70,000" },
-    { value: "80000", label: "$80,000" },
-    { value: "100000", label: "$100,000" },
-    { value: "150000", label: "$150,000" },
-    { value: "200000", label: "$200,000+" }
-  ]
-
-  const mileageOptions = [
-    { value: "", label: "Any Mileage" },
-    { value: "5000", label: "5,000 km" },
-    { value: "10000", label: "10,000 km" },
-    { value: "15000", label: "15,000 km" },
-    { value: "20000", label: "20,000 km" },
-    { value: "30000", label: "30,000 km" },
-    { value: "40000", label: "40,000 km" },
-    { value: "50000", label: "50,000 km" },
-    { value: "60000", label: "60,000 km" },
-    { value: "70000", label: "70,000 km" },
-    { value: "80000", label: "80,000 km" },
-    { value: "100000", label: "100,000 km" },
-    { value: "120000", label: "120,000 km" },
-    { value: "150000", label: "150,000 km" },
-    { value: "200000", label: "200,000 km" },
-    { value: "250000", label: "250,000+ km" }
-  ]
-
   // Extract unique values from allCars for dropdown options
   const getUniqueValues = (field) => {
     if (!allCars || allCars.length === 0) return []
@@ -106,6 +42,7 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
   const makes = getUniqueValues("make")
   const models = getUniqueValues("model")
+  const modelCodes = getUniqueValues("modelCode")
   const types = getUniqueValues("type")
   const fuels = getUniqueValues("fuel")
   const countries = getUniqueValues("country")
@@ -114,11 +51,90 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
   const drives = getUniqueValues("drive")
   const transmissions = getUniqueValues("transmission")
 
+  // Get engine CC options from actual car data
+  const engineCCs = allCars.map((car) => car.engineCC).filter((cc) => cc && cc > 0)
+  const uniqueEngineCCs = [...new Set(engineCCs)].sort((a, b) => a - b)
+
+  // Get year range from actual data
+  const years = allCars.map((car) => car.year).filter((year) => year)
+  const minYear = years.length > 0 ? Math.min(...years) : 2000
+  const maxYear = years.length > 0 ? Math.max(...years) : new Date().getFullYear()
+  const yearOptions = []
+  for (let year = maxYear; year >= minYear; year--) {
+    yearOptions.push(year)
+  }
+
+  // Predefined price ranges
+  const priceRanges = [
+    { label: "Any Price", value: "" },
+    { label: "Under $5,000", from: "", to: "5000" },
+    { label: "$5,000 - $10,000", from: "5000", to: "10000" },
+    { label: "$10,000 - $15,000", from: "10000", to: "15000" },
+    { label: "$15,000 - $20,000", from: "15000", to: "20000" },
+    { label: "$20,000 - $30,000", from: "20000", to: "30000" },
+    { label: "$30,000 - $50,000", from: "30000", to: "50000" },
+    { label: "$50,000 - $75,000", from: "50000", to: "75000" },
+    { label: "$75,000 - $100,000", from: "75000", to: "100000" },
+    { label: "Above $100,000", from: "100000", to: "" },
+  ]
+
+  // Predefined mileage ranges
+  const mileageRanges = [
+    { label: "Any Mileage", value: "" },
+    { label: "Under 10,000 km", from: "", to: "10000" },
+    { label: "10,000 - 30,000 km", from: "10000", to: "30000" },
+    { label: "30,000 - 50,000 km", from: "30000", to: "50000" },
+    { label: "50,000 - 80,000 km", from: "50000", to: "80000" },
+    { label: "80,000 - 120,000 km", from: "80000", to: "120000" },
+    { label: "120,000 - 200,000 km", from: "120000", to: "200000" },
+    { label: "Above 200,000 km", from: "200000", to: "" },
+  ]
+
   const handleInputChange = (field, value) => {
     setSearchParams((prev) => ({
       ...prev,
       [field]: value,
     }))
+  }
+
+  const handlePriceRangeChange = (value) => {
+    if (!value) {
+      setSearchParams((prev) => ({ ...prev, priceFrom: "", priceTo: "" }))
+    } else {
+      const range = priceRanges.find((r) => r.label === value)
+      if (range && range.from !== undefined) {
+        setSearchParams((prev) => ({
+          ...prev,
+          priceFrom: range.from,
+          priceTo: range.to,
+        }))
+      }
+    }
+  }
+
+  const handleMileageRangeChange = (value) => {
+    if (!value) {
+      setSearchParams((prev) => ({ ...prev, mileageFrom: "", mileageTo: "" }))
+    } else {
+      const range = mileageRanges.find((r) => r.label === value)
+      if (range && range.from !== undefined) {
+        setSearchParams((prev) => ({
+          ...prev,
+          mileageFrom: range.from,
+          mileageTo: range.to,
+        }))
+      }
+    }
+  }
+
+  const getCurrentPriceRange = () => {
+    const current = priceRanges.find((r) => r.from === searchParams.priceFrom && r.to === searchParams.priceTo)
+    return current ? current.label : ""
+  }
+
+  const getCurrentMileageRange = () => {
+    const current = mileageRanges.find((r) => r.from === searchParams.mileageFrom && r.to === searchParams.mileageTo)
+    return current ? current.label : ""
   }
 
   const handleSearch = () => {
@@ -155,16 +171,21 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
     onSearch(resetParams)
   }
 
-  // Close filter when clicking outside on mobile - Updated to be more specific
+  const hasActiveFilters = Object.values(searchParams).some((value) => value !== "")
+
+  // Close filter when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isFilterOpen && window.innerWidth < 1024) {
-        // Only close if clicking on the background, not on form elements
         const searchContainer = document.querySelector(".search-form-container")
         const toggleButton = document.querySelector(".filter-toggle-button")
-        
-        if (searchContainer && !searchContainer.contains(event.target) && 
-            toggleButton && !toggleButton.contains(event.target)) {
+
+        if (
+          searchContainer &&
+          !searchContainer.contains(event.target) &&
+          toggleButton &&
+          !toggleButton.contains(event.target)
+        ) {
           setIsFilterOpen(false)
         }
       }
@@ -262,18 +283,23 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
               </select>
             </div>
 
-            {/* Model Code */}
+            {/* Model Code - Now a dropdown */}
             <div className="min-w-0">
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
                 Model Code
               </label>
-              <input
-                type="text"
-                placeholder="e.g., XV70"
-                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm"
+              <select
+                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.modelCode}
                 onChange={(e) => handleInputChange("modelCode", e.target.value)}
-              />
+              >
+                <option value="">All Model Codes</option>
+                {modelCodes.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Type */}
@@ -303,10 +329,10 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
                 value={searchParams.yearFrom}
                 onChange={(e) => handleInputChange("yearFrom", e.target.value)}
               >
-                <option value="">From Year</option>
-                {yearOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                <option value="">Any Year</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
                   </option>
                 ))}
               </select>
@@ -322,65 +348,50 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
                 value={searchParams.yearTo}
                 onChange={(e) => handleInputChange("yearTo", e.target.value)}
               >
-                <option value="">To Year</option>
-                {yearOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                <option value="">Any Year</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Price From */}
+            {/* Price Range - Single dropdown */}
             <div className="min-w-0">
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
-                Price From
+                Price Range
               </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
-                value={searchParams.priceFrom}
-                onChange={(e) => handleInputChange("priceFrom", e.target.value)}
+                value={getCurrentPriceRange()}
+                onChange={(e) => handlePriceRangeChange(e.target.value)}
               >
-                <option value="">Min Price</option>
-                {priceOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {priceRanges.map((range) => (
+                  <option key={range.label} value={range.label}>
+                    {range.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Price To */}
-            <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
-                Price To
-              </label>
-              <select
-                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
-                value={searchParams.priceTo}
-                onChange={(e) => handleInputChange("priceTo", e.target.value)}
-              >
-                <option value="">Max Price</option>
-                {priceOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Engine CC */}
+            {/* Engine CC - Now a dropdown */}
             <div className="min-w-0">
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
                 Engine CC
               </label>
-              <input
-                type="number"
-                placeholder="2500"
-                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm"
+              <select
+                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.engineCC}
                 onChange={(e) => handleInputChange("engineCC", e.target.value)}
-              />
+              >
+                <option value="">Any Engine CC</option>
+                {uniqueEngineCCs.map((cc) => (
+                  <option key={cc} value={cc}>
+                    {cc} CC
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Fuel */}
@@ -402,39 +413,19 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
               </select>
             </div>
 
-            {/* Mileage From */}
+            {/* Mileage Range - Single dropdown */}
             <div className="min-w-0">
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
-                Mileage From
+                Mileage Range
               </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
-                value={searchParams.mileageFrom}
-                onChange={(e) => handleInputChange("mileageFrom", e.target.value)}
+                value={getCurrentMileageRange()}
+                onChange={(e) => handleMileageRangeChange(e.target.value)}
               >
-                <option value="">Min Mileage</option>
-                {mileageOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Mileage To */}
-            <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
-                Mileage To
-              </label>
-              <select
-                className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
-                value={searchParams.mileageTo}
-                onChange={(e) => handleInputChange("mileageTo", e.target.value)}
-              >
-                <option value="">Max Mileage</option>
-                {mileageOptions.slice(1).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {mileageRanges.map((range) => (
+                  <option key={range.label} value={range.label}>
+                    {range.label}
                   </option>
                 ))}
               </select>
@@ -543,12 +534,13 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
                 <option value="Available">Available</option>
                 <option value="Sold">Sold</option>
                 <option value="Reserved">Reserved</option>
+                <option value="In Stock">In Stock</option>
               </select>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 justify-center">
+          <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 justify-center mb-4">
             <button
               onClick={handleSearch}
               className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
@@ -564,10 +556,37 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
               Clear Filters
             </button>
           </div>
+
+          {/* Active Filters Summary */}
+          {hasActiveFilters && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600 mb-2">Active Filters:</div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(searchParams).map(([key, value]) => {
+                  if (!value) return null
+                  let displayValue = value
+                  if (key === "priceFrom" || key === "priceTo") {
+                    displayValue = getCurrentPriceRange()
+                    if (key === "priceTo" && getCurrentPriceRange()) return null
+                  }
+                  if (key === "mileageFrom" || key === "mileageTo") {
+                    displayValue = getCurrentMileageRange()
+                    if (key === "mileageTo" && getCurrentMileageRange()) return null
+                  }
+                  return (
+                    <span
+                      key={key}
+                      className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"
+                    >
+                      {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}: {displayValue}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Mobile Overlay - Removed as it was interfering with form interactions */}
     </div>
   )
 }

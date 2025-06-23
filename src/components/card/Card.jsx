@@ -75,9 +75,11 @@ const Card = ({
           >
             <Heart className={`w-4 h-4 ${isInWishlist ? "fill-current" : ""}`} />
           </button>
+          <Link to={`/cars/${id}`} className="">
           <button className="p-2 bg-white/90 text-gray-700 rounded-full hover:bg-blue-50 transition-all duration-200 hover:scale-110 shadow-md backdrop-blur-sm">
             <Eye className="w-4 h-4" />
           </button>
+          </Link>
         </div>
 
         {/* Year Badge */}
