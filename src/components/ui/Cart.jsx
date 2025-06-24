@@ -12,6 +12,7 @@ import {
   Truck,
   MessageCircle,
   DollarSign,
+  LogIn,
 } from "lucide-react"
 import { useShop } from "../../Context/ShopContext"
 import { useCreateOrder } from "../../hooks/useOrders";
@@ -71,6 +72,36 @@ const PriceDisplay = ({ amount, currency, className = "", showBothCurrencies = f
   )
 }
 
+// Login Required Modal Component
+const LoginRequiredModal = ({ isOpen, onClose, onLogin }) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LogIn size={32} className="text-blue-600" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2 text-gray-900">Login Required</h3>
+          <p className="text-gray-600 mb-6">
+            Please log in to place an order and start negotiating. You'll need an account to track your orders and communicate with our team.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={onLogin} className="flex-1">
+              <LogIn size={16} className="mr-2" />
+              Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Cart() {
   const { 
     cartItems, 
@@ -80,12 +111,15 @@ export default function Cart() {
     clearCart, 
     cartCount,
     exchangeRate,
-    exchangeRateLoading
+    exchangeRateLoading,
+    isAuthenticated,
+    currentUser
   } = useShop()
   
   const [currency, setCurrency] = useState("USD") // Default currency
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showOrderSuccess, setShowOrderSuccess] = useState(false)
+  const [showLoginRequired, setShowLoginRequired] = useState(false)
   const [createdOrder, setCreatedOrder] = useState(null)
   const { mutate: createOrder, isPending: orderLoading } = useCreateOrder()
 
@@ -113,6 +147,12 @@ export default function Cart() {
   }
 
   const handleNegotiateOrder = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      setShowLoginRequired(true)
+      return
+    }
+
     createOrder(cartItems, {
       onSuccess: (data) => {
         console.log("Order created successfully:", data)
@@ -131,6 +171,12 @@ export default function Cart() {
         alert("Failed to create order. Please try again.")
       },
     })
+  }
+
+  const handleLoginRequired = () => {
+    setShowLoginRequired(false)
+    // Redirect to login page - adjust the path as needed
+    window.location.href = "/login"
   }
 
   const handleOrderSuccessClose = () => {
@@ -193,6 +239,11 @@ export default function Cart() {
               <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
               <p className="text-gray-600 mt-1">
                 {cartCount} {cartCount === 1 ? "item" : "items"} in your cart
+                {currentUser && (
+                  <span className="text-blue-600 ml-2">
+                    - {currentUser.name || currentUser.email}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -365,8 +416,17 @@ export default function Cart() {
                   disabled={orderLoading}
                   className="w-full py-3 text-base font-medium flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                 >
-                  <MessageCircle size={20} />
-                  {orderLoading ? "Creating Order..." : "Order to Negotiate"}
+                  {!isAuthenticated() ? (
+                    <>
+                      <LogIn size={20} />
+                      Login to Negotiate
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle size={20} />
+                      {orderLoading ? "Creating Order..." : "Order to Negotiate"}
+                    </>
+                  )}
                 </Button>
 
                 <Button variant="outline" className="w-full py-3" onClick={() => (window.location.href = "/checkout")}>
@@ -406,6 +466,13 @@ export default function Cart() {
             </div>
           </div>
         )}
+
+        {/* Login Required Modal */}
+        <LoginRequiredModal 
+          isOpen={showLoginRequired}
+          onClose={() => setShowLoginRequired(false)}
+          onLogin={handleLoginRequired}
+        />
 
         {/* Order Success Modal */}
         {showOrderSuccess && createdOrder && (

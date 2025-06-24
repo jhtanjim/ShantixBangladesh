@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Heart, ShoppingCart, Eye, Calendar, Fuel, Users, Palette, Star } from 'lucide-react'
 import { Link } from "react-router-dom"
+import { useShop } from "../../Context/ShopContext"
 
 const Card = ({
   id,
@@ -15,25 +16,44 @@ const Card = ({
   fuel = "Petrol",
   exteriorColor = "N/A",
   seats = 4,
-  onAddToCart,
-  onAddToWishlist,
-  isInCart = false,
-  isInWishlist = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  
+  // Use shop context instead of props
+  const { 
+    addToCart, 
+    toggleWishlist, 
+    isInCart, 
+    isInWishlist,
+    // isAuthenticated 
+  } = useShop()
+
+  // Create car object for context functions
+  const carData = {
+    id,
+    title,
+    price,
+    imageUrl,
+    year,
+    fuel,
+    exteriorColor,
+    seats
+  }
 
   const handleAddToCart = () => {
-    if (onAddToCart) {
-      onAddToCart({ id, title, price, imageUrl, year, fuel, exteriorColor, seats })
-    }
+    
+    addToCart(carData)
   }
 
-  const handleAddToWishlist = () => {
-    if (onAddToWishlist) {
-      onAddToWishlist({ id, title, price, imageUrl, year, fuel, exteriorColor, seats })
-    }
+  const handleToggleWishlist = () => {
+   
+    toggleWishlist(carData)
   }
+
+  // Check if item is in cart/wishlist
+  const itemIsInCart = isInCart(id)
+  const itemIsInWishlist = isInWishlist(id)
 
   return (
     <div
@@ -66,19 +86,19 @@ const Card = ({
           }`}
         >
           <button
-            onClick={handleAddToWishlist}
+            onClick={handleToggleWishlist}
             className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 ${
-              isInWishlist 
+              itemIsInWishlist 
                 ? "bg-red-500 text-white shadow-lg" 
                 : "bg-white/90 text-gray-700 hover:bg-red-50 shadow-md"
             }`}
           >
-            <Heart className={`w-4 h-4 ${isInWishlist ? "fill-current" : ""}`} />
+            <Heart className={`w-4 h-4 ${itemIsInWishlist ? "fill-current" : ""}`} />
           </button>
           <Link to={`/cars/${id}`} className="">
-          <button className="p-2 bg-white/90 text-gray-700 rounded-full hover:bg-blue-50 transition-all duration-200 hover:scale-110 shadow-md backdrop-blur-sm">
-            <Eye className="w-4 h-4" />
-          </button>
+            <button className="p-2 bg-white/90 text-gray-700 rounded-full hover:bg-blue-50 transition-all duration-200 hover:scale-110 shadow-md backdrop-blur-sm">
+              <Eye className="w-4 h-4" />
+            </button>
           </Link>
         </div>
 
@@ -105,17 +125,6 @@ const Card = ({
           <h3 className="text-lg font-bold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
             {title}
           </h3>
-          
-          {/* Rating Stars */}
-          {/* <div className="flex items-center gap-1 mt-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3 h-3 ${i < 4 ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-              />
-            ))}
-            <span className="text-xs text-gray-500 ml-1">(4.0)</span>
-          </div> */}
         </div>
 
         {/* Car Details Grid */}
@@ -151,21 +160,18 @@ const Card = ({
           <button
             onClick={handleAddToCart}
             className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-              isInCart
+              itemIsInCart
                 ? "bg-green-100 text-green-700 border border-green-200"
                 : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
             }`}
           >
-
-
             <ShoppingCart className="w-4 h-4" />
-            {isInCart ? "Added" : "Add to Cart"}
+            {itemIsInCart ? "Added" : "Add to Cart"}
           </button>
-                         <Link to={`/cars/${id}`} className="">
-
-          <button className="px-3 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium">
-            View
-          </button>
+          <Link to={`/cars/${id}`} className="">
+            <button className="px-3 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium">
+              View
+            </button>
           </Link>
         </div>
       </div>

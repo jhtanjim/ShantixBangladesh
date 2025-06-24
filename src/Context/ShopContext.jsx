@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useState, useContext, useEffect } from "react"
+import { useAuth } from "./AuthContext" // Import your auth context
 
 const ShopContext = createContext()
 
@@ -8,51 +9,105 @@ export function ShopProvider({ children }) {
   const [cartItems, setCartItems] = useState([])
   const [wishlistItems, setWishlistItems] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const { token, user } = useAuth() // Get token and user from auth context
+  const [currentUser, setCurrentUser] = useState(null)
 
   // ✅ Hardcoded exchange rate
   const exchangeRate = 142.08
 
-  // Load data from localStorage on mount
+  // Get current user data
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem("shantix-cart")
-      const savedWishlist = localStorage.getItem("shantix-wishlist")
-
-      if (savedCart) {
-        setCartItems(JSON.parse(savedCart))
+    const fetchUser = async () => {
+      if (token) {
+        try {
+          const userData = await user()
+          setCurrentUser(userData)
+        } catch (error) {
+          console.error("Error fetching user:", error)
+          setCurrentUser(null)
+        }
+      } else {
+        setCurrentUser(null)
       }
-
-      if (savedWishlist) {
-        setWishlistItems(JSON.parse(savedWishlist))
-      }
-    } catch (error) {
-      console.error("Error loading data from localStorage:", error)
-    } finally {
-      setIsLoaded(true)
     }
-  }, [])
+
+    fetchUser()
+  }, [token, user])
+
+  // Generate user-specific storage keys
+  const getStorageKey = (type) => {
+    if (!currentUser?.id) return `shantix-${type}-guest`
+    return `shantix-${type}-${currentUser.id}`
+  }
+
+  // Load data from localStorage on mount or when user changes
+  useEffect(() => {
+    const loadUserData = () => {
+      try {
+        const cartKey = getStorageKey("cart")
+        const wishlistKey = getStorageKey("wishlist")
+        
+        const savedCart = localStorage.getItem(cartKey)
+        const savedWishlist = localStorage.getItem(wishlistKey)
+
+        if (savedCart) {
+          setCartItems(JSON.parse(savedCart))
+        } else {
+          setCartItems([]) // Clear cart if no data for this user
+        }
+
+        if (savedWishlist) {
+          setWishlistItems(JSON.parse(savedWishlist))
+        } else {
+          setWishlistItems([]) // Clear wishlist if no data for this user
+        }
+      } catch (error) {
+        console.error("Error loading data from localStorage:", error)
+        setCartItems([])
+        setWishlistItems([])
+      } finally {
+        setIsLoaded(true)
+      }
+    }
+
+    // Load data when user changes or on initial load
+    if (currentUser !== undefined) { // Wait for user data to be determined
+      loadUserData()
+    }
+  }, [currentUser])
+
+  // Clear cart and wishlist when user logs out
+  useEffect(() => {
+    if (token === null && isLoaded) {
+      // User logged out, clear current session data
+      setCartItems([])
+      setWishlistItems([])
+    }
+  }, [token, isLoaded])
 
   // Save cart to localStorage whenever cartItems changes
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && currentUser !== undefined) {
       try {
-        localStorage.setItem("shantix-cart", JSON.stringify(cartItems))
+        const cartKey = getStorageKey("cart")
+        localStorage.setItem(cartKey, JSON.stringify(cartItems))
       } catch (error) {
         console.error("Error saving cart to localStorage:", error)
       }
     }
-  }, [cartItems, isLoaded])
+  }, [cartItems, isLoaded, currentUser])
 
   // Save wishlist to localStorage whenever wishlistItems changes
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && currentUser !== undefined) {
       try {
-        localStorage.setItem("shantix-wishlist", JSON.stringify(wishlistItems))
+        const wishlistKey = getStorageKey("wishlist")
+        localStorage.setItem(wishlistKey, JSON.stringify(wishlistItems))
       } catch (error) {
         console.error("Error saving wishlist to localStorage:", error)
       }
     }
-  }, [wishlistItems, isLoaded])
+  }, [wishlistItems, isLoaded, currentUser])
 
   // Cart functions
   const addToCart = (car) => {
@@ -142,6 +197,11 @@ export function ShopProvider({ children }) {
     return Math.round(usdPrice * exchangeRate)
   }
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    return !!token && !!currentUser
+  }
+
   const value = {
     cartItems,
     addToCart,
@@ -160,6 +220,9 @@ export function ShopProvider({ children }) {
     wishlistCount,
     exchangeRate,
     formatYenPrice,
+    isAuthenticated,
+    currentUser,
+    exchangeRateLoading: false, // Since we're using hardcoded rate
   }
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>

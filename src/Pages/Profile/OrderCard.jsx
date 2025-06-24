@@ -440,7 +440,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
           </div>
 
           <a
-            href={`https://wa.me/8801234567890?text=${encodeURIComponent(`Hello, I have a question about Order ID: ${order.id}`)}`}
+            href={`https://wa.me/8801752742031?text=${encodeURIComponent(`Hello, I have a question about Order ID: ${order.id}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center text-sm font-medium px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
