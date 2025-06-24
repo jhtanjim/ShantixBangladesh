@@ -150,11 +150,14 @@ const Navbar = () => {
               )}
             </Link>
 
-            <Link to="/profile" className="hidden lg:block">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                My Page
-              </button>
-            </Link>
+            {/* Only show My Page button when user is authenticated */}
+            {authState.isAuthenticated && (
+              <Link to="/profile" className="hidden lg:block">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                  My Page
+                </button>
+              </Link>
+            )}
 
             <button
               onClick={toggleMenu}
@@ -182,13 +185,16 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              <div className="pt-4 border-t border-gray-200">
-                <Link to="/profile">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                    My Page
-                  </button>
-                </Link>
-              </div>
+              {/* Only show My Page button in mobile menu when user is authenticated */}
+              {authState.isAuthenticated && (
+                <div className="pt-4 border-t border-gray-200">
+                  <Link to="/profile">
+                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                      My Page
+                    </button>
+                  </Link>
+                </div>
+              )}
             </nav>
           </div>
         </div>
