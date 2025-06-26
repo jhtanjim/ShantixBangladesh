@@ -7,7 +7,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 import logoImg from "../../assets/images/logo.png"
 import Swal from "sweetalert2"
 
-export default function LoginPage() {
+export default function LoginPage({onForgotPassword}) {
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -198,7 +198,7 @@ export default function LoginPage() {
             <div className="text-right">
               <button
                 type="button"
-                onClick={handleForgotPassword}
+               onClick={onForgotPassword}
                 className="text-sm font-medium hover:underline transition-colors"
                 style={{ color: '#0072BC' }}
               >

@@ -9,3 +9,12 @@ export const registerUser = async (data) => {
   const response = await axios.post("/auth/register", data)
   return response.data
 }
+export const forgotPass = async (email) => {
+  const res = await api.post("/auth/forgot-password", { email });
+  return res.data;
+};
+export const resetPass = async (data) => {
+  const res = await api.post("/auth/reset-password", data);
+  // console.log(res);
+  return res.data;
+};

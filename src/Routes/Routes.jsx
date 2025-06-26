@@ -27,6 +27,8 @@ import AdminRoute from "./AdminRoute";
 import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
 import HowToBuy from "../Pages/HowToBuy/HowToBuy";
 import AdminLayout from "../layout/AdminLayout";
+import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
+import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
 
 export const router = createBrowserRouter([
   {
@@ -81,7 +83,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/login",
-        element: <Login />,
+        element: <SignInwithForgetPass />,
       },
       {
         path: "/register",
@@ -102,6 +104,10 @@ export const router = createBrowserRouter([
       {
         path: "updateProfile",
         element: <UpdateProfile />,
+      },
+      {
+        path: "privacyPolicy",
+        element: <PrivacyPolicy />,
       },
       // {
       //   path: "myPage",

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { registerUser } from "../../api/auth"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Check, Eye, EyeOff, Globe, Mail, Lock, Phone, User, Building } from "lucide-react"
 import logoImg from "../../assets/images/logo.png"
 import Swal from 'sweetalert2'
@@ -325,19 +325,23 @@ const Register = () => {
               </div>
               <label htmlFor="confirmCheckbox" className="text-sm text-gray-600 cursor-pointer leading-5">
                 I agree to the{" "}
+                   <Link to={"/privacyPolicy"}>
                 <span 
                   className="font-semibold hover:underline cursor-pointer transition-colors"
                   style={{ color: '#0072BC' }}
                 >
                   Terms & Conditions
                 </span>{" "}
+                   </Link>
                 and{" "}
+                <Link to={"/privacyPolicy"}>
                 <span 
                   className="font-semibold hover:underline cursor-pointer transition-colors"
                   style={{ color: '#0072BC' }}
                 >
                   Privacy Policy
                 </span>
+                </Link>
               </label>
             </div>
 
