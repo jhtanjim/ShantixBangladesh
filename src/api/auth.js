@@ -10,7 +10,8 @@ export const registerUser = async (data) => {
   return response.data
 }
 export const forgotPass = async (email) => {
-  const res = await api.post("/auth/forgot-password", { email });
+  console.log(email)
+  const res = await api.post("/auth/request-password-reset", { email });
   return res.data;
 };
 export const resetPass = async (data) => {

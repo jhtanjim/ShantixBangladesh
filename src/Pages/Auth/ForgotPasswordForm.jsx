@@ -11,7 +11,6 @@ const ForgotPasswordForm = ({ onBackToLogin, onEmailSent }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
     try {
       const result = await forgotPass(email);
       if (result.success) {
