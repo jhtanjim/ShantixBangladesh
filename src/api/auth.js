@@ -10,12 +10,10 @@ export const registerUser = async (data) => {
   return response.data
 }
 export const forgotPass = async (email) => {
-  console.log(email)
   const res = await axios.post("/auth/request-password-reset", { email });
   return res.data;
 };
 export const resetPass = async (data) => {
    const res = await axios.post("/auth/reset-password", data);
-   console.log(data);
   return res.data;
 };
