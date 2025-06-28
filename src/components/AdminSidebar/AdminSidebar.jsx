@@ -19,7 +19,8 @@ import {
   Grid3X3,
   Car,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Info
 } from 'lucide-react'
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -47,6 +48,12 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: Users,
       key: "users",
       path: "/admin/users"
+    },
+    {
+      title: " enquiryList",
+      icon: Info,
+      key: "enquiryList",
+      path: "/admin/enquiryList"
     },
     {
       title: "Orders",

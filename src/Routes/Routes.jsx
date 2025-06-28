@@ -4,7 +4,6 @@ import About from "../Pages/About/About";
 import ContactUs from "../Pages/ContactUs/ContactUs";
 import CarDetails from "../Pages/AllCar/CarDetails";
 import Enquiry from "../Pages/Enquiry/Enquiry";
-import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Register";
 import Profile from "../Pages/Profile/Profile";
 import UserProfile from "../Pages/Profile/UserProfile";
@@ -29,6 +28,7 @@ import HowToBuy from "../Pages/HowToBuy/HowToBuy";
 import AdminLayout from "../layout/AdminLayout";
 import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
 import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
+import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
 
 export const router = createBrowserRouter([
   {
@@ -136,7 +136,8 @@ export const router = createBrowserRouter([
       { path: "users", element: <UsersPage /> },
       { path: "users/create", element: <CreateUserPage /> },
       { path: "users/:id/edit", element: <EditUserPage /> },
-      { path: "orders", element: <OrderPage /> }
+      { path: "orders", element: <OrderPage /> },
+      { path: "enquiryList", element: <EnquiryList /> }
 
     ],
   },

@@ -11,11 +11,11 @@ export const registerUser = async (data) => {
 }
 export const forgotPass = async (email) => {
   console.log(email)
-  const res = await api.post("/auth/request-password-reset", { email });
+  const res = await axios.post("/auth/request-password-reset", { email });
   return res.data;
 };
 export const resetPass = async (data) => {
-  const res = await api.post("/auth/reset-password", data);
-  // console.log(res);
+   const res = await axios.post("/auth/reset-password", data);
+   console.log(data);
   return res.data;
 };

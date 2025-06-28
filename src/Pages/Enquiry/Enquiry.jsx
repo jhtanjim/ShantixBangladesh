@@ -26,7 +26,7 @@ const Enquiry = () => {
   };
   
 
-  const handleRadioChange = (name: string, value: string) => {
+  const handleRadioChange = (name, value) => {
     setFormData(prevState => ({
       ...prevState,
       [name]: value
@@ -42,7 +42,7 @@ const Enquiry = () => {
     { value: "au", label: "Australia" }
   ];
 
-  const submitInquiry = (e: React.FormEvent<HTMLButtonElement>) => {
+  const submitInquiry = (e) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
   };
