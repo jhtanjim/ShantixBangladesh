@@ -1,21 +1,25 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import SelectField from "../../components/ui/SelectField";
+import Swal from "sweetalert2";
+import { useCreateInquiry } from "../../hooks/useInquiry";
 
 const Enquiry = () => {
   const [formData, setFormData] = useState({
     make: "",
     model: "",
-    steering: "right",
+    steering: "RIGHT_HAND",
     yearFrom: "",
     yearTo: "",
     country: "",
     port: "",
     email: "",
     mobile: "",
-    userType: "individual",
+    customerType: "INDIVIDUAL",
     message: "",
-    enquiryFor: "car"
+    inquiryType: "CAR"
   });
+
+  const createInquiryMutation = useCreateInquiry();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +28,6 @@ const Enquiry = () => {
       [name]: value
     }));
   };
-  
 
   const handleRadioChange = (name, value) => {
     setFormData(prevState => ({
@@ -32,21 +35,134 @@ const Enquiry = () => {
       [name]: value
     }));
   };
-  
 
   const countryOptions = [
     { value: "", label: "Select Country" },
-    { value: "us", label: "United States" },
-    { value: "jp", label: "Japan" },
-    { value: "uk", label: "United Kingdom" },
-    { value: "au", label: "Australia" }
+    { value: "US", label: "United States" },
+    { value: "JP", label: "Japan" },
+    { value: "UK", label: "United Kingdom" },
+    { value: "AU", label: "Australia" },
+    { value: "BD", label: "Bangladesh" },
+    { value: "IN", label: "India" },
+    { value: "MY", label: "Malaysia" },
+    { value: "TH", label: "Thailand" },
+    { value: "SG", label: "Singapore" }
   ];
 
-  const submitInquiry = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
+  const validateForm = () => {
+    const requiredFields = ['country', 'email', 'mobile', 'inquiryType', 'customerType'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Missing Required Fields',
+        text: `Please fill in: ${missingFields.join(', ')}`,
+        confirmButtonColor: '#dc2626'
+      });
+      return false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Email',
+        text: 'Please enter a valid email address',
+        confirmButtonColor: '#dc2626'
+      });
+      return false;
+    }
+
+    // Year validation
+    if (formData.yearFrom && formData.yearTo) {
+      const yearFrom = parseInt(formData.yearFrom);
+      const yearTo = parseInt(formData.yearTo);
+      
+      if (yearFrom > yearTo) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid Year Range',
+          text: 'Year From cannot be greater than Year To',
+          confirmButtonColor: '#dc2626'
+        });
+        return false;
+      }
+    }
+
+    return true;
   };
-  
+
+  const submitInquiry = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    try {
+      // Show loading
+      Swal.fire({
+        title: 'Submitting Inquiry...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Prepare data for API
+      const apiData = {
+        ...formData,
+        yearFrom: formData.yearFrom ? parseInt(formData.yearFrom) : undefined,
+        yearTo: formData.yearTo ? parseInt(formData.yearTo) : undefined,
+      };
+
+      // Remove empty fields
+      Object.keys(apiData).forEach(key => {
+        if (apiData[key] === "" || apiData[key] === undefined) {
+          delete apiData[key];
+        }
+      });
+
+      await createInquiryMutation.mutateAsync(apiData);
+
+      // Success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Inquiry Submitted Successfully!',
+        text: 'We will get back to you within 24 hours with the best offers.',
+        confirmButtonColor: '#059669',
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+      // Reset form
+      setFormData({
+        make: "",
+        model: "",
+        steering: "RIGHT_HAND",
+        yearFrom: "",
+        yearTo: "",
+        country: "",
+        port: "",
+        email: "",
+        mobile: "",
+        customerType: "INDIVIDUAL",
+        message: "",
+        inquiryType: "CAR"
+      });
+
+    } catch (error) {
+      console.error('Inquiry submission error:', error);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text: error.response?.data?.message || 'Something went wrong. Please try again.',
+        confirmButtonColor: '#dc2626'
+      });
+    }
+  };
 
   return (
     <div className="bg-white">
@@ -74,7 +190,7 @@ const Enquiry = () => {
                 value={formData.make}
                 onChange={handleChange}
                 placeholder="Enter Make (Ex: Toyota)"
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
@@ -86,19 +202,19 @@ const Enquiry = () => {
                 value={formData.model}
                 onChange={handleChange}
                 placeholder="Enter Model (Ex: Corolla)"
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
             <div className="grid grid-cols-3 items-center">
               <label className="font-medium">Steering</label>
-              <div className="col-span-2 flex space-x-2">
+              <div className="col-span-2 flex flex-wrap gap-2">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
                     name="steering"
-                    checked={formData.steering === "right"}
-                    onChange={() => handleRadioChange("steering", "right")}
+                    checked={formData.steering === "RIGHT_HAND"}
+                    onChange={() => handleRadioChange("steering", "RIGHT_HAND")}
                     className="mr-1"
                   />
                   <span>Right Hand</span>
@@ -107,8 +223,8 @@ const Enquiry = () => {
                   <input
                     type="radio"
                     name="steering"
-                    checked={formData.steering === "left"}
-                    onChange={() => handleRadioChange("steering", "left")}
+                    checked={formData.steering === "LEFT_HAND"}
+                    onChange={() => handleRadioChange("steering", "LEFT_HAND")}
                     className="mr-1"
                   />
                   <span>Left Hand</span>
@@ -117,8 +233,8 @@ const Enquiry = () => {
                   <input
                     type="radio"
                     name="steering"
-                    checked={formData.steering === "any"}
-                    onChange={() => handleRadioChange("steering", "any")}
+                    checked={formData.steering === "ANY"}
+                    onChange={() => handleRadioChange("steering", "ANY")}
                     className="mr-1"
                   />
                   <span>Any</span>
@@ -130,20 +246,24 @@ const Enquiry = () => {
               <label className="font-medium">Year</label>
               <div className="col-span-2 grid grid-cols-2 gap-2">
                 <input
-                  type="text"
+                  type="number"
                   name="yearFrom"
                   value={formData.yearFrom}
                   onChange={handleChange}
                   placeholder="Year From"
-                  className="border border-gray-300 p-2 rounded w-full"
+                  min="1900"
+                  max="2030"
+                  className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <input
-                  type="text"
+                  type="number"
                   name="yearTo"
                   value={formData.yearTo}
                   onChange={handleChange}
                   placeholder="Year To"
-                  className="border border-gray-300 p-2 rounded w-full"
+                  min="1900"
+                  max="2030"
+                  className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -156,7 +276,8 @@ const Enquiry = () => {
                 onChange={handleChange}
                 placeholder="Write 0-250 words"
                 rows={4}
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                maxLength={250}
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -164,7 +285,7 @@ const Enquiry = () => {
           {/* Middle Column */}
           <div className="space-y-4">
             <div className="grid grid-cols-3 items-center">
-              <label className="font-medium">Country</label>
+              <label className="font-medium">Country <span className="text-red-500">*</span></label>
               <div className="col-span-2">
                 <SelectField
                   name="country"
@@ -172,6 +293,7 @@ const Enquiry = () => {
                   onChange={handleChange}
                   options={countryOptions}
                   placeholder="Select Country"
+                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -184,25 +306,25 @@ const Enquiry = () => {
                 value={formData.port}
                 onChange={handleChange}
                 placeholder="Please Enter Destination Port"
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
             <div className="grid grid-cols-3 items-center">
-              <label className="font-medium">Email</label>
+              <label className="font-medium">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Please Enter Email"
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
             <div className="grid grid-cols-3 items-center">
               <label className="font-medium">
-                Mobile 
+                Mobile <span className="text-red-500">*</span>
                 <span className="text-gray-500 text-xs block">
                   (With Country Code)
                 </span>
@@ -213,7 +335,7 @@ const Enquiry = () => {
                 value={formData.mobile}
                 onChange={handleChange}
                 placeholder="Please Enter Phone/Mobile"
-                className="col-span-2 border border-gray-300 p-2 rounded w-full"
+                className="col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
@@ -223,9 +345,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="userType"
-                    checked={formData.userType === "individual"}
-                    onChange={() => handleRadioChange("userType", "individual")}
+                    name="customerType"
+                    checked={formData.customerType === "INDIVIDUAL"}
+                    onChange={() => handleRadioChange("customerType", "INDIVIDUAL")}
                     className="mr-1"
                   />
                   <span>Individual</span>
@@ -233,9 +355,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="userType"
-                    checked={formData.userType === "carDealer"}
-                    onChange={() => handleRadioChange("userType", "carDealer")}
+                    name="customerType"
+                    checked={formData.customerType === "CAR_DEALER"}
+                    onChange={() => handleRadioChange("customerType", "CAR_DEALER")}
                     className="mr-1"
                   />
                   <span>Car Dealer</span>
@@ -247,14 +369,14 @@ const Enquiry = () => {
           {/* Right Column */}
           <div>
             <div className="mb-4">
-              <label className="font-medium block mb-2">Enquiry For</label>
+              <label className="font-medium block mb-2">Enquiry For <span className="text-red-500">*</span></label>
               <div className="grid grid-cols-2 gap-2">
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "car"}
-                    onChange={() => handleRadioChange("enquiryFor", "car")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "CAR"}
+                    onChange={() => handleRadioChange("inquiryType", "CAR")}
                     className="mr-1"
                   />
                   <span>Car</span>
@@ -262,9 +384,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "bus"}
-                    onChange={() => handleRadioChange("enquiryFor", "bus")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "BUS"}
+                    onChange={() => handleRadioChange("inquiryType", "BUS")}
                     className="mr-1"
                   />
                   <span>Bus</span>
@@ -272,9 +394,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "trucks"}
-                    onChange={() => handleRadioChange("enquiryFor", "trucks")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "TRUCKS"}
+                    onChange={() => handleRadioChange("inquiryType", "TRUCKS")}
                     className="mr-1"
                   />
                   <span>Trucks</span>
@@ -282,9 +404,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "bikes"}
-                    onChange={() => handleRadioChange("enquiryFor", "bikes")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "BIKES"}
+                    onChange={() => handleRadioChange("inquiryType", "BIKES")}
                     className="mr-1"
                   />
                   <span>Bikes</span>
@@ -292,9 +414,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "parts"}
-                    onChange={() => handleRadioChange("enquiryFor", "parts")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "PARTS"}
+                    onChange={() => handleRadioChange("inquiryType", "PARTS")}
                     className="mr-1"
                   />
                   <span>Parts</span>
@@ -302,9 +424,9 @@ const Enquiry = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
-                    name="enquiryFor"
-                    checked={formData.enquiryFor === "others"}
-                    onChange={() => handleRadioChange("enquiryFor", "others")}
+                    name="inquiryType"
+                    checked={formData.inquiryType === "OTHERS"}
+                    onChange={() => handleRadioChange("inquiryType", "OTHERS")}
                     className="mr-1"
                   />
                   <span>Others</span>
@@ -317,9 +439,10 @@ const Enquiry = () => {
               <button 
                 type="button"
                 onClick={submitInquiry}
-                className="bg-red-600 text-white font-medium rounded px-4 py-2 hover:bg-red-700 transition-colors"
+                disabled={createInquiryMutation.isPending}
+                className="bg-red-600 text-white font-medium rounded px-4 py-2 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit Inquiry
+                {createInquiryMutation.isPending ? 'Submitting...' : 'Submit Inquiry'}
               </button>
             </div>
           </div>

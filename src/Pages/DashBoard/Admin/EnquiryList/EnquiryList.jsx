@@ -1,534 +1,670 @@
-import React, { useState } from 'react';
-import { Search, Eye, MessageCircle, Calendar, User, Car, Phone, Mail, MapPin, Filter, Download, Trash2, Edit3 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { useUpdateInquiry, useDeleteInquiry, useInquiry } from '../../../../hooks/useInquiry';
+import { Search, Filter, Eye, Edit, Trash2, MessageCircle, Calendar, User, Mail, Phone, MapPin, Car } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { useAllInquiries } from '../../../../hooks/useInquiry';
 
 const EnquiryList = () => {
-  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
-  const [showReplyModal, setShowReplyModal] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [enquiryTypeFilter, setEnquiryTypeFilter] = useState('all');
-
-  // Mock enquiry data
-  const [enquiries, setEnquiries] = useState([
-    {
-      id: 1,
-      make: 'Toyota',
-      model: 'Camry',
-      steering: 'right',
-      yearFrom: '2018',
-      yearTo: '2022',
-      country: 'us',
-      port: 'Los Angeles',
-      email: 'john.doe@email.com',
-      mobile: '+1-555-0123',
-      userType: 'individual',
-      message: 'Looking for a reliable Toyota Camry in good condition. Prefer lower mileage.',
-      enquiryFor: 'car',
-      status: 'pending',
-      submittedAt: '2024-06-25T10:30:00Z',
-      replies: []
-    },
-    {
-      id: 2,
-      make: 'Honda',
-      model: 'Civic',
-      steering: 'left',
-      yearFrom: '2020',
-      yearTo: '2024',
-      country: 'jp',
-      port: 'Tokyo',
-      email: 'sarah.wilson@email.com',
-      mobile: '+81-90-1234-5678',
-      userType: 'carDealer',
-      message: 'Need multiple Honda Civic units for dealership. Looking for bulk pricing.',
-      enquiryFor: 'car',
-      status: 'replied',
-      submittedAt: '2024-06-24T14:20:00Z',
-      replies: [
-        {
-          id: 1,
-          message: 'Thank you for your enquiry. We have several Honda Civic units available. Please find the detailed quotation attached.',
-          repliedAt: '2024-06-24T16:45:00Z',
-          repliedBy: 'Admin'
-        }
-      ]
-    },
-    {
-      id: 3,
-      make: 'Ford',
-      model: 'Transit',
-      steering: 'right',
-      yearFrom: '2019',
-      yearTo: '2023',
-      country: 'uk',
-      port: 'Southampton',
-      email: 'mike.transport@email.com',
-      mobile: '+44-7700-900123',
-      userType: 'individual',
-      message: 'Looking for Ford Transit van for my delivery business.',
-      enquiryFor: 'bus',
-      status: 'closed',
-      submittedAt: '2024-06-23T09:15:00Z',
-      replies: [
-        {
-          id: 1,
-          message: 'We have a perfect Ford Transit 2021 model available. FOB price: $25,000',
-          repliedAt: '2024-06-23T11:30:00Z',
-          repliedBy: 'Admin'
-        }
-      ]
-    }
-  ]);
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'replied': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'closed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const handleReply = (enquiry) => {
-    setSelectedEnquiry(enquiry);
-    setShowReplyModal(true);
-    setReplyText('');
-  };
-
-  const submitReply = () => {
-    if (!replyText.trim()) return;
-
-    const updatedEnquiries = enquiries.map(enquiry => {
-      if (enquiry.id === selectedEnquiry.id) {
-        return {
-          ...enquiry,
-          status: 'replied',
-          replies: [
-            ...enquiry.replies,
-            {
-              id: enquiry.replies.length + 1,
-              message: replyText,
-              repliedAt: new Date().toISOString(),
-              repliedBy: 'Admin'
-            }
-          ]
-        };
-      }
-      return enquiry;
-    });
-
-    setEnquiries(updatedEnquiries);
-    setShowReplyModal(false);
-    setSelectedEnquiry(null);
-    setReplyText('');
-  };
-
-  const filteredEnquiries = enquiries.filter(enquiry => {
-    const matchesSearch = 
-      enquiry.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enquiry.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || enquiry.status === statusFilter;
-    const matchesType = enquiryTypeFilter === 'all' || enquiry.enquiryFor === enquiryTypeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
+  const [filters, setFilters] = useState({
+    status: '',
+    inquiryType: '',
+    country: '',
+    email: '',
+    fromDate: '',
+    toDate: '',
+    page: 1,
+    limit: 10
   });
 
-  const userEnquiries = filteredEnquiries;
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [adminResponse, setAdminResponse] = useState('');
+
+  const { data: inquiriesData, isLoading, isError, error } = useAllInquiries(filters);
+  const { data: inquiryDetails, isLoading: isLoadingDetails } = useInquiry(selectedInquiry?.id);
+  const updateInquiryMutation = useUpdateInquiry();
+  const deleteInquiryMutation = useDeleteInquiry();
+
+  const inquiries = inquiriesData?.data || [];
+  const totalCount = inquiriesData?.total || 0;
+  const totalPages = Math.ceil(totalCount / filters.limit);
+
+  const statusOptions = [
+    { value: '', label: 'All Status' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'IN_PROGRESS', label: 'In Progress' },
+    { value: 'RESPONDED', label: 'Responded' },
+    { value: 'CLOSED', label: 'Closed' }
+  ];
+
+  const inquiryTypeOptions = [
+    { value: '', label: 'All Types' },
+    { value: 'CAR', label: 'Car' },
+    { value: 'BUS', label: 'Bus' },
+    { value: 'TRUCKS', label: 'Trucks' },
+    { value: 'PARTS', label: 'Parts' },
+    { value: 'BIKES', label: 'Bikes' },
+    { value: 'OTHERS', label: 'Others' }
+  ];
+
+  const handleFilterChange = (name, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [name]: value,
+      page: 1 // Reset to first page when filtering
+    }));
+  };
+
+  const handlePageChange = (newPage) => {
+    setFilters(prev => ({
+      ...prev,
+      page: newPage
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      inquiryType: '',
+      country: '',
+      email: '',
+      fromDate: '',
+      toDate: '',
+      page: 1,
+      limit: 10
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const statusStyles = {
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      IN_PROGRESS: 'bg-blue-100 text-blue-800',
+      RESPONDED: 'bg-green-100 text-green-800',
+      CLOSED: 'bg-gray-100 text-gray-800'
+    };
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
+        {status?.replace('_', ' ')}
+      </span>
+    );
+  };
+
+  const handleViewDetails = (inquiry) => {
+    setSelectedInquiry(inquiry);
+    setShowDetails(true);
+  };
+
+  const handleUpdateStatus = async (inquiryId, newStatus) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Update Status',
+        text: `Change status to ${newStatus.replace('_', ' ')}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Update'
+      });
+
+      if (result.isConfirmed) {
+        await updateInquiryMutation.mutateAsync({
+          inquiryId,
+          updateData: { status: newStatus }
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated',
+          text: 'Inquiry status has been updated successfully.',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: error.response?.data?.message || 'Failed to update status'
+      });
+    }
+  };
+
+  const handleRespond = (inquiry) => {
+    setSelectedInquiry(inquiry);
+    setAdminResponse(inquiry.adminResponse || '');
+    setShowResponseModal(true);
+  };
+
+  const submitResponse = async () => {
+    if (!adminResponse.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Response Required',
+        text: 'Please enter a response message'
+      });
+      return;
+    }
+
+    try {
+      await updateInquiryMutation.mutateAsync({
+        inquiryId: selectedInquiry.id,
+        updateData: {
+          status: 'RESPONDED',
+          adminResponse: adminResponse.trim(),
+          respondedBy: 'Admin' // You can get this from auth context
+        }
+      });
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Response Sent',
+        text: 'Your response has been sent successfully.',
+        timer: 2000,
+        timerProgressBar: true
+      });
+
+      setShowResponseModal(false);
+      setAdminResponse('');
+      setSelectedInquiry(null);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Response Failed',
+        text: error.response?.data?.message || 'Failed to send response'
+      });
+    }
+  };
+
+  const handleDelete = async (inquiryId) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Delete Inquiry',
+        text: 'Are you sure you want to delete this inquiry? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete'
+      });
+
+      if (result.isConfirmed) {
+        await deleteInquiryMutation.mutateAsync(inquiryId);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: 'Inquiry has been deleted successfully.',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: error.response?.data?.message || 'Failed to delete inquiry'
+      });
+    }
+  };
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Inquiries</h2>
+          <p className="text-gray-600">{error?.message || 'Something went wrong'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Admin Dashboard - Enquiry Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Manage customer enquiries and send replies
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Inquiry Management</h1>
+          <p className="text-gray-600">Manage customer inquiries and responses</p>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by make, model, or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Filter className="mr-2 h-5 w-5" />
+                Filters
+              </h2>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </button>
             </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="replied">Replied</option>
-              <option value="closed">Closed</option>
-            </select>
-
-            {/* Type Filter */}
-            <select
-              value={enquiryTypeFilter}
-              onChange={(e) => setEnquiryTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Types</option>
-              <option value="car">Car</option>
-              <option value="bus">Bus</option>
-              <option value="trucks">Trucks</option>
-              <option value="bikes">Bikes</option>
-              <option value="parts">Parts</option>
-            </select>
-
-            {/* Export Button */}
-            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              <Download className="w-4 h-4" />
-              Export
-            </button>
           </div>
+
+          {showFilters && (
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {statusOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select
+                    value={filters.inquiryType}
+                    onChange={(e) => handleFilterChange('inquiryType', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {inquiryTypeOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={filters.country}
+                    onChange={(e) => handleFilterChange('country', e.target.value)}
+                    placeholder="Enter country"
+                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={filters.email}
+                    onChange={(e) => handleFilterChange('email', e.target.value)}
+                    placeholder="Enter email"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    value={filters.fromDate}
+                    onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    value={filters.toDate}
+                    onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Total Enquiries</p>
-                  <p className="text-2xl font-bold text-gray-900">{enquiries.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {enquiries.filter(e => e.status === 'pending').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Replied</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {enquiries.filter(e => e.status === 'replied').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Closed</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {enquiries.filter(e => e.status === 'closed').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Car className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
+        {/* Inquiries Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Inquiries ({totalCount})
+              </h2>
             </div>
           </div>
-       
 
-        {/* Enquiries List */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehicle Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer Info
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {userEnquiries.map((enquiry) => (
-                  <tr key={enquiry.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {enquiry.make} {enquiry.model}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {enquiry.yearFrom}-{enquiry.yearTo} • {enquiry.steering} hand • {enquiry.enquiryFor}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="flex items-center text-sm text-gray-900">
-                          <Mail className="w-4 h-4 mr-1 text-gray-400" />
-                          {enquiry.email}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                          {enquiry.mobile}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                          {enquiry.port}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(enquiry.status)}`}>
-                        {enquiry.status.charAt(0).toUpperCase() + enquiry.status.slice(1)}
-                      </span>
-                      {enquiry.replies.length > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {enquiry.replies.length} replies
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(enquiry.submittedAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setSelectedEnquiry(enquiry)}
-                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleReply(enquiry)}
-                          className="text-green-600 hover:text-green-900 flex items-center gap-1"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          Reply
-                        </button>
-                      </div>
-                    </td>
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading inquiries...</p>
+            </div>
+          ) : inquiries.length === 0 ? (
+            <div className="p-8 text-center">
+              <MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-4 text-gray-600">No inquiries found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer Info
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Inquiry Details
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Enquiry Details Modal */}
-        {selectedEnquiry && !showReplyModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Enquiry Details</h2>
-                  <button
-                    onClick={() => setSelectedEnquiry(null)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Vehicle Details */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900 border-b pb-2">Vehicle Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Make:</span>
-                        <p className="font-medium">{selectedEnquiry.make}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Model:</span>
-                        <p className="font-medium">{selectedEnquiry.model}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Year Range:</span>
-                        <p className="font-medium">{selectedEnquiry.yearFrom} - {selectedEnquiry.yearTo}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Steering:</span>
-                        <p className="font-medium">{selectedEnquiry.steering} hand</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Type:</span>
-                        <p className="font-medium">{selectedEnquiry.enquiryFor}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Status:</span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEnquiry.status)}`}>
-                          {selectedEnquiry.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customer Details */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900 border-b pb-2">Customer Information</h3>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="text-gray-500">Email:</span>
-                        <p className="font-medium">{selectedEnquiry.email}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Mobile:</span>
-                        <p className="font-medium">{selectedEnquiry.mobile}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Country:</span>
-                        <p className="font-medium">{selectedEnquiry.country}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Port:</span>
-                        <p className="font-medium">{selectedEnquiry.port}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">User Type:</span>
-                        <p className="font-medium">{selectedEnquiry.userType}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Message */}
-                <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2 mb-3">Customer Message</h3>
-                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedEnquiry.message}</p>
-                </div>
-
-                {/* Replies */}
-                {selectedEnquiry.replies.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 border-b pb-2 mb-3">Replies</h3>
-                    <div className="space-y-3">
-                      {selectedEnquiry.replies.map((reply) => (
-                        <div key={reply.id} className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-blue-900">{reply.repliedBy}</span>
-                            <span className="text-sm text-gray-500">{formatDate(reply.repliedAt)}</span>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {inquiries.map((inquiry) => (
+                    <tr key={inquiry.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <User className="h-5 w-5 text-blue-600" />
+                            </div>
                           </div>
-                          <p className="text-gray-700">{reply.message}</p>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {inquiry.name}
+                            </div>
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {inquiry.email}
+                            </div>
+                            {inquiry.phone && (
+                              <div className="text-sm text-gray-500 flex items-center">
+                                <Phone className="h-3 w-3 mr-1" />
+                                {inquiry.phone}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          <div className="flex items-center mb-1">
+                            <Car className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className="font-medium">{inquiry.inquiryType}</span>
+                          </div>
+                          <div className="text-gray-600 line-clamp-2">
+                            {inquiry.message}
+                          </div>
+                          {inquiry.country && (
+                            <div className="flex items-center mt-1 text-gray-500">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {inquiry.country}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col space-y-2">
+                          {getStatusBadge(inquiry.status)}
+                          <select
+                            value={inquiry.status}
+                            onChange={(e) => handleUpdateStatus(inquiry.id, e.target.value)}
+                            className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            disabled={updateInquiryMutation.isLoading}
+                          >
+                            {statusOptions.slice(1).map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {new Date(inquiry.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(inquiry.createdAt).toLocaleTimeString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewDetails(inquiry)}
+                            className="text-blue-600 hover:text-blue-900 flex items-center"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRespond(inquiry)}
+                            className="text-green-600 hover:text-green-900 flex items-center"
+                            title="Respond"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(inquiry.id)}
+                            className="text-red-600 hover:text-red-900 flex items-center"
+                            title="Delete"
+                            disabled={deleteInquiryMutation.isLoading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-                {/* Action Buttons */}
-                <div className="mt-6 flex gap-3">
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, totalCount)} of {totalCount} results
+                </div>
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => handleReply(selectedEnquiry)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    onClick={() => handlePageChange(filters.page - 1)}
+                    disabled={filters.page === 1}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    Send Reply
+                    Previous
                   </button>
+                  
+                  {[...Array(Math.min(5, totalPages))].map((_, index) => {
+                    const page = Math.max(1, Math.min(totalPages - 4, filters.page - 2)) + index;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-1 border rounded-md text-sm font-medium ${
+                          filters.page === page
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                  
                   <button
-                    onClick={() => setSelectedEnquiry(null)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    onClick={() => handlePageChange(filters.page + 1)}
+                    disabled={filters.page === totalPages}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Close
+                    Next
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Details Modal */}
+        {showDetails && selectedInquiry && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Inquiry Details</h3>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  ✕
+                </button>
+              </div>
+              
+              {isLoadingDetails ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading details...</p>
+                </div>
+              ) : inquiryDetails ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Name</label>
+                      <p className="text-sm text-gray-900">{inquiryDetails.name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <p className="text-sm text-gray-900">{inquiryDetails.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Phone</label>
+                      <p className="text-sm text-gray-900">{inquiryDetails.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Country</label>
+                      <p className="text-sm text-gray-900">{inquiryDetails.country || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Inquiry Type</label>
+                      <p className="text-sm text-gray-900">{inquiryDetails.inquiryType}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      {getStatusBadge(inquiryDetails.status)}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Message</label>
+                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md mt-1">
+                      {inquiryDetails.message}
+                    </p>
+                  </div>
+                  
+                  {inquiryDetails.adminResponse && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Admin Response</label>
+                      <p className="text-sm text-gray-900 bg-blue-50 p-3 rounded-md mt-1">
+                        {inquiryDetails.adminResponse}
+                      </p>
+                      {inquiryDetails.respondedBy && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Responded by: {inquiryDetails.respondedBy}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Created At</label>
+                      <p>{new Date(inquiryDetails.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Updated At</label>
+                      <p>{new Date(inquiryDetails.updatedAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-gray-600">Failed to load inquiry details</p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Reply Modal */}
-        {showReplyModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Send Reply</h2>
-                  <button
-                    onClick={() => setShowReplyModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
+        {/* Response Modal */}
+        {showResponseModal && selectedInquiry && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Respond to Inquiry</h3>
+                <button
+                  onClick={() => setShowResponseModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <h4 className="font-medium text-gray-900 mb-2">Original Inquiry</h4>
+                  <p className="text-sm text-gray-700">{selectedInquiry.message}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    From: {selectedInquiry.name} ({selectedInquiry.email})
+                  </p>
                 </div>
-
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">Replying to enquiry for:</p>
-                  <p className="font-medium">{selectedEnquiry.make} {selectedEnquiry.model} ({selectedEnquiry.yearFrom}-{selectedEnquiry.yearTo})</p>
-                  <p className="text-sm text-gray-600">Customer: {selectedEnquiry.email}</p>
-                </div>
-
-                <div className="mb-6">
+                
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Reply
+                    Your Response
                   </label>
                   <textarea
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
+                    value={adminResponse}
+                    onChange={(e) => setAdminResponse(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Type your reply here..."
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your response..."
                   />
                 </div>
-
-                <div className="flex gap-3">
+                
+                <div className="flex justify-end space-x-3">
                   <button
-                    onClick={submitReply}
-                    disabled={!replyText.trim()}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Send Reply
-                  </button>
-                  <button
-                    onClick={() => setShowReplyModal(false)}
-                    className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    onClick={() => setShowResponseModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    disabled={updateInquiryMutation.isLoading}
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={submitResponse}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                    disabled={updateInquiryMutation.isLoading}
+                  >
+                    {updateInquiryMutation.isLoading ? 'Sending...' : 'Send Response'}
                   </button>
                 </div>
               </div>
