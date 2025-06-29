@@ -1,4 +1,5 @@
 "use client"
+import Swal from "sweetalert2"
 
 import { useState } from "react"
 import {
@@ -115,7 +116,7 @@ export default function Cart() {
     isAuthenticated,
     currentUser
   } = useShop()
-  
+  console.log(cartItems)
   const [currency, setCurrency] = useState("USD") // Default currency
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showOrderSuccess, setShowOrderSuccess] = useState(false)
@@ -146,32 +147,61 @@ export default function Cart() {
     setCurrency(newCurrency)
   }
 
-  const handleNegotiateOrder = () => {
-    // Check if user is authenticated
-    if (!isAuthenticated()) {
-      setShowLoginRequired(true)
-      return
-    }
 
-    createOrder(cartItems, {
-      onSuccess: (data) => {
-        console.log("Order created successfully:", data)
-        setCreatedOrder(data.order)
-        setShowOrderSuccess(true)
-        clearCart()
-        // Redirect to WhatsApp with order ID
-        const orderId = data.order.id
-        const whatsappNumber = "8801752742031" // change to your business number
-        const message = `Hello, I just placed an order (ID: ${orderId}). I'd like to negotiate the price.`
-
-        window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
-      },
-      onError: (error) => {
-        console.error("Failed to create order:", error)
-        alert("Failed to create order. Please try again.")
-      },
-    })
+const handleNegotiateOrder = () => {
+  // Check if user is authenticated
+  if (!isAuthenticated()) {
+    setShowLoginRequired(true)
+    return
   }
+
+  // Check if any item in cart is ON_HOLD
+  const hasOnHoldItem = cartItems.some(item => item.status === "ON_HOLD")
+  if (hasOnHoldItem) {
+    Swal.fire({
+      icon: "warning",
+      title: "Negotiation Unavailable",
+      text: "One or more items in your cart are currently ON HOLD and cannot be negotiated or ordered.",
+      confirmButtonText: "Okay",
+    })
+    return
+  }
+
+  // Proceed to create order
+  createOrder(cartItems, {
+    onSuccess: (data) => {
+      console.log("Order created successfully:", data)
+      setCreatedOrder(data.order)
+      setShowOrderSuccess(true)
+      clearCart()
+
+      // Show SweetAlert before redirecting to WhatsApp
+  Swal.fire({
+  icon: "success",
+  title: "Order Placed",
+  text: "Your order was placed successfully. You'll now be redirected to WhatsApp to negotiate.",
+  showConfirmButton: true,
+  confirmButtonText: "Go to WhatsApp",
+}).then(() => {
+  const orderId = data.order.id
+  const whatsappNumber = "8801752742031"
+  const message = `Hello, I just placed an order (ID: ${orderId}). I'd like to negotiate the price.`
+  window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank")
+})
+
+    },
+    onError: (error) => {
+      console.error("Failed to create order:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Order Failed",
+        text: "Failed to create order. Please try again later.",
+        confirmButtonText: "Okay",
+      })
+    },
+  })
+}
+
 
   const handleLoginRequired = () => {
     setShowLoginRequired(false)

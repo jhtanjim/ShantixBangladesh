@@ -1,14 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  
   createSchedule,
   updateSchedule,
   deleteSchedule,
   activateSchedule,
   deactivateSchedule,
   getAdminSchedules,
-} from "../api/shipSchedule"; // Adjust path as needed
-import { getSchedules } from "../api/shipSchedule";
+  getSchedules,
+} from "../api/shipSchedule";
 
 const useShipSchedule = () => {
   const queryClient = useQueryClient();
@@ -18,16 +17,34 @@ const useShipSchedule = () => {
     data: schedules,
     isLoading,
     isError,
+    refetch: refetchSchedules,
   } = useQuery({
     queryKey: ["schedules"],
     queryFn: getSchedules,
   });
 
+  // Get admin ship schedules
+  const {
+    data: adminSchedules,
+    isLoading: isAdminLoading,
+    isError: isAdminError,
+    refetch: refetchAdminSchedules,
+  } = useQuery({
+    queryKey: ["adminSchedules"],
+    queryFn: getAdminSchedules,
+  });
+
+  // Helper function to invalidate both queries
+  const invalidateScheduleQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    queryClient.invalidateQueries({ queryKey: ["adminSchedules"] });
+  };
+
   // Create schedule mutation
   const createMutation = useMutation({
     mutationFn: (data) => createSchedule(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      invalidateScheduleQueries(); // ✅ Invalidate both queries
     },
   });
 
@@ -35,7 +52,7 @@ const useShipSchedule = () => {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => updateSchedule(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      invalidateScheduleQueries(); // ✅ Invalidate both queries
     },
   });
 
@@ -43,7 +60,7 @@ const useShipSchedule = () => {
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteSchedule(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      invalidateScheduleQueries(); // ✅ Invalidate both queries
     },
   });
 
@@ -51,7 +68,7 @@ const useShipSchedule = () => {
   const activateMutation = useMutation({
     mutationFn: (id) => activateSchedule(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      invalidateScheduleQueries(); // ✅ Invalidate both queries
     },
   });
 
@@ -59,26 +76,28 @@ const useShipSchedule = () => {
   const deactivateMutation = useMutation({
     mutationFn: (id) => deactivateSchedule(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      invalidateScheduleQueries(); // ✅ Invalidate both queries
     },
-  });
-
-  // Get admin ship schedules
-  const { data: adminSchedules } = useQuery({
-    queryKey: ["adminSchedules"],
-    queryFn: getAdminSchedules,
   });
 
   return {
     schedules,
+    adminSchedules,
     isLoading,
     isError,
+    isAdminLoading,
+    isAdminError,
     createMutation,
     updateMutation,
     deleteMutation,
     activateMutation,
     deactivateMutation,
-    adminSchedules,
+    refetchSchedules,
+    refetchAdminSchedules,
+    // Optional: return the combined loading state
+    isAnyLoading: isLoading || isAdminLoading,
+    // Optional: return the combined error state
+    hasAnyError: isError || isAdminError,
   };
 };
 
