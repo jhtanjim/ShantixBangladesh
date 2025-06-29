@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, X, AlertCircle, Car, Info, Settings, ImageIcon, Trash2
 import { useNavigate, useParams } from "react-router-dom"
 import { useCar, useUpdateCar } from "../../../../hooks/useCars"
 import type { CarFeature } from "../../../../api/carService"
+import Swal from "sweetalert2"
 
 // Define the options arrays
 const carTypes = ["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Wagon", "Truck", "Van"]
@@ -13,6 +14,268 @@ const fuelTypes = ["Gasoline", "Diesel", "Hybrid", "Electric", "CNG", "LPG"]
 const transmissionTypes = ["Manual", "Automatic", "CVT", "Semi-Automatic"]
 const driveTypes = ["FWD", "RWD", "AWD", "4WD"]
 const featureTypes = ["Safety", "Special", "Exterior", "Interior"]
+
+  const carMakes = [
+    "Toyota",
+    "Honda",
+    "BMW",
+    "Mercedes-Benz",
+    "Audi",
+    "Nissan",
+    "Ford",
+    "Chevrolet",
+    "Hyundai",
+    "Kia",
+    "Mazda",
+    "Subaru",
+    "Volkswagen",
+    "Lexus",
+    "Acura",
+    "Infiniti",
+    "Cadillac",
+    "Lincoln",
+    "Volvo",
+    "Jaguar",
+    "Land Rover",
+    "Porsche",
+    "Tesla",
+  ]
+
+  const carModels = [
+    "Corolla",
+    "Corolla Cross",
+    "Camry",
+    "RAV4",
+    "Highlander",
+    "Prius",
+    "Civic",
+    "Accord",
+    "CR-V",
+    "Pilot",
+    "X3",
+    "X5",
+    "3 Series",
+    "5 Series",
+    "C-Class",
+    "E-Class",
+    "GLC",
+    "GLE",
+    "Q3",
+    "Q5",
+    "A4",
+    "A6",
+    "Altima",
+    "Sentra",
+    "Rogue",
+    "Murano",
+  ]
+
+  const exteriorColors = [
+    "Pearl White",
+    "Jet Black",
+    "Silver Metallic",
+    "Gun Metallic",
+    "Deep Blue",
+    "Crimson Red",
+    "Forest Green",
+    "Golden Bronze",
+    "Charcoal Gray",
+    "Alpine White",
+    "Midnight Black",
+    "Storm Gray",
+    "Ruby Red",
+    "Ocean Blue",
+    "Sunset Orange",
+    "Ivory Pearl",
+  ]
+
+  const interiorColors = [
+    "Black Leather",
+    "Beige Leather",
+    "Brown Leather",
+    "Gray Fabric",
+    "Black Fabric",
+    "Tan Leather",
+    "White Leather",
+    "Red Leather",
+    "Navy Fabric",
+    "Charcoal Leather",
+    "Cream Leather",
+    "Saddle Brown",
+  ]
+
+  const countries = [
+    "Japan",
+    "Germany",
+    "United States",
+    "South Korea",
+    "United Kingdom",
+    "France",
+    "Italy",
+    "Sweden",
+    "Canada",
+    "Australia",
+    "India",
+    "China",
+    "Mexico",
+    "Brazil",
+  ]
+
+  const regions = [
+    "Tokyo",
+    "Osaka",
+    "Kyoto",
+    "Yokohama",
+    "Nagoya",
+    "Kobe",
+    "Fukuoka",
+    "Sapporo",
+    "Sendai",
+    "Hiroshima",
+    "Munich",
+    "Berlin",
+    "Stuttgart",
+    "Frankfurt",
+    "California",
+    "Texas",
+    "New York",
+    "Florida",
+    "Michigan",
+    "Ohio",
+  ]
+
+  const featureOptions = {
+    Safety: [
+      "ABS Brakes",
+      "Airbags (Front)",
+      "Airbags (Side)",
+      "Airbags (Curtain)",
+      "Electronic Stability Control",
+      "Traction Control",
+      "Blind Spot Monitoring",
+      "Lane Departure Warning",
+      "Forward Collision Warning",
+      "Automatic Emergency Braking",
+      "Backup Camera",
+      "Parking Sensors",
+    ],
+    Interior: [
+      "Leather Seats",
+      "Heated Seats",
+      "Ventilated Seats",
+      "Power Seats",
+      "Memory Seats",
+      "Massage Seats",
+      "Premium Audio System",
+      "Navigation System",
+      "Dual Zone Climate Control",
+      "Tri-Zone Climate Control",
+      "Heated Steering Wheel",
+      "Wireless Charging",
+    ],
+    Exterior: [
+      "Sunroof",
+      "Panoramic Sunroof",
+      "LED Headlights",
+      "HID Headlights",
+      "Fog Lights",
+      "Roof Rails",
+      "Running Boards",
+      "Tow Package",
+      "Alloy Wheels",
+      "Chrome Trim",
+    ],
+    Technology: [
+      "Apple CarPlay",
+      "Android Auto",
+      "Bluetooth Connectivity",
+      "USB Ports",
+      "WiFi Hotspot",
+      "Remote Start",
+      "Keyless Entry",
+      "Push Button Start",
+      "Digital Dashboard",
+      "Head-Up Display",
+    ],
+    Performance: [
+      "Turbo Engine",
+      "Supercharged Engine",
+      "Sport Mode",
+      "Paddle Shifters",
+      "Limited Slip Differential",
+      "Performance Suspension",
+      "Sport Exhaust",
+      "Launch Control",
+    ],
+    Comfort: [
+      "Cruise Control",
+      "Adaptive Cruise Control",
+      "Rain Sensing Wipers",
+      "Auto Dimming Mirrors",
+      "Power Liftgate",
+      "Hands-Free Liftgate",
+      "Third Row Seating",
+      "Folding Rear Seats",
+    ],
+    Entertainment: [
+      "Premium Sound System",
+      "Subwoofer",
+      "Rear Entertainment System",
+      "DVD Player",
+      "Satellite Radio",
+      "HD Radio",
+      "Multiple USB Ports",
+      "Wireless Audio Streaming",
+    ],
+  }
+const engineCCOptions = [
+  "1000cc",
+  "1200cc",
+  "1500cc",
+  "1600cc",
+  "1800cc",
+  "2000cc",
+  "2200cc",
+  "2500cc",
+  "3000cc",
+  "3500cc",
+  "4000cc",
+];
+const seatOptions = [2, 4, 5, 6, 7, 8, 9];
+const mileageOptions = [
+  "0 km",
+  "10,000 km",
+  "20,000 km",
+  "30,000 km",
+  "50,000 km",
+  "75,000 km",
+  "100,000 km",
+  "150,000 km",
+  "200,000 km+",
+];
+const keywordOptions = [
+  "hybrid",
+  "eco-friendly",
+  "family car",
+  "sports",
+  "low mileage",
+  "luxury",
+  "off-road",
+  "compact",
+  "city car",
+  "imported",
+];
+const stockNumberOptions = [
+  "STK-001",
+  "STK-002",
+  "STK-003",
+  "STK-004",
+  "STK-005",
+  "STK-006",
+  "STK-007",
+];
+
+
 
 export function EditCarPage() {
   const navigate = useNavigate()
@@ -110,37 +373,87 @@ export function EditCarPage() {
     navigate("/admin/cars")
   }
 
-  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, mainImage: file }))
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setMainImagePreview(e.target?.result as string)
+
+  const compressImage = (
+  file: File,
+  maxWidth = 1200,
+  maxHeight = 800,
+  quality = 0.8
+): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    img.onload = () => {
+      let { width, height } = img
+
+      if (width > height && width > maxWidth) {
+        height = (height * maxWidth) / width
+        width = maxWidth
+      } else if (height > maxHeight) {
+        width = (width * maxHeight) / height
+        height = maxHeight
       }
-      reader.readAsDataURL(file)
+
+      canvas.width = width
+      canvas.height = height
+      ctx?.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          const compressedFile = new File([blob!], file.name, {
+            type: file.type,
+            lastModified: Date.now(),
+          })
+          resolve(compressedFile)
+        },
+        file.type,
+        quality
+      )
     }
+
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+
+const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (file) {
+    const compressedFile = await compressImage(file)
+    setFormData((prev) => ({ ...prev, mainImage: compressedFile }))
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setMainImagePreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(compressedFile)
   }
+}
 
-  const handleGalleryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const maxImages = 10
-    const allowedFiles = files.slice(0, maxImages - formData.gallery.length)
+const handleGalleryImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || [])
+  const maxImages = 10
+  const allowedFiles = files.slice(0, maxImages - formData.gallery.length)
 
-    setFormData((prev) => ({
-      ...prev,
-      gallery: [...prev.gallery, ...allowedFiles],
-    }))
+  const compressedFiles = await Promise.all(allowedFiles.map(file => compressImage(file)))
 
-    // Create previews
-    allowedFiles.forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setGalleryPreviews((prev) => [...prev, e.target?.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
-  }
+  setFormData((prev) => ({
+    ...prev,
+    gallery: [...prev.gallery, ...compressedFiles],
+  }))
+
+  // Create previews
+  compressedFiles.forEach((file) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setGalleryPreviews((prev) => [...prev, e.target?.result as string])
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 
   const removeGalleryImage = (index: number) => {
     setFormData((prev) => ({
@@ -172,86 +485,81 @@ export function EditCarPage() {
   }
 
   const handleSubmit = async () => {
-    // Basic validation
-    if (!formData.title.trim()) {
-      alert("Please enter a car title")
-      return
-    }
-    if (!formData.make.trim()) {
-      alert("Please enter the car make")
-      return
-    }
-    if (!formData.model.trim()) {
-      alert("Please enter the car model")
-      return
-    }
-    if (!formData.fuel) {
-      alert("Please select a fuel type")
-      return
-    }
-    if (!formData.exteriorColor.trim()) {
-      alert("Please enter the exterior color")
-      return
-    }
-    if (!isEditMode && !formData.mainImage) {
-      alert("Please upload a main image")
-      return
-    }
+  // Basic validation
+  if (!formData.title.trim()) return alert("Please enter a car title")
+  if (!formData.make.trim()) return alert("Please enter the car make")
+  if (!formData.model.trim()) return alert("Please enter the car model")
+  if (!formData.fuel) return alert("Please select a fuel type")
+  if (!formData.exteriorColor.trim()) return alert("Please enter the exterior color")
+  if (!isEditMode && !formData.mainImage) return alert("Please upload a main image")
 
-    try {
-      // Create FormData for file upload
-      const submitData = new FormData()
+  try {
+    const submitData = new FormData()
 
-      // Add all form fields
-    // Replace the gallery handling section in your handleSubmit function
-// Change "gallery" to whatever your backend expects
+    Object.keys(formData).forEach((key) => {
+      const value = formData[key]
 
-Object.keys(formData).forEach((key) => {
-  if (key === "gallery") {
-    // Option A: Send with same field name multiple times
-    formData.gallery.forEach((file) => {
-      submitData.append("galleryImages", file)
-    })
-    
-    // Option B: Send with indexed field names
-    // formData.gallery.forEach((file, index) => {
-    //   submitData.append(`gallery[${index}]`, file)
-    // })
-    
-    // Option C: Send with numbered field names
-    // formData.gallery.forEach((file, index) => {
-    //   submitData.append(`gallery${index}`, file)
-    // })
-  } else if (key === "mainImage") {
-    if (formData.mainImage) {
-      submitData.append("mainImage", formData.mainImage)
-    }
-  } else if (key === "features") {
-    submitData.append("features", JSON.stringify(formData.features))
-  } else if (key === "year" || key === "seats" || key === "price") {
-    submitData.append(key, String(formData[key]))
-  } else if (key === "isActive") {
-    submitData.append(key, String(formData[key]))
-  } else if (formData[key] !== null && formData[key] !== "") {
-    submitData.append(key, String(formData[key]))
-  }
-})
-
-      if (isEditMode) {
-        await updateMutation.mutateAsync({ id: carId, data: submitData })
-        alert("Car updated successfully")
-      } else {
-        // You'll need a createCar mutation for new cars
-        // await createMutation.mutateAsync(carData)
-        alert("Car created successfully")
+      if (key === "gallery") {
+        value.forEach((file) => {
+          submitData.append("galleryImages", file) // Adjust field name to match backend
+        })
+      } else if (key === "mainImage") {
+        if (value) submitData.append("mainImage", value)
+      } else if (key === "features") {
+        submitData.append("features", JSON.stringify(value))
+      } else if (
+        key === "year" ||
+        key === "seats" ||
+        key === "price" ||
+        key === "stock" ||
+        key === "engineCC" ||
+        key === "mileage"
+      ) {
+        if (value !== null && value !== "") {
+          submitData.append(key, String(value))
+        }
+      } else if (key === "isActive") {
+        submitData.append("isActive", String(value))
+      } else if (value !== null && value !== "") {
+        submitData.append(key, value)
       }
+    })
 
-      navigate("/admin/cars")
-    } catch (error) {
-      console.error("Failed to save car:", error)
-      alert("Failed to save car. Please try again.")
+    if (isEditMode) {
+      await updateMutation.mutateAsync({ id: carId, data: submitData })
+
+      await Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Car updated successfully",
+        confirmButtonColor: "#28a745",
+        timer: 2000,
+        timerProgressBar: true,
+      })
+    } else {
+      await createMutation.mutateAsync(submitData)
+
+      await Swal.fire({
+        icon: "success",
+        title: "Car Created!",
+        text: "The car has been added successfully.",
+        confirmButtonColor: "#007bff",
+        timer: 2000,
+        timerProgressBar: true,
+      })
     }
+
+    navigate("/admin/cars")
+  } catch (error) {
+    console.error("Failed to save car:", error)
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Failed to save car. Please try again.",
+    })
   }
+}
+
 
   if (isLoading) {
     return (
@@ -308,352 +616,444 @@ Object.keys(formData).forEach((key) => {
 
         <div className="space-y-8">
           {/* Basic Information */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center mb-6">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl mr-4">
-                <Info className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
-            </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
+  <div className="flex items-center mb-6">
+    <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl mr-4">
+      <Info className="h-6 w-6 text-white" />
+    </div>
+    <h2 className="text-2xl font-bold text-gray-800">Basic Information</h2>
+  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-3">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Car Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  placeholder="Toyota Corolla Cross Z Leather 2022 Pearl White Hybrid"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                  required
-                />
-              </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {/* Car Title */}
+    <div className="lg:col-span-3">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Car Title <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={formData.title}
+        onChange={(e) => handleInputChange("title", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select car title template</option>
+        <option value="Toyota Corolla Cross Z Leather 2022 Pearl White Hybrid">
+          Toyota Corolla Cross Z Leather 2022 Pearl White Hybrid
+        </option>
+        <option value="Honda CR-V EX-L 2023 Black Premium SUV">
+          Honda CR-V EX-L 2023 Black Premium SUV
+        </option>
+        <option value="BMW X3 xDrive30i 2022 Alpine White Luxury">
+          BMW X3 xDrive30i 2022 Alpine White Luxury
+        </option>
+        <option value="Mercedes-Benz C-Class C300 2023 Polar White Sedan">
+          Mercedes-Benz C-Class C300 2023 Polar White Sedan
+        </option>
+        <option value="Audi Q5 Premium Plus 2022 Glacier White SUV">
+          Audi Q5 Premium Plus 2022 Glacier White SUV
+        </option>
+        <option value="Nissan Altima SV 2023 Gun Metallic Sedan">
+          Nissan Altima SV 2023 Gun Metallic Sedan
+        </option>
+        <option value="Ford Explorer XLT 2022 Oxford White SUV">
+          Ford Explorer XLT 2022 Oxford White SUV
+        </option>
+        <option value="Chevrolet Equinox LT 2023 Summit White Crossover">
+          Chevrolet Equinox LT 2023 Summit White Crossover
+        </option>
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Make <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.make}
-                  onChange={(e) => handleInputChange("make", e.target.value)}
-                  placeholder="Toyota"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                  required
-                />
-              </div>
+    {/* Make */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Make <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={formData.make}
+        onChange={(e) => handleInputChange("make", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select make</option>
+        {carMakes.map((make) => (
+          <option key={make} value={make}>{make}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Model <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.model}
-                  onChange={(e) => handleInputChange("model", e.target.value)}
-                  placeholder="Corolla Cross"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                  required
-                />
-              </div>
+    {/* Model */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Model <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={formData.model}
+        onChange={(e) => handleInputChange("model", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select model</option>
+        {carModels.map((model) => (
+          <option key={model} value={model}>{model}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Model Code</label>
-                <input
-                  type="text"
-                  value={formData.modelCode}
-                  onChange={(e) => handleInputChange("modelCode", e.target.value)}
-                  placeholder="ZX-123"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                />
-              </div>
+    {/* Model Code */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Model Code</label>
+      <select
+        value={formData.modelCode}
+        onChange={(e) => handleInputChange("modelCode", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+      >
+        <option value="">Select model code</option>
+        {["ZX-123","LX-456","EX-789","DX-321","SX-654","GX-987","HX-147","MX-258","NX-369","PX-741"].map((code) => (
+          <option key={code} value={code}>{code}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
-                <input
-                  type="number"
-                  value={formData.year}
-                  onChange={(e) =>
-                    handleInputChange("year", Number.parseInt(e.target.value) || new Date().getFullYear())
-                  }
-                  min="1900"
-                  max={new Date().getFullYear() + 1}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                  required
-                />
-              </div>
+    {/* Year */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
+      <select
+        value={formData.year}
+        onChange={(e) => handleInputChange("year", parseInt(e.target.value))}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select year</option>
+        {Array.from({ length: (new Date().getFullYear() + 1) - 1990 }, (_, i) => 1990 + i).map((y) => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => handleInputChange("type", e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                >
-                  <option value="">Select type</option>
-                  {carTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+    {/* Type */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+      <select
+        value={formData.type}
+        onChange={(e) => handleInputChange("type", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+      >
+        <option value="">Select type</option>
+        {carTypes.map((type) => (
+          <option key={type} value={type}>{type}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
-                <input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", Number.parseFloat(e.target.value) || 0)}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
-                  required
-                />
-              </div>
-            </div>
-          </div>
+    {/* Price */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
+      <select
+        value={formData.price}
+        onChange={(e) => handleInputChange("price", parseFloat(e.target.value))}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select price</option>
+        {[
+          10000,15000,20000,25000,30000,35000,40000,45000,50000,60000,
+          75000,100000,150000,200000
+        ].map((price) => (
+          <option key={price} value={price}>{`$${price.toLocaleString()}`}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+</div>
+
 
           {/* Technical Specifications */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center mb-6">
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl mr-4">
-                <Settings className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800">Technical Specifications</h2>
-            </div>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
+  <div className="flex items-center mb-6">
+    <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl mr-4">
+      <Settings className="h-6 w-6 text-white" />
+    </div>
+    <h2 className="text-2xl font-bold text-gray-800">Technical Specifications</h2>
+  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Fuel Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.fuel}
-                  onChange={(e) => handleInputChange("fuel", e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                  required
-                >
-                  <option value="">Select fuel type</option>
-                  {fuelTypes.map((fuel) => (
-                    <option key={fuel} value={fuel}>
-                      {fuel}
-                    </option>
-                  ))}
-                </select>
-              </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Engine CC</label>
-                <input
-                  type="text"
-                  value={formData.engineCC}
-                  onChange={(e) => handleInputChange("engineCC", e.target.value)}
-                  placeholder="1800cc"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Fuel Type */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Fuel Type <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={formData.fuel}
+        onChange={(e) => handleInputChange("fuel", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select fuel type</option>
+        {fuelTypes.map((fuel) => (
+          <option key={fuel} value={fuel}>{fuel}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Transmission</label>
-                <select
-                  value={formData.transmission}
-                  onChange={(e) => handleInputChange("transmission", e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                >
-                  <option value="">Select transmission</option>
-                  {transmissionTypes.map((trans) => (
-                    <option key={trans} value={trans}>
-                      {trans}
-                    </option>
-                  ))}
-                </select>
-              </div>
+    {/* Engine CC */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Engine CC</label>
+      <select
+        value={formData.engineCC}
+        onChange={(e) => handleInputChange("engineCC", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select engine CC</option>
+        {["1000cc","1200cc","1500cc","1600cc","1800cc","2000cc","2200cc","2500cc","3000cc","3500cc","4000cc"].map((cc) => (
+          <option key={cc} value={cc}>{cc}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Drive Type</label>
-                <select
-                  value={formData.drive}
-                  onChange={(e) => handleInputChange("drive", e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                >
-                  <option value="">Select drive type</option>
-                  {driveTypes.map((drive) => (
-                    <option key={drive} value={drive}>
-                      {drive}
-                    </option>
-                  ))}
-                </select>
-              </div>
+    {/* Transmission */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Transmission</label>
+      <select
+        value={formData.transmission}
+        onChange={(e) => handleInputChange("transmission", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select transmission</option>
+        {transmissionTypes.map((trans) => (
+          <option key={trans} value={trans}>{trans}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Seats</label>
-                <input
-                  type="number"
-                  value={formData.seats}
-                  onChange={(e) => handleInputChange("seats", Number.parseInt(e.target.value) || 5)}
-                  min="1"
-                  max="9"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                  required
-                />
-              </div>
+    {/* Drive Type */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Drive Type</label>
+      <select
+        value={formData.drive}
+        onChange={(e) => handleInputChange("drive", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select drive type</option>
+        {driveTypes.map((drive) => (
+          <option key={drive} value={drive}>{drive}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Mileage</label>
-                <input
-                  type="text"
-                  value={formData.mileage}
-                  onChange={(e) => handleInputChange("mileage", e.target.value)}
-                  placeholder="50,000 km"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Seats */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Seats</label>
+      <select
+        value={formData.seats}
+        onChange={(e) => handleInputChange("seats", parseInt(e.target.value))}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select seats</option>
+        {[2,4,5,6,7,8,9].map((seat) => (
+          <option key={seat} value={seat}>{seat}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Exterior Color <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.exteriorColor}
-                  onChange={(e) => handleInputChange("exteriorColor", e.target.value)}
-                  placeholder="Pearl White"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                  required
-                />
-              </div>
+    {/* Mileage */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Mileage</label>
+      <select
+        value={formData.mileage}
+        onChange={(e) => handleInputChange("mileage", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select mileage</option>
+        {["0 km","10,000 km","20,000 km","30,000 km","50,000 km","75,000 km","100,000 km","150,000 km","200,000 km+"].map((mile) => (
+          <option key={mile} value={mile}>{mile}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Interior Color</label>
-                <input
-                  type="text"
-                  value={formData.color}
-                  onChange={(e) => handleInputChange("color", e.target.value)}
-                  placeholder="Black Leather"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Exterior Color */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Exterior Color <span className="text-red-500">*</span>
+      </label>
+      <select
+        value={formData.exteriorColor}
+        onChange={(e) => handleInputChange("exteriorColor", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+        required
+      >
+        <option value="">Select exterior color</option>
+        {exteriorColors.map((color) => (
+          <option key={color} value={color}>{color}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Number</label>
-                <input
-                  type="text"
-                  value={formData.stock}
-                  onChange={(e) => handleInputChange("stock", e.target.value)}
-                  placeholder="STK-001"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Interior Color */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Interior Color</label>
+      <select
+        value={formData.color}
+        onChange={(e) => handleInputChange("color", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select interior color</option>
+        {interiorColors.map((color) => (
+          <option key={color} value={color}>{color}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Country</label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) => handleInputChange("country", e.target.value)}
-                  placeholder="Japan"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Stock Number */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Number</label>
+      <select
+        value={formData.stock}
+        onChange={(e) => handleInputChange("stock", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select stock number</option>
+        {["STK-001","STK-002","STK-003","STK-004","STK-005"].map((stock) => (
+          <option key={stock} value={stock}>{stock}</option>
+        ))}
+      </select>
+    </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Region</label>
-                <input
-                  type="text"
-                  value={formData.region}
-                  onChange={(e) => handleInputChange("region", e.target.value)}
-                  placeholder="Tokyo"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
+    {/* Country */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Country</label>
+      <select
+        value={formData.country}
+        onChange={(e) => handleInputChange("country", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select country</option>
+        {countries.map((country) => (
+          <option key={country} value={country}>{country}</option>
+        ))}
+      </select>
+    </div>
 
-              <div className="md:col-span-2 lg:col-span-3">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Keywords</label>
-                <input
-                  type="text"
-                  value={formData.keywords}
-                  onChange={(e) => handleInputChange("keywords", e.target.value)}
-                  placeholder="hybrid, eco-friendly, family car, low mileage"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
-            </div>
+    {/* Region */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Region</label>
+      <select
+        value={formData.region}
+        onChange={(e) => handleInputChange("region", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select region</option>
+        {regions.map((region) => (
+          <option key={region} value={region}>{region}</option>
+        ))}
+      </select>
+    </div>
 
-            <div className="mt-6">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => handleInputChange("isActive", e.target.checked)}
-                  className="mr-3 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="text-sm font-semibold text-gray-700">Active (visible to customers)</span>
-              </label>
-            </div>
-          </div>
+    {/* Keywords */}
+    <div className="md:col-span-2 lg:col-span-3">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">Keywords</label>
+      <select
+        value={formData.keywords}
+        onChange={(e) => handleInputChange("keywords", e.target.value)}
+        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+      >
+        <option value="">Select keyword</option>
+        {["hybrid","eco-friendly","family car","sports","low mileage","luxury","off-road","compact","city car","imported"].map((kw) => (
+          <option key={kw} value={kw}>{kw}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <div className="mt-6">
+    <label className="flex items-center">
+      <input
+        type="checkbox"
+        checked={formData.isActive}
+        onChange={(e) => handleInputChange("isActive", e.target.checked)}
+        className="mr-3 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+      />
+      <span className="text-sm font-semibold text-gray-700">Active (visible to customers)</span>
+    </label>
+  </div>
+</div>
 
           {/* Features Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl mr-4">
-                  <Settings className="h-6 w-6 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800">Features</h2>
-              </div>
-              <button
-                type="button"
-                onClick={addFeature}
-                className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Add Feature
-              </button>
-            </div>
+       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
+  <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center">
+      <div className="p-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl mr-4">
+        <Settings className="h-6 w-6 text-white" />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-800">Features</h2>
+    </div>
+    <button
+      type="button"
+      onClick={addFeature}
+      className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+    >
+      <Plus className="h-5 w-5 mr-2" />
+      Add Feature
+    </button>
+  </div>
 
-            <div className="space-y-4">
-              {formData.features.map((feature, index) => (
-                <div key={index} className="flex gap-4 items-center bg-gray-50 p-4 rounded-xl">
-                  <select
-                    value={feature.type}
-                    onChange={(e) => updateFeature(index, "type", e.target.value)}
-                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
-                  >
-                    <option value="">Select type</option>
-                    {featureTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={feature.name}
-                    onChange={(e) => updateFeature(index, "name", e.target.value)}
-                    placeholder="Feature name"
-                    className="flex-2 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFeature(index)}
-                    className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
+  <div className="space-y-4">
+    {formData.features.map((feature, index) => (
+      <div key={index} className="flex gap-4 items-center bg-gray-50 p-4 rounded-xl flex-wrap">
+        {/* Select for type */}
+        <select
+          value={feature.type}
+          onChange={(e) => {
+            updateFeature(index, "type", e.target.value);
+            updateFeature(index, "name", ""); // reset name if type changes
+          }}
+          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200"
+        >
+          <option value="">Select type</option>
+          {Object.keys(featureOptions).map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
 
-              {formData.features.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Settings className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>No features added yet. Click "Add Feature" to get started.</p>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Select for name based on type */}
+        <select
+          value={feature.name}
+          onChange={(e) => updateFeature(index, "name", e.target.value)}
+          disabled={!feature.type}
+          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-200 focus:border-green-500 transition-all duration-200 disabled:opacity-50"
+        >
+          <option value="">Select feature</option>
+          {feature.type &&
+            featureOptions[feature.type].map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+        </select>
+
+        {/* Delete button */}
+        <button
+          type="button"
+          onClick={() => removeFeature(index)}
+          className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+      </div>
+    ))}
+
+    {formData.features.length === 0 && (
+      <div className="text-center py-8 text-gray-500">
+        <Settings className="h-12 w-12 mx-auto mb-3 opacity-30" />
+        <p>No features added yet. Click "Add Feature" to get started.</p>
+      </div>
+    )}
+  </div>
+</div>
 
           {/* Images Section */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">

@@ -30,6 +30,7 @@ import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
 import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
 import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage";
+import ShipScheduleDetails from "../Pages/ShipSchedule/ShipScheduleDetails";
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: "/shipSchedule",
         element: <ShipSchedule />,
+      },
+      {
+        path: "/shipSchedule/:id",
+        element: <ShipScheduleDetails />,
       },
       {
         path: "/howToBuy",

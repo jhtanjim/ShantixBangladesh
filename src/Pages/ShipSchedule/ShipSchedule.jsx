@@ -1,9 +1,10 @@
 import React from 'react'
 import useShipSchedule from '../../hooks/useShipSchedule';
+import { Link } from 'react-router-dom';
 
 const ShipSchedule = () => {
     const { schedules, isLoading, isError } = useShipSchedule();
-    console.log(schedules.data)
+    // console.log(schedules.data)
     // Handle loading state
     if (isLoading) {
         return (
@@ -54,6 +55,8 @@ const ShipSchedule = () => {
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {schedules.data.map((schedule) => (
+                 <Link to={`/shipSchedule/${schedule.id}`}>
+   
                     <div 
                         key={schedule.id} 
                         className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
@@ -108,6 +111,8 @@ const ShipSchedule = () => {
                             </div>
                         </div>
                     </div>
+                    </Link>
+
                 ))}
             </div>
         </div>

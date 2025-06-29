@@ -347,27 +347,36 @@ const Register = () => {
 
             {/* Submit Button */}
             <button
-              type="submit"
-              disabled={mutation.isPending || !form.confirmCheckbox || (form.password !== form.confirmPassword)}
-              className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden"
-              style={{
-                background: (form.confirmCheckbox && form.password === form.confirmPassword)
-                  ? 'linear-gradient(135deg, #0072BC 0%, #003366 100%)' 
-                  : '#9CA3AF'
-              }}
-            >
-              {mutation.isPending ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating Account...</span>
-                </div>
-              ) : (
-                <span className="relative z-10">Register</span>
-              )}
-              {(form.confirmCheckbox && form.password === form.confirmPassword) && !mutation.isPending && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
-              )}
-            </button>
+  type="submit"
+  disabled={
+    mutation.isPending ||
+    !form.confirmCheckbox ||
+    form.password !== form.confirmPassword
+  }
+  className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden cursor-pointer"
+  style={{
+    background:
+      form.confirmCheckbox && form.password === form.confirmPassword
+        ? 'linear-gradient(135deg, #0072BC 0%, #003366 100%)'
+        : '#9CA3AF',
+  }}
+>
+  {mutation.isPending ? (
+    <div className="flex items-center justify-center space-x-2">
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      <span>Creating Account...</span>
+    </div>
+  ) : (
+    <span className="relative z-10">Register</span>
+  )}
+
+  {form.confirmCheckbox &&
+    form.password === form.confirmPassword &&
+    !mutation.isPending && (
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
+    )}
+</button>
+
           </form>
 
           {/* Login Link */}

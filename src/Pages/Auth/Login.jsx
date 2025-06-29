@@ -207,16 +207,17 @@ export default function LoginPage({onForgotPassword}) {
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden group"
-              style={{
-                background: loading 
-                  ? '#9CA3AF' 
-                  : 'linear-gradient(135deg, #0072BC 0%, #003366 100%)'
-              }}
-            >
+           <button
+  type="submit"
+  disabled={loading}
+  className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden group cursor-pointer"
+  style={{
+    background: loading 
+      ? '#9CA3AF' 
+      : 'linear-gradient(135deg, #0072BC 0%, #003366 100%)'
+  }}
+>
+
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

@@ -107,15 +107,15 @@ console.log(data)
   const meta = data?.meta || { total: 0, page: 1, limit: 9, totalPages: 1 }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="lg:p-6">
+      <div className="lg:flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cars</h1>
           <p className="text-sm text-gray-600">Manage your car inventory ({meta.total} cars)</p>
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="flex items-center bg-blue-600 text-white px-4 my-2 lg:my-0 py-2 rounded-md hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Car

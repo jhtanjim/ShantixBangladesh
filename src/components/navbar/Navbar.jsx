@@ -6,20 +6,26 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 import useUsersRole from "../../hooks/useUsersRole";
+import { useCurrentUser } from "../../hooks/useUsers";
 
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { token, logout, user } = useAuth();
+const { data: user, isLoading: userLoading, error: userError } = useCurrentUser()
+  console.log(user, "user data in profile page")
+
+
+
+  const { token, logout } = useAuth();
   const { isAdmin } = useUsersRole(); // Use the hook to check admin role
   const navigate = useNavigate();
-  
   // Force re-render when auth state changes
   const [authState, setAuthState] = useState({
     isAuthenticated: Boolean(token),
     currentUser: user
+    
   });
-
+console.log(user.data)
   useEffect(() => {
     setAuthState({
       isAuthenticated: Boolean(token),
@@ -57,42 +63,67 @@ const Navbar = () => {
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
-      {/* Top Bar */}
+      {/* Top Bar - Optimized for mobile */}
       <div className="bg-red-600 text-white">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-2 gap-2">
-            <div className="text-center lg:text-left">
-              <span className="text-lg font-semibold">1 USD = 142.08 JPY</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1 sm:py-2 gap-1 sm:gap-2">
+            {/* Currency Rate - Hidden on very small screens */}
+            <div className="text-center sm:text-left order-2 sm:order-1">
+              <span className="text-sm sm:text-base lg:text-lg font-medium sm:font-semibold">
+                1 USD = 142.08 JPY
+              </span>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
-              <Clock size={16} />
-              <span className="text-sm">Japan Time: 05:39 AM, Thursday</span>
+            {/* Time - Centered on mobile */}
+            <div className="flex items-center justify-center gap-1 sm:gap-2 order-1 sm:order-2">
+              <Clock size={14} className="sm:size-4" />
+              <span className="text-xs sm:text-sm">Japan Time: 05:39 AM, Thursday</span>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-              <a href="tel:+88-34-777-0000" className="flex items-center gap-1 hover:text-gray-200 transition-colors">
-                <Phone size={14} />
-                +88-34-777-0000
+            {/* Contact & Auth - Bottom on mobile */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm order-3">
+              {/* Phone - Hidden on very small screens, shown on sm+ */}
+              <a 
+                href="tel:+88-34-777-0000" 
+                className="hidden sm:flex items-center gap-1 hover:text-gray-200 transition-colors"
+              >
+                <Phone size={12} className="sm:size-3.5" />
+                <span className="hidden md:inline">+88-34-777-0000</span>
+                <span className="md:hidden">Call</span>
               </a>
 
               {authState.isAuthenticated ? (
-                <div className="flex items-center gap-3">
-                  <NavLink to="/profile" className="flex items-center gap-1 hover:text-gray-200 transition-colors">
-                    <User size={14} />
-                    Welcome, {authState.currentUser?.firstName || "User"}
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <NavLink 
+                    to="/profile" 
+                    className="flex items-center gap-1 hover:text-gray-200 transition-colors"
+                  >
+                    <User size={12} className="sm:size-3.5" />
+                    <span className="truncate max-w-20 sm:max-w-none">
+                      {authState.currentUser?.fullName || "User"}
+                    </span>
                   </NavLink>
                   <button
                     onClick={handleLogout}
-                    className="hover:text-gray-200 transition-colors"
+                    className="hover:text-blue-800 transition-colors px-2 py-1 rounded"
                   >
                     Logout
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <NavLink to="/login" className="hover:text-gray-200 transition-colors">Login</NavLink>
-                  <NavLink to="/register" className="hover:text-gray-200 transition-colors">Register</NavLink>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <NavLink 
+                    to="/login" 
+                    className="hover:text-gray-200 transition-colors px-2 py-1 rounded"
+                  >
+                    Login
+                  </NavLink>
+                  <NavLink 
+                    to="/register" 
+                    className="hover:text-gray-200 transition-colors px-2 py-1 rounded"
+                  >
+                    Register
+                  </NavLink>
                 </div>
               )}
             </div>
@@ -102,24 +133,28 @@ const Navbar = () => {
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
           <NavLink to="/">
             <div className="flex items-center">
               <div className="relative">
-                <div className="absolute top-0 w-1 h-12 rounded-r"></div>
-                <img src={logoImg} alt="Shantix Logo" className="h-12 w-auto ml-2" />
+                <div className="absolute top-0 w-1 h-8 sm:h-10 lg:h-12 rounded-r"></div>
+                <img 
+                  src={logoImg} 
+                  alt="Shantix Logo" 
+                  className="h-8 sm:h-10 lg:h-12 w-auto ml-2" 
+                />
               </div>
             </div>
           </NavLink>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navLinks.map((link) => (
               <NavLink
                 key={link.href}
                 to={link.href}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group text-sm xl:text-base"
               >
                 {link.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
@@ -128,29 +163,35 @@ const Navbar = () => {
           </nav>
 
           {/* Icons & Mobile Menu Toggle */}
-          <div className="flex items-center gap-4">
-            <Link to="/wishlist" className="relative p-2 text-gray-700 hover:text-red-600 transition-colors">
-              <Heart size={24} />
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+            <Link 
+              to="/wishlist" 
+              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-red-600 transition-colors"
+            >
+              <Heart size={20} className="sm:size-6" />
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {wishlistCount}
+                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center font-medium">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
                 </span>
               )}
             </Link>
 
-            <Link to="/cart" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
-              <ShoppingCart size={24} />
+            <Link 
+              to="/cart" 
+              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              <ShoppingCart size={20} className="sm:size-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {cartCount}
+                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-blue-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center font-medium">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </Link>
 
-            {/* Only show My Page button when user is authenticated */}
+            {/* My Page button - Hidden on mobile, shown on desktop when authenticated */}
             {authState.isAuthenticated && (
               <Link to="/profile" className="hidden lg:block">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 xl:px-6 py-2 rounded-lg font-medium transition-colors text-sm xl:text-base">
                   My Page
                 </button>
               </Link>
@@ -158,9 +199,9 @@ const Navbar = () => {
 
             <button
               onClick={toggleMenu}
-              className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 text-gray-700 hover:text-blue-600 transition-colors"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={20} className="sm:size-6" /> : <Menu size={20} className="sm:size-6" />}
             </button>
           </div>
         </div>
@@ -170,7 +211,7 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-200">
           <div className="container mx-auto px-4 py-4">
-            <nav className="space-y-4">
+            <nav className="space-y-3">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -182,11 +223,24 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              {/* Only show My Page button in mobile menu when user is authenticated */}
+              {/* Phone number in mobile menu */}
+              <a 
+                href="tel:+88-34-777-0000" 
+                className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Phone size={16} />
+                +88-34-777-0000
+              </a>
+
+              {/* My Page button in mobile menu when user is authenticated */}
               {authState.isAuthenticated && (
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-3 border-t border-gray-200">
                   <Link to="/profile">
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       My Page
                     </button>
                   </Link>

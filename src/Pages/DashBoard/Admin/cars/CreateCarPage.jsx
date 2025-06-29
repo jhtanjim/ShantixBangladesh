@@ -546,7 +546,7 @@ const removeGalleryImage = (index) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="lg:p-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button

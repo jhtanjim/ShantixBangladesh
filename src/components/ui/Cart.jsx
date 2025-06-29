@@ -25,7 +25,7 @@ const CurrencyToggle = ({ currency, onCurrencyChange }) => {
     <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
       <button
         onClick={() => onCurrencyChange("USD")}
-        className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+        className={` cursor-pointer flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
           currency === "USD" ? "bg-white text-blue-600 shadow-sm" : "text-gray-600 hover:bg-gray-200"
         }`}
       >
@@ -34,7 +34,7 @@ const CurrencyToggle = ({ currency, onCurrencyChange }) => {
       </button>
       <button
         onClick={() => onCurrencyChange("JPY")}
-        className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+        className={` cursor-pointer flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
           currency === "JPY" ? "bg-white text-blue-600 shadow-sm" : "text-gray-600 hover:bg-gray-200"
         }`}
       >
@@ -279,7 +279,7 @@ const handleNegotiateOrder = () => {
           </div>
           <div className="flex items-center gap-4">
             <CurrencyToggle currency={currency} onCurrencyChange={handleCurrencyChange} />
-            <Button variant="outline" onClick={() => setShowClearConfirm(true)}>
+            <Button className="cursor-pointer" variant="outline" onClick={() => setShowClearConfirm(true)}>
               Clear Cart
             </Button>
           </div>
@@ -342,7 +342,7 @@ const handleNegotiateOrder = () => {
                             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                className="p-2 hover:bg-gray-100"
+                                className="cursor-pointer p-2 hover:bg-gray-100"
                                 disabled={item.quantity <= 1}
                               >
                                 <Minus size={16} />
@@ -352,7 +352,7 @@ const handleNegotiateOrder = () => {
                               </span>
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className="p-2 hover:bg-gray-100"
+                                className="cursor-pointer p-2 hover:bg-gray-100"
                               >
                                 <Plus size={16} />
                               </button>
@@ -378,7 +378,7 @@ const handleNegotiateOrder = () => {
                             </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="text-red-600 hover:text-red-700 text-sm flex items-center gap-1 ml-auto"
+                              className="cursor-pointer text-red-600 hover:text-red-700 text-sm flex items-center gap-1 ml-auto"
                             >
                               <Trash2 size={14} />
                               Remove
@@ -444,7 +444,7 @@ const handleNegotiateOrder = () => {
                 <Button
                   onClick={handleNegotiateOrder}
                   disabled={orderLoading}
-                  className="w-full py-3 text-base font-medium flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  className="cursor-pointer w-full py-3 text-base font-medium flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                 >
                   {!isAuthenticated() ? (
                     <>
@@ -459,8 +459,8 @@ const handleNegotiateOrder = () => {
                   )}
                 </Button>
 
-                <Button variant="outline" className="w-full py-3" onClick={() => (window.location.href = "/checkout")}>
-                  <CreditCard size={20} className="mr-2" />
+                <Button variant="outline" className="cursor-pointer w-full py-3" onClick={() => (window.location.href = "/checkout")}>
+                  <CreditCard size={20} className= " mr-2" />
                   Proceed to Checkout
                 </Button>
               </div>
@@ -486,10 +486,10 @@ const handleNegotiateOrder = () => {
               <h3 className="text-lg font-semibold mb-4">Clear Cart?</h3>
               <p className="text-gray-600 mb-6">Are you sure you want to remove all items from your cart?</p>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setShowClearConfirm(false)}>
+                <Button className="cursor-pointer" variant="outline" onClick={() => setShowClearConfirm(false)}>
                   Cancel
                 </Button>
-                <Button variant="danger" onClick={handleClearCart}>
+                <Button className="cursor-pointer" variant="danger" onClick={handleClearCart}>
                   Clear Cart
                 </Button>
               </div>

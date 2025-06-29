@@ -96,7 +96,7 @@ const formatYenPrice = (usdPrice) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
            <Link to={`/cars/${car.id}`} className="">
             <Button 
-              className="bg-blue text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+              className="cursor-pointer  bg-blue text-gray-900 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
             >
               <Eye size={16} />
               View Details
@@ -204,7 +204,7 @@ const formatYenPrice = (usdPrice) => {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Link to={`/cars/${car.id}`} className="flex-1">
-              <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-lg font-medium transition-colors">
+              <button className=" cursor-pointer w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-lg font-medium transition-colors">
                 More Details
               </button>
             </Link>
@@ -213,7 +213,7 @@ const formatYenPrice = (usdPrice) => {
               onClick={handleAddToCart}
               disabled={addingToCart || !car.isActive}
               variant={isInCart(car.id) ? "success" : "secondary"}
-              className="flex-1 flex items-center justify-center gap-2"
+              className="cursor-pointer flex-1 flex items-center justify-center gap-2"
             >
               {addingToCart ? (
                 <>

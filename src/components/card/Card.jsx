@@ -87,7 +87,7 @@ const Card = ({
         >
           <button
             onClick={handleToggleWishlist}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 ${
+            className={` cursor-pointer p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 ${
               itemIsInWishlist 
                 ? "bg-red-500 text-white shadow-lg" 
                 : "bg-white/90 text-gray-700 hover:bg-red-50 shadow-md"
@@ -96,7 +96,7 @@ const Card = ({
             <Heart className={`w-4 h-4 ${itemIsInWishlist ? "fill-current" : ""}`} />
           </button>
           <Link to={`/cars/${id}`} className="">
-            <button className="p-2 bg-white/90 text-gray-700 rounded-full hover:bg-blue-50 transition-all duration-200 hover:scale-110 shadow-md backdrop-blur-sm">
+            <button className=" cursor-pointer p-2 bg-white/90 text-gray-700 rounded-full hover:bg-blue-50 transition-all duration-200 hover:scale-110 shadow-md backdrop-blur-sm">
               <Eye className="w-4 h-4" />
             </button>
           </Link>
@@ -159,7 +159,7 @@ const Card = ({
         <div className="flex gap-2">
           <button
             onClick={handleAddToCart}
-            className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+            className={` cursor-pointer flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
               itemIsInCart
                 ? "bg-green-100 text-green-700 border border-green-200"
                 : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
@@ -169,7 +169,7 @@ const Card = ({
             {itemIsInCart ? "Added" : "Add to Cart"}
           </button>
           <Link to={`/cars/${id}`} className="">
-            <button className="px-3 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium">
+            <button className=" cursor-pointer px-3 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium">
               View
             </button>
           </Link>
