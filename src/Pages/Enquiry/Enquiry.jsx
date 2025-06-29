@@ -21,6 +21,23 @@ const Enquiry = () => {
 
   const createInquiryMutation = useCreateInquiry();
 
+  // Generate year options (from 1990 to current year + 2)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const startYear = 1990;
+    const endYear = currentYear + 2;
+    
+    const options = [{ value: "", label: "Select Year" }];
+    
+    for (let year = endYear; year >= startYear; year--) {
+      options.push({ value: year.toString(), label: year.toString() });
+    }
+    
+    return options;
+  };
+
+  const yearOptions = generateYearOptions();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
@@ -245,25 +262,21 @@ const Enquiry = () => {
             <div className="grid grid-cols-3 items-center">
               <label className="font-medium">Year</label>
               <div className="col-span-2 grid grid-cols-2 gap-2">
-                <input
-                  type="number"
+                <SelectField
                   name="yearFrom"
                   value={formData.yearFrom}
                   onChange={handleChange}
+                  options={yearOptions}
                   placeholder="Year From"
-                  min="1900"
-                  max="2030"
-                  className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <input
-                  type="number"
+                <SelectField
                   name="yearTo"
                   value={formData.yearTo}
                   onChange={handleChange}
+                  options={yearOptions}
                   placeholder="Year To"
-                  min="1900"
-                  max="2030"
-                  className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { resetPass } from '../../api/auth';
+import Swal from 'sweetalert2';
 
 const ResetPasswordForm = ({ token, onSuccess, onError }) => {
   const [formData, setFormData] = useState({
@@ -10,19 +11,27 @@ const ResetPasswordForm = ({ token, onSuccess, onError }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      Swal.fire({
+        icon: 'error',
+        title: 'Password Mismatch',
+        text: 'Passwords do not match',
+        confirmButtonColor: '#4f46e5'
+      });
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
+      Swal.fire({
+        icon: 'error',
+        title: 'Password Too Short',
+        text: 'Password must be at least 6 characters long',
+        confirmButtonColor: '#4f46e5'
+      });
       return;
     }
 
@@ -31,9 +40,21 @@ const ResetPasswordForm = ({ token, onSuccess, onError }) => {
     try {
       const result = await resetPass({token, newPassword:formData.newPassword});
       if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Password Reset Successful!',
+          text: 'Your password has been updated successfully',
+          confirmButtonColor: '#4f46e5'
+        });
         onSuccess();
       }
     } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Reset Failed',
+        text: 'Invalid or expired reset token',
+        confirmButtonColor: '#4f46e5'
+      });
       onError('Invalid or expired reset token');
     } finally {
       setLoading(false);
@@ -111,13 +132,6 @@ const ResetPasswordForm = ({ token, onSuccess, onError }) => {
               </button>
             </div>
           </div>
-
-          {error && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
 
           <button
             type="submit"
