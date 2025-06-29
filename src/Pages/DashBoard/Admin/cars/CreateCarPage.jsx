@@ -45,49 +45,129 @@ export default function CreateCarPage() {
       [field]: value,
     }))
   }
+// State declarations
 
-  const handleMainImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, mainImage: file }))
+// Compress image function
+const compressImage = (file, maxWidth = 1200, maxHeight = 800, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    
+    img.onload = () => {
+      // Calculate new dimensions while maintaining aspect ratio
+      let { width, height } = img
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height
+          height = maxHeight
+        }
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      canvas.toBlob(
+        (blob) => {
+          const compressedFile = new File([blob], file.name, {
+            type: file.type,
+            lastModified: Date.now()
+          })
+          resolve(compressedFile)
+        },
+        file.type,
+        quality
+      )
+    }
+    
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+// Handle main image change with compression
+const handleMainImageChange = async (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    try {
+      // Compress the image
+      const compressedFile = await compressImage(file)
+      
+      setFormData((prev) => ({ ...prev, mainImage: compressedFile }))
+      
       const reader = new FileReader()
       reader.onload = (e) => setMainImagePreview(e.target.result)
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleGalleryImagesChange = (e) => {
-    const files = Array.from(e.target.files)
-    if (files.length + formData.galleryImages.length > 10) {
+      reader.readAsDataURL(compressedFile)
+    } catch (error) {
+      console.error('Error compressing main image:', error)
       Swal.fire({
-        icon: "warning",
-        title: "Too Many Images",
-        text: "Maximum 10 gallery images allowed",
+        icon: "error",
+        title: "Image Processing Error",
+        text: "Failed to process the image. Please try again.",
         confirmButtonColor: "#3B82F6",
       })
-      return
     }
+  }
+}
 
-    const newImages = [...formData.galleryImages, ...files]
+// Handle gallery images change with compression
+const handleGalleryImagesChange = async (e) => {
+  const files = Array.from(e.target.files)
+  
+  if (files.length + formData.galleryImages.length > 10) {
+    Swal.fire({
+      icon: "warning",
+      title: "Too Many Images",
+      text: "Maximum 10 gallery images allowed",
+      confirmButtonColor: "#3B82F6",
+    })
+    return
+  }
+
+  try {
+    // Compress all images
+    const compressedFiles = await Promise.all(
+      files.map(file => compressImage(file))
+    )
+    
+    const newImages = [...formData.galleryImages, ...compressedFiles]
     setFormData((prev) => ({ ...prev, galleryImages: newImages }))
 
-    // Create previews
-    files.forEach((file) => {
+    // Create previews for compressed images
+    compressedFiles.forEach((file) => {
       const reader = new FileReader()
       reader.onload = (e) => {
         setGalleryPreviews((prev) => [...prev, e.target.result])
       }
       reader.readAsDataURL(file)
     })
+  } catch (error) {
+    console.error('Error compressing gallery images:', error)
+    Swal.fire({
+      icon: "error",
+      title: "Image Processing Error",
+      text: "Failed to process some images. Please try again.",
+      confirmButtonColor: "#3B82F6",
+    })
   }
+}
 
-  const removeGalleryImage = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      galleryImages: prev.galleryImages.filter((_, i) => i !== index),
-    }))
-    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index))
-  }
+// Remove gallery image function
+const removeGalleryImage = (index) => {
+  setGalleryPreviews((prev) => prev.filter((_, i) => i !== index))
+  setFormData((prev) => ({
+    ...prev,
+    galleryImages: prev.galleryImages.filter((_, i) => i !== index)
+  }))
+}
 
   // Feature management functions
   const addFeature = () => {
@@ -1007,7 +1087,7 @@ export default function CreateCarPage() {
 
           {/* Features Section */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-6">
+            <div className="lg:flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="p-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl mr-4">
                   <Settings className="h-6 w-6 text-white" />
@@ -1020,7 +1100,7 @@ export default function CreateCarPage() {
               <button
                 type="button"
                 onClick={addFeature}
-                className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 mt-4 lg:mx-0 mx-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Feature
@@ -1048,7 +1128,7 @@ export default function CreateCarPage() {
                 {formData.features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex gap-4 items-center p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200"
+                    className="lg:flex gap-4 items-center p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex-1">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
@@ -1183,129 +1263,137 @@ export default function CreateCarPage() {
           </div>
 
           {/* Images */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center mb-6">
-              <div className="p-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl mr-4">
-                <ImageIcon className="h-6 w-6 text-white" />
+         {/* Images */}
+<div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-4 sm:p-6 lg:p-8 hover:shadow-2xl transition-all duration-300">
+  <div className="flex flex-col sm:flex-row sm:items-center mb-6">
+    <div className="p-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-xl mb-3 sm:mb-0 sm:mr-4 w-fit">
+      <ImageIcon className="h-6 w-6 text-white" />
+    </div>
+    <div>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Images</h2>
+      <p className="text-sm text-gray-600 mt-1">Upload high-quality photos of your vehicle</p>
+    </div>
+  </div>
+
+  <div className="space-y-6 sm:space-y-8">
+    {/* Main Image Section */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-3">
+        Main Image <span className="text-red-500">*</span>
+        <span className="block sm:inline text-xs text-gray-500 font-normal sm:ml-2">
+          (This will be the primary photo shown)
+        </span>
+      </label>
+      <div className="mt-1 flex justify-center px-4 sm:px-6 pt-6 sm:pt-8 pb-6 sm:pb-8 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-all duration-200 bg-gradient-to-br from-gray-50 to-green-50">
+        <div className="space-y-2 text-center w-full">
+          {mainImagePreview ? (
+            <div className="relative group">
+              <img
+                src={mainImagePreview || "/placeholder.svg"}
+                alt="Main preview"
+                className="mx-auto h-32 w-48 sm:h-40 sm:w-60 object-cover rounded-lg shadow-lg"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMainImagePreview(null)
+                    setFormData((prev) => ({ ...prev, mainImage: null }))
+                  }}
+                  className="opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-all duration-200 transform hover:scale-110"
+                >
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">Images</h2>
-                <p className="text-sm text-gray-600 mt-1">Upload high-quality photos of your vehicle</p>
-              </div>
+              <p className="text-xs text-green-600 font-medium mt-2">✓ Main image uploaded</p>
             </div>
-
-            <div className="space-y-8">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Main Image <span className="text-red-500">*</span>
-                  <span className="text-xs text-gray-500 font-normal ml-2">(This will be the primary photo shown)</span>
-                </label>
-                <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-all duration-200 bg-gradient-to-br from-gray-50 to-green-50">
-                  <div className="space-y-2 text-center">
-                    {mainImagePreview ? (
-                      <div className="relative group">
-                        <img
-                          src={mainImagePreview || "/placeholder.svg"}
-                          alt="Main preview"
-                          className="mx-auto h-40 w-60 object-cover rounded-lg shadow-lg"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMainImagePreview(null)
-                              setFormData((prev) => ({ ...prev, mainImage: null }))
-                            }}
-                            className="opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-all duration-200 transform hover:scale-110"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                        </div>
-                        <p className="text-xs text-green-600 font-medium mt-2">✓ Main image uploaded</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                          <ImageIcon className="h-8 w-8 text-green-600" />
-                        </div>
-                        <div className="flex text-sm text-gray-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 px-4 py-2 border border-green-200 hover:border-green-300 transition-all duration-200">
-                            <span>Choose main image</span>
-                            <input
-                              type="file"
-                              className="sr-only"
-                              accept="image/*"
-                              onChange={handleMainImageChange}
-                              required
-                            />
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                      </>
-                    )}
-                  </div>
-                </div>
+          ) : (
+            <>
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full mb-4">
+                <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Gallery Images
-                  <span className="text-xs text-gray-500 font-normal ml-2">
-                    (Max 10 images - {formData.galleryImages.length}/10 used)
-                  </span>
+              <div className="flex justify-center text-sm text-gray-600">
+                <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 px-3 py-2 sm:px-4 sm:py-2 border border-green-200 hover:border-green-300 transition-all duration-200">
+                  <span className="text-xs sm:text-sm">Choose main image</span>
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept="image/*"
+                    onChange={handleMainImageChange}
+                    required
+                  />
                 </label>
-                <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-all duration-200 bg-gradient-to-br from-gray-50 to-green-50">
-                  <div className="space-y-2 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                      <ImageIcon className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 px-4 py-2 border border-green-200 hover:border-green-300 transition-all duration-200">
-                        <span>Add gallery images</span>
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept="image/*"
-                          multiple
-                          onChange={handleGalleryImagesChange}
-                        />
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
-                    <p className="text-xs text-blue-600">💡 Tip: Add interior, exterior, and engine photos</p>
-                  </div>
-                </div>
-
-                {galleryPreviews.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                      Gallery Preview ({galleryPreviews.length} images)
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {galleryPreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={preview || "/placeholder.svg"}
-                            alt={`Gallery ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg shadow-md"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
-                            <button
-                              type="button"
-                              onClick={() => removeGalleryImage(index)}
-                              className="opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all duration-200 transform hover:scale-110"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+              <p className="text-xs text-blue-600">📱 Images will be automatically optimized</p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* Gallery Images Section */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-3">
+        Gallery Images
+        <span className="block sm:inline text-xs text-gray-500 font-normal sm:ml-2">
+          (Max 10 images - {formData.galleryImages.length}/10 used)
+        </span>
+      </label>
+      <div className="mt-1 flex justify-center px-4 sm:px-6 pt-6 sm:pt-8 pb-6 sm:pb-8 border-2 border-gray-300 border-dashed rounded-xl hover:border-green-400 transition-all duration-200 bg-gradient-to-br from-gray-50 to-green-50">
+        <div className="space-y-2 text-center w-full">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full mb-4">
+            <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
           </div>
+          <div className="flex justify-center text-sm text-gray-600">
+            <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 px-3 py-2 sm:px-4 sm:py-2 border border-green-200 hover:border-green-300 transition-all duration-200">
+              <span className="text-xs sm:text-sm">Add gallery images</span>
+              <input
+                type="file"
+                className="sr-only"
+                accept="image/*"
+                multiple
+                onChange={handleGalleryImagesChange}
+              />
+            </label>
+          </div>
+          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+          <p className="text-xs text-blue-600">💡 Tip: Add interior, exterior, and engine photos</p>
+          <p className="text-xs text-green-600">📱 All images will be automatically optimized</p>
+        </div>
+      </div>
+
+      {/* Gallery Preview */}
+      {galleryPreviews.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            Gallery Preview ({galleryPreviews.length} images)
+          </h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            {galleryPreviews.map((preview, index) => (
+              <div key={index} className="relative group">
+                <img
+                  src={preview || "/placeholder.svg"}
+                  alt={`Gallery ${index + 1}`}
+                  className="w-full h-20 sm:h-24 object-cover rounded-lg shadow-md"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryImage(index)}
+                    className="opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-all duration-200 transform hover:scale-110"
+                  >
+                    <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
           {/* Status */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">

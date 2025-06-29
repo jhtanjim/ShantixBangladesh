@@ -10,7 +10,6 @@ import UserProfile from "../Pages/Profile/UserProfile";
 import UpdateProfile from "../Pages/Profile/UpdateProfile";
 import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
 import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
-import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage";
 import { UsersPage } from "../Pages/DashBoard/Admin/users/UsersPage";
 import { CreateUserPage } from "../Pages/DashBoard/Admin/users/CreateUserPage";
 import { EditUserPage } from "../Pages/DashBoard/Admin/users/EditUserPage";
@@ -30,6 +29,7 @@ import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
 import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
 import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
+import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage";
 
 export const router = createBrowserRouter([
   {

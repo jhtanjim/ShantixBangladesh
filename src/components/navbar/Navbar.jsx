@@ -43,10 +43,7 @@ const Navbar = () => {
   // Filter nav links based on user role
   const baseNavLinks = [
     { href: "/about", label: "About Us" },
-    { href: "/stock-list", label: "Stock List" },
     { href: "/howToBuy", label: "How To Buy" },
-    { href: "/auction", label: "Auction" },
-    { href: "/container", label: "Container" },
     { href: "/enquiry", label: "Inquiry" },
     { href: "/contact", label: "Contact Us" },
     { href: "/shipSchedule", label: "Ship Schedule" },
