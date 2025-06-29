@@ -29,6 +29,7 @@ import AdminLayout from "../layout/AdminLayout";
 import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
 import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
+import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
 
 export const router = createBrowserRouter([
   {
@@ -137,7 +138,8 @@ export const router = createBrowserRouter([
       { path: "users/create", element: <CreateUserPage /> },
       { path: "users/:id/edit", element: <EditUserPage /> },
       { path: "orders", element: <OrderPage /> },
-      { path: "enquiryList", element: <EnquiryList /> }
+      { path: "enquiryList", element: <EnquiryList /> },
+      { path: "shipScheduleList", element: <ShipScheduleList /> }
 
     ],
   },

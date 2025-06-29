@@ -56,6 +56,12 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
       path: "/admin/enquiryList"
     },
     {
+      title: " ShipScheduleList",
+      icon: Info,
+      key: "ShipScheduleList",
+      path: "/admin/shipScheduleList"
+    },
+    {
       title: "Orders",
       icon: ShoppingCart,
       key: "orders",
