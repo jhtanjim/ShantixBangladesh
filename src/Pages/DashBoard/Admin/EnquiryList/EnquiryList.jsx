@@ -22,7 +22,21 @@ const EnquiryList = () => {
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [adminResponse, setAdminResponse] = useState('');
 
-  const { data: inquiriesData, isLoading, isError, error } = useAllInquiries(filters);
+  // Filter out empty string values before sending to API
+  const cleanFilters = useMemo(() => {
+    const cleaned = {};
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      // Only include non-empty values (but keep page and limit)
+      if (key === 'page' || key === 'limit' || (value !== '' && value !== null && value !== undefined)) {
+        cleaned[key] = value;
+      }
+    });
+    return cleaned;
+  }, [filters]);
+
+  const { data: inquiriesData, isLoading, isError, error } = useAllInquiries(cleanFilters);
+  console.log(inquiriesData)
   const { data: inquiryDetails, isLoading: isLoadingDetails } = useInquiry(selectedInquiry?.id);
   const updateInquiryMutation = useUpdateInquiry();
   const deleteInquiryMutation = useDeleteInquiry();
@@ -669,6 +683,7 @@ const EnquiryList = () => {
                 </div>
               </div>
             </div>
+       
           </div>
         )}
       </div>
