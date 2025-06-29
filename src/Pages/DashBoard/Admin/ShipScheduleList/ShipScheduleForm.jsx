@@ -1,6 +1,6 @@
 // components/ShipSchedule/ShipScheduleForm.jsx
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Save, Upload, ImageIcon, Loader, AlertCircle, Calendar } from 'lucide-react';
+import { X, Save, Upload, ImageIcon, Loader, AlertCircle, Calendar, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const ShipScheduleForm = ({ 
@@ -23,79 +23,65 @@ const ShipScheduleForm = ({
   const [dragOver, setDragOver] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [compressionInfo, setCompressionInfo] = useState(null);
   
   const fileInputRef = useRef(null);
 
-  // Image compression function
-  const compressImage = useCallback((file, maxWidth = 800, maxHeight = 600, quality = 0.8) => {
-    return new Promise((resolve) => {
+  // Enhanced image compression function with better quality control
+  const compressImage = useCallback((file, maxWidth = 1200, maxHeight = 800, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
 
       img.onload = () => {
         let { width, height } = img;
+        const originalSize = file.size;
         
-        if (width > height) {
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
+        // Calculate new dimensions while maintaining aspect ratio
+        const aspectRatio = width / height;
+        
+        if (width > maxWidth || height > maxHeight) {
+          if (aspectRatio > 1) {
+            // Landscape
+            width = Math.min(width, maxWidth);
+            height = width / aspectRatio;
+          } else {
+            // Portrait
+            height = Math.min(height, maxHeight);
+            width = height * aspectRatio;
           }
         }
 
         canvas.width = width;
         canvas.height = height;
+        
+        // Use better image rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressionRatio = ((originalSize - blob.size) / originalSize * 100).toFixed(1);
+            setCompressionInfo({
+              originalSize: (originalSize / 1024 / 1024).toFixed(2),
+              compressedSize: (blob.size / 1024 / 1024).toFixed(2),
+              compressionRatio
+            });
+            resolve(blob);
+          } else {
+            reject(new Error('Image compression failed'));
+          }
+        }, 'image/jpeg', quality);
       };
 
+      img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });
   }, []);
 
-  // Upload image to API
-  const uploadImageToAPI = async (file) => {
-    try {
-      setImageUploading(true);
-      
-      const compressedFile = await compressImage(file);
-      
-      const formDataUpload = new FormData();
-      formDataUpload.append('image', compressedFile, 'schedule-image.jpg');
-
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) {
-        throw new Error('Image upload failed');
-      }
-
-      const data = await response.json();
-      return data.imageUrl || data.url;
-      
-    } catch (error) {
-      console.error('Image upload error:', error);
-      
-      // Fallback to base64 if API upload fails
-      const compressedFile = await compressImage(file);
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(compressedFile);
-      });
-    } finally {
-      setImageUploading(false);
-    }
-  };
-
-  // Form validation
+  // Form validation with enhanced checks
   const validateForm = () => {
     const errors = {};
     
@@ -103,12 +89,16 @@ const ShipScheduleForm = ({
       errors.title = 'Title is required';
     } else if (formData.title.trim().length < 3) {
       errors.title = 'Title must be at least 3 characters long';
+    } else if (formData.title.trim().length > 100) {
+      errors.title = 'Title must be less than 100 characters';
     }
     
     if (!formData.description.trim()) {
       errors.description = 'Description is required';
     } else if (formData.description.trim().length < 10) {
       errors.description = 'Description must be at least 10 characters long';
+    } else if (formData.description.trim().length > 1000) {
+      errors.description = 'Description must be less than 1000 characters';
     }
     
     setFormErrors(errors);
@@ -129,18 +119,39 @@ const ShipScheduleForm = ({
     }
 
     try {
-      let finalFormData = { ...formData };
+      setImageUploading(true);
       
+      // Create FormData object to send both text data and file
+      const submitFormData = new FormData();
+      
+      // Add text fields
+      submitFormData.append('title', formData.title.trim());
+      submitFormData.append('description', formData.description.trim());
+      submitFormData.append('isActive', formData.isActive);
+      
+      // Add image file if present
       if (imageFile) {
-        const imageUrl = await uploadImageToAPI(imageFile);
-        finalFormData.image = imageUrl;
+        try {
+          const compressedFile = await compressImage(imageFile);
+          submitFormData.append('image', compressedFile, 'schedule-image.jpg');
+        } catch (compressionError) {
+          console.error('Image compression failed:', compressionError);
+          // Fallback to original file if compression fails
+          submitFormData.append('image', imageFile);
+        }
+      } else if (formData.image && formData.image !== initialData.image) {
+        // If it's a new URL, send it as text
+        submitFormData.append('imageUrl', formData.image);
       }
 
-      await onSubmit(finalFormData);
+      // Pass FormData to parent component
+      await onSubmit(submitFormData);
       
     } catch (error) {
       console.error('Form submission error:', error);
       // Error handling is done in parent components
+    } finally {
+      setImageUploading(false);
     }
   };
 
@@ -175,26 +186,31 @@ const ShipScheduleForm = ({
   const handleFileSelect = async (file) => {
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    // Enhanced file validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
       Swal.fire({
-        title: 'Invalid File',
-        text: 'Please select a valid image file (PNG, JPG, GIF).',
+        title: 'Invalid File Type',
+        text: 'Please select a valid image file (JPEG, PNG, GIF, WebP).',
         icon: 'error',
         confirmButtonColor: '#3b82f6'
       });
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    const maxSize = 15 * 1024 * 1024; // 15MB
+    if (file.size > maxSize) {
       Swal.fire({
         title: 'File Too Large',
-        text: 'Please select an image smaller than 10MB.',
+        text: 'Please select an image smaller than 15MB.',
         icon: 'error',
         confirmButtonColor: '#3b82f6'
       });
       return;
     }
 
+    // Reset compression info
+    setCompressionInfo(null);
     setImageFile(file);
     
     const reader = new FileReader();
@@ -224,6 +240,7 @@ const ShipScheduleForm = ({
   const removeImage = () => {
     setImagePreview('');
     setImageFile(null);
+    setCompressionInfo(null);
     setFormData({ ...formData, image: '' });
   };
 
@@ -264,6 +281,7 @@ const ShipScheduleForm = ({
                 formErrors.title ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter schedule title (e.g., Dhaka to Chittagong)"
+              maxLength={100}
             />
             {formErrors.title && (
               <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -271,6 +289,9 @@ const ShipScheduleForm = ({
                 {formErrors.title}
               </p>
             )}
+            <p className="text-gray-500 text-xs mt-1">
+              {formData.title.length}/100 characters
+            </p>
           </div>
 
           {/* Image Upload */}
@@ -293,7 +314,7 @@ const ShipScheduleForm = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   onChange={(e) => handleFileSelect(e.target.files[0])}
                   className="hidden"
                 />
@@ -302,7 +323,7 @@ const ShipScheduleForm = ({
                   <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-xl">
                     <div className="text-center">
                       <Loader className="animate-spin text-blue-600 mx-auto mb-2" size={32} />
-                      <p className="text-blue-600 font-medium">Compressing image...</p>
+                      <p className="text-blue-600 font-medium">Processing image...</p>
                     </div>
                   </div>
                 )}
@@ -312,7 +333,7 @@ const ShipScheduleForm = ({
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="max-h-48 mx-auto rounded-lg"
+                      className="max-h-48 mx-auto rounded-lg shadow-md"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         e.currentTarget.nextElementSibling.style.display = 'block';
@@ -328,7 +349,7 @@ const ShipScheduleForm = ({
                         e.stopPropagation();
                         removeImage();
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md"
                     >
                       <X size={16} />
                     </button>
@@ -337,10 +358,24 @@ const ShipScheduleForm = ({
                   <div className="py-4">
                     <Upload className="mx-auto text-gray-400 mb-2" size={48} />
                     <p className="text-gray-600 font-medium">Drop image here or click to upload</p>
-                    <p className="text-gray-400 text-sm mt-1">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-gray-400 text-sm mt-1">JPEG, PNG, GIF, WebP up to 15MB</p>
                   </div>
                 )}
               </div>
+
+              {/* Compression Info */}
+              {compressionInfo && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <Info size={16} />
+                    <span className="font-medium">Image Optimized</span>
+                  </div>
+                  <div className="text-sm text-green-700 mt-1">
+                    Original: {compressionInfo.originalSize}MB → Compressed: {compressionInfo.compressedSize}MB 
+                    ({compressionInfo.compressionRatio}% reduction)
+                  </div>
+                </div>
+              )}
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -359,6 +394,7 @@ const ShipScheduleForm = ({
                   if (e.target.value) {
                     setImagePreview(e.target.value);
                     setImageFile(null);
+                    setCompressionInfo(null);
                   }
                 }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -381,6 +417,7 @@ const ShipScheduleForm = ({
                 formErrors.description ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter detailed description of the schedule including departure times, routes, and important information..."
+              maxLength={1000}
             />
             {formErrors.description && (
               <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -388,6 +425,9 @@ const ShipScheduleForm = ({
                 {formErrors.description}
               </p>
             )}
+            <p className="text-gray-500 text-xs mt-1">
+              {formData.description.length}/1000 characters
+            </p>
           </div>
 
           {/* Status */}
@@ -395,7 +435,7 @@ const ShipScheduleForm = ({
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Status
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"

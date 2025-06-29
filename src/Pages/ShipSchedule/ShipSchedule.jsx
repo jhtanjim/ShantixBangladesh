@@ -3,7 +3,7 @@ import useShipSchedule from '../../hooks/useShipSchedule';
 
 const ShipSchedule = () => {
     const { schedules, isLoading, isError } = useShipSchedule();
-    
+    console.log(schedules.data)
     // Handle loading state
     if (isLoading) {
         return (
