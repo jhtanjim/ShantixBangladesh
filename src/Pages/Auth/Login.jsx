@@ -209,16 +209,16 @@ export default function LoginPage({onForgotPassword}) {
               </button>
             </div>
           </div>
-
-          {/* Forgot Password Link */}
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Forgot your password?
-            </button>
+ {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+               onClick={onForgotPassword}
+                className="text-sm font-medium hover:underline transition-colors"
+                style={{ color: '#0072BC' }}
+              >
+                Forgot your password?
+              </button>
           </div>
 
           {/* Submit Button */}
