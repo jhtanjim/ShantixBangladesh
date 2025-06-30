@@ -1,9 +1,9 @@
-import SectionTitle from "../../../components/ui/SectionTitle";
-import Button from "../../../components/ui/Button";
+import { Link } from "react-router-dom";
 import Card from "../../../components/card/Card";
+import Button from "../../../components/ui/Button";
+import SectionTitle from "../../../components/ui/SectionTitle";
 import { useShop } from "../../../Context/ShopContext";
 import { useAllCars } from "../../../hooks/useCars";
-import { Link } from "react-router-dom";
 
 const FixedPriceStock = () => {
   const {
@@ -34,9 +34,7 @@ const FixedPriceStock = () => {
         subheading="Find from Large Number of Stock"
       />
 
-      {isLoading && (
-        <p className="text-center py-8">Loading...</p>
-      )}
+      {isLoading && <p className="text-center py-8">Loading...</p>}
 
       {error && (
         <p className="text-center py-8 text-red-500">Error loading cars.</p>
@@ -44,7 +42,7 @@ const FixedPriceStock = () => {
 
       {!isLoading && !error && (
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-{carsResponse.slice(0, 10).map((car) => (
+          {carsResponse?.slice(0, 10).map((car) => (
             <Card
               key={car.id}
               id={car.id}
@@ -67,9 +65,10 @@ const FixedPriceStock = () => {
       )}
 
       <div className="text-center mt-8">
-<Link to={"/allCars"}>
+        <Link to={"/allCars"}>
           <Button>View All Stock</Button>
-        </Link>      </div>
+        </Link>{" "}
+      </div>
     </div>
   );
 };
