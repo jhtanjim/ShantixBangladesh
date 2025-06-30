@@ -1,5 +1,4 @@
 "use client"
-
 import { createContext, useContext, useState } from "react"
 import { loginUser } from "../api/auth"
 import { getCurrentUser } from "../api/users"
@@ -30,11 +29,43 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token")
+      // Clear the redirect URL when logging out
+      localStorage.removeItem("redirectAfterLogin")
     }
     setToken(null)
   }
 
-  return <AuthContext.Provider value={{ token, login, logout, user }}>{children}</AuthContext.Provider>
+  // Function to set redirect URL
+  const setRedirectAfterLogin = (url) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("redirectAfterLogin", url)
+    }
+  }
+
+  // Function to get and clear redirect URL
+  const getAndClearRedirectUrl = () => {
+    if (typeof window !== "undefined") {
+      const redirectUrl = localStorage.getItem("redirectAfterLogin")
+      localStorage.removeItem("redirectAfterLogin")
+      return redirectUrl || "/"
+    }
+    return "/"
+  }
+
+  return (
+    <AuthContext.Provider 
+      value={{ 
+        token, 
+        login, 
+        logout, 
+        user, 
+        setRedirectAfterLogin,
+        getAndClearRedirectUrl
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {

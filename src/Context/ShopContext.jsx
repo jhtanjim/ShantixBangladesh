@@ -11,6 +11,7 @@ export function ShopProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const { token, user } = useAuth() // Get token and user from auth context
   const [currentUser, setCurrentUser] = useState(null)
+  const [previousUser, setPreviousUser] = useState(null) // Track previous user state
 
   // ✅ Hardcoded exchange rate
   const exchangeRate = 142.08
@@ -40,6 +41,38 @@ export function ShopProvider({ children }) {
     return `shantix-${type}-${currentUser.id}`
   }
 
+  // Helper function to merge cart items
+  const mergeCartItems = (guestCart, userCart) => {
+    const merged = [...userCart]
+    
+    guestCart.forEach(guestItem => {
+      const existingIndex = merged.findIndex(item => item.id === guestItem.id)
+      if (existingIndex >= 0) {
+        // Item exists, add quantities
+        merged[existingIndex].quantity += guestItem.quantity
+      } else {
+        // New item, add to cart
+        merged.push(guestItem)
+      }
+    })
+    
+    return merged
+  }
+
+  // Helper function to merge wishlist items
+  const mergeWishlistItems = (guestWishlist, userWishlist) => {
+    const merged = [...userWishlist]
+    
+    guestWishlist.forEach(guestItem => {
+      const exists = merged.some(item => item.id === guestItem.id)
+      if (!exists) {
+        merged.push(guestItem)
+      }
+    })
+    
+    return merged
+  }
+
   // Load data from localStorage on mount or when user changes
   useEffect(() => {
     const loadUserData = () => {
@@ -50,16 +83,49 @@ export function ShopProvider({ children }) {
         const savedCart = localStorage.getItem(cartKey)
         const savedWishlist = localStorage.getItem(wishlistKey)
 
-        if (savedCart) {
-          setCartItems(JSON.parse(savedCart))
-        } else {
-          setCartItems([]) // Clear cart if no data for this user
-        }
+        // Check if user just logged in (was guest, now has user)
+        const wasGuest = previousUser === null
+        const isNowLoggedIn = currentUser !== null
+        const justLoggedIn = wasGuest && isNowLoggedIn && isLoaded
 
-        if (savedWishlist) {
-          setWishlistItems(JSON.parse(savedWishlist))
+        if (justLoggedIn) {
+          // User just logged in, merge guest cart with user cart
+          const guestCartKey = `shantix-cart-guest`
+          const guestWishlistKey = `shantix-wishlist-guest`
+          
+          const guestCart = JSON.parse(localStorage.getItem(guestCartKey) || '[]')
+          const guestWishlist = JSON.parse(localStorage.getItem(guestWishlistKey) || '[]')
+          
+          const userCart = JSON.parse(savedCart || '[]')
+          const userWishlist = JSON.parse(savedWishlist || '[]')
+          
+          // Merge guest data with user data
+          const mergedCart = mergeCartItems(guestCart, userCart)
+          const mergedWishlist = mergeWishlistItems(guestWishlist, userWishlist)
+          
+          setCartItems(mergedCart)
+          setWishlistItems(mergedWishlist)
+          
+          // Save merged data to user's storage
+          localStorage.setItem(cartKey, JSON.stringify(mergedCart))
+          localStorage.setItem(wishlistKey, JSON.stringify(mergedWishlist))
+          
+          // Clear guest data
+          localStorage.removeItem(guestCartKey)
+          localStorage.removeItem(guestWishlistKey)
         } else {
-          setWishlistItems([]) // Clear wishlist if no data for this user
+          // Normal load (not just logged in)
+          if (savedCart) {
+            setCartItems(JSON.parse(savedCart))
+          } else {
+            setCartItems([])
+          }
+
+          if (savedWishlist) {
+            setWishlistItems(JSON.parse(savedWishlist))
+          } else {
+            setWishlistItems([])
+          }
         }
       } catch (error) {
         console.error("Error loading data from localStorage:", error)
@@ -73,17 +139,19 @@ export function ShopProvider({ children }) {
     // Load data when user changes or on initial load
     if (currentUser !== undefined) { // Wait for user data to be determined
       loadUserData()
+      setPreviousUser(currentUser) // Update previous user state
     }
   }, [currentUser])
 
   // Clear cart and wishlist when user logs out
   useEffect(() => {
-    if (token === null && isLoaded) {
+    if (token === null && isLoaded && previousUser !== null) {
       // User logged out, clear current session data
       setCartItems([])
       setWishlistItems([])
+      setPreviousUser(null)
     }
-  }, [token, isLoaded])
+  }, [token, isLoaded, previousUser])
 
   // Save cart to localStorage whenever cartItems changes
   useEffect(() => {

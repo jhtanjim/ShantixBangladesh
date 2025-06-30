@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { useShop } from "../../Context/ShopContext"
 import { useCreateOrder } from "../../hooks/useOrders";
+import { useAuth } from "../../Context/AuthContext" // Import useAuth
 import Button from "./Button";
 
 // Currency Toggle Component
@@ -116,6 +117,9 @@ export default function Cart() {
     isAuthenticated,
     currentUser
   } = useShop()
+  
+  const { setRedirectAfterLogin } = useAuth() // Get setRedirectAfterLogin from useAuth
+  
   console.log(cartItems)
   const [currency, setCurrency] = useState("USD") // Default currency
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -147,64 +151,63 @@ export default function Cart() {
     setCurrency(newCurrency)
   }
 
+  const handleNegotiateOrder = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      setShowLoginRequired(true)
+      return
+    }
 
-const handleNegotiateOrder = () => {
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    setShowLoginRequired(true)
-    return
-  }
-
-  // Check if any item in cart is ON_HOLD
-  const hasOnHoldItem = cartItems.some(item => item.status === "ON_HOLD")
-  if (hasOnHoldItem) {
-    Swal.fire({
-      icon: "warning",
-      title: "Negotiation Unavailable",
-      text: "One or more items in your cart are currently ON HOLD and cannot be negotiated or ordered.",
-      confirmButtonText: "Okay",
-    })
-    return
-  }
-
-  // Proceed to create order
-  createOrder(cartItems, {
-    onSuccess: (data) => {
-      console.log("Order created successfully:", data)
-      setCreatedOrder(data.order)
-      setShowOrderSuccess(true)
-      clearCart()
-
-      // Show SweetAlert before redirecting to WhatsApp
-  Swal.fire({
-  icon: "success",
-  title: "Order Placed",
-  text: "Your order was placed successfully. You'll now be redirected to WhatsApp to negotiate.",
-  showConfirmButton: true,
-  confirmButtonText: "Go to WhatsApp",
-}).then(() => {
-  const orderId = data.order.id
-  const whatsappNumber = "8801752742031"
-  const message = `Hello, I just placed an order (ID: ${orderId}). I'd like to negotiate the price.`
-  window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank")
-})
-
-    },
-    onError: (error) => {
-      console.error("Failed to create order:", error)
+    // Check if any item in cart is ON_HOLD
+    const hasOnHoldItem = cartItems.some(item => item.status === "ON_HOLD")
+    if (hasOnHoldItem) {
       Swal.fire({
-        icon: "error",
-        title: "Order Failed",
-        text: "Failed to create order. Please try again later.",
+        icon: "warning",
+        title: "Negotiation Unavailable",
+        text: "One or more items in your cart are currently ON HOLD and cannot be negotiated or ordered.",
         confirmButtonText: "Okay",
       })
-    },
-  })
-}
+      return
+    }
 
+    // Proceed to create order
+    createOrder(cartItems, {
+      onSuccess: (data) => {
+        console.log("Order created successfully:", data)
+        setCreatedOrder(data.order)
+        setShowOrderSuccess(true)
+        clearCart()
+
+        // Show SweetAlert before redirecting to WhatsApp
+        Swal.fire({
+          icon: "success",
+          title: "Order Placed",
+          text: "Your order was placed successfully. You'll now be redirected to WhatsApp to negotiate.",
+          showConfirmButton: true,
+          confirmButtonText: "Go to WhatsApp",
+        }).then(() => {
+          const orderId = data.order.id
+          const whatsappNumber = "8801752742031"
+          const message = `Hello, I just placed an order (ID: ${orderId}). I'd like to negotiate the price.`
+          window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank")
+        })
+      },
+      onError: (error) => {
+        console.error("Failed to create order:", error)
+        Swal.fire({
+          icon: "error",
+          title: "Order Failed",
+          text: "Failed to create order. Please try again later.",
+          confirmButtonText: "Okay",
+        })
+      },
+    })
+  }
 
   const handleLoginRequired = () => {
     setShowLoginRequired(false)
+    // Set redirect URL to cart page before redirecting to login
+    setRedirectAfterLogin("/cart")
     // Redirect to login page - adjust the path as needed
     window.location.href = "/login"
   }
@@ -278,7 +281,7 @@ const handleNegotiateOrder = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <CurrencyToggle currency={currency} onCurrencyChange={handleCurrencyChange} />
+         
             <Button className="cursor-pointer" variant="outline" onClick={() => setShowClearConfirm(true)}>
               Clear Cart
             </Button>
@@ -338,28 +341,10 @@ const handleNegotiateOrder = () => {
 
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-700">Quantity:</span>
-                            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                className="cursor-pointer p-2 hover:bg-gray-100"
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus size={16} />
-                              </button>
-                              <span className="px-4 py-2 border-x border-gray-300 min-w-[60px] text-center font-medium">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className="cursor-pointer p-2 hover:bg-gray-100"
-                              >
-                                <Plus size={16} />
-                              </button>
-                            </div>
+                          
                           </div>
 
-                          <div className="text-right">
+                          <div className=" flextext-right">
                             <PriceDisplay
                               amount={item.price * item.quantity}
                               currency={currency}
@@ -369,12 +354,7 @@ const handleNegotiateOrder = () => {
                               style={{ color: "var(--color-red)" }}
                             />
                             <div className="text-sm text-gray-500 mb-2">
-                              <PriceDisplay 
-                                amount={item.price} 
-                                currency={currency}
-                                exchangeRate={exchangeRate}
-                                exchangeRateLoading={exchangeRateLoading}
-                              /> each
+                              
                             </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
@@ -459,10 +439,7 @@ const handleNegotiateOrder = () => {
                   )}
                 </Button>
 
-                <Button variant="outline" className="cursor-pointer w-full py-3" onClick={() => (window.location.href = "/checkout")}>
-                  <CreditCard size={20} className= " mr-2" />
-                  Proceed to Checkout
-                </Button>
+             
               </div>
 
               <div className="flex items-center justify-between text-sm text-gray-500">

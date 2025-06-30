@@ -1,11 +1,14 @@
-import React from 'react'
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "../api/users";
+import { useAuth } from "../Context/AuthContext";
 
-const useCurrentUser = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+export const useCurrentUser = () => {
+  const { token } = useAuth();
 
-export default useCurrentUser
+  return useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCurrentUser,
+    enabled: !!token,
+    retry: false,
+  });
+};

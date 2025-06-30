@@ -161,9 +161,13 @@ export default function Wishlist() {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                  <button className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    View Details
-                  </button>
+                 <Link
+  to={`/cars/${car.id}`}
+  className="flex-1 text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+>
+  View Details
+</Link>
+
                   
                   <button
                     onClick={() => handleAddToCart(car)}

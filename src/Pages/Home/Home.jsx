@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import Banner from "./Banner"
 import FixedPriceStock from "./FixedPriceStock/FixedPriceStock"
 import LowCostStock from "./LowCostStock/LowCostStock"
@@ -155,14 +155,13 @@ const Home = () => {
                 <h1 className="text-4xl md:text-6xl lg:text-7xl">Welcome to</h1>
                 <h1 className="text-red uppercase font-extrabold text-5xl md:text-7xl lg:text-8xl my-2">SHANTIX</h1>
                 <p className="text-lg md:text-2xl mt-4">
-                  Lorem ipsum dolor sit amet consectetur. Lectus nibh morbi non proin dui ut. Vel vestibulum dolor
-                  sagittis pulvinar felis ac. Ullamcorper non dictum in ullamcorper eros vel viverra. Venenatis magna
-                  lacus malesuada proin quam parturient viverra tellus.
+                  Shantix Corporation Japan is a leading exporter of premium Japanese used vehicles and auto parts, delivering excellence to customers around the world. Headquartered in Japan, we specialize in the export of high-quality Right-Hand Drive (RHD) and Left-Hand Drive (LHD) vehicles to a wide range of international markets.
                 </p>
-
-                <button className="mt-6 bg-dark-blue text-white px-6 py-3 rounded-md hover:bg-red-700 text-xl font-semibold">
+<Link to={"/about"}>
+                <button className=" cursor-pointer mt-6 bg-dark-blue text-white px-6 py-3 rounded-md hover:bg-red-700 text-xl font-semibold">
                   Read More
                 </button>
+                </Link>
               </div>
 
               {/* Right Side */}

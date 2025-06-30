@@ -5,17 +5,15 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import { useShop } from "../../Context/ShopContext";
 import logoImg from "../../assets/images/logo.png";
-import { useCurrentUser } from "../../hooks/useUsers";
+
 import useUsersRole from "../../hooks/useUsersRole";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const {
-    data: user,
-    isLoading: userLoading,
-    error: userError,
-  } = useCurrentUser();
+  const { data: user, isLoading, error } = useCurrentUser();
+
 
   const { token, logout } = useAuth();
   const { isAdmin } = useUsersRole(); // Use the hook to check admin role

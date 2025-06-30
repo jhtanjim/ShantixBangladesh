@@ -132,7 +132,7 @@ const ResetPasswordForm = ({ token, onSuccess, onError }) => {
               </button>
             </div>
           </div>
-
+<p className='text-red-700'>Password should be 8 characters long</p>
           <button
             type="submit"
             disabled={loading}
