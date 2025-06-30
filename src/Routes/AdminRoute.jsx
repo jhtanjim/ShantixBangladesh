@@ -1,34 +1,35 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Shield, AlertTriangle, Loader2, ArrowLeft } from "lucide-react"
-import { useAuth } from "../Context/AuthContext"
+import { AlertTriangle, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../Context/AuthContext";
+import { getCurrentUser } from "../api/users";
 
 const AdminRoute = ({ children }) => {
-  const { user, token } = useAuth()
-  const [userData, setUserData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { user, token } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         if (token) {
-          const currentUser = await user()
-          setUserData(currentUser)
+          const currentUser = await getCurrentUser();
+          setUserData(currentUser);
         }
       } catch (err) {
-        setError("Failed to fetch user data")
-        console.error("Error fetching user:", err)
+        setError("Failed to fetch user data");
+        console.error("Error fetching user:", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUserData()
-  }, [token, user])
-
+    fetchUserData();
+  }, [token, user]);
+  console.log(userData);
   // Loading state with beautiful spinner
   if (loading) {
     return (
@@ -38,11 +39,15 @@ const AdminRoute = ({ children }) => {
             <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
             <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full mx-auto animate-pulse"></div>
           </div>
-          <h3 className="mt-6 text-xl font-semibold text-gray-800">Verifying Access</h3>
-          <p className="mt-2 text-gray-600">Please wait while we check your permissions...</p>
+          <h3 className="mt-6 text-xl font-semibold text-gray-800">
+            Verifying Access
+          </h3>
+          <p className="mt-2 text-gray-600">
+            Please wait while we check your permissions...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   // Error state
@@ -53,7 +58,9 @@ const AdminRoute = ({ children }) => {
           <div className="bg-red-100 rounded-full p-4 w-20 h-20 mx-auto mb-6">
             <AlertTriangle className="h-12 w-12 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Oops! Something went wrong</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            Oops! Something went wrong
+          </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -63,7 +70,7 @@ const AdminRoute = ({ children }) => {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Not authenticated
@@ -74,8 +81,12 @@ const AdminRoute = ({ children }) => {
           <div className="bg-yellow-100 rounded-full p-4 w-20 h-20 mx-auto mb-6">
             <Shield className="h-12 w-12 text-yellow-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">You need to be logged in to access this area</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            Authentication Required
+          </h2>
+          <p className="text-gray-600 mb-6">
+            You need to be logged in to access this area
+          </p>
           <div className="space-y-3">
             <button
               onClick={() => (window.location.href = "/login")}
@@ -93,7 +104,7 @@ const AdminRoute = ({ children }) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Not admin
@@ -104,11 +115,18 @@ const AdminRoute = ({ children }) => {
           <div className="bg-red-100 rounded-full p-4 w-20 h-20 mx-auto mb-6">
             <Shield className="h-12 w-12 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Access Denied</h2>
-          <p className="text-gray-600 mb-2">You don't have permission to access this area</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            Access Denied
+          </h2>
+          <p className="text-gray-600 mb-2">
+            You don't have permission to access this area
+          </p>
           <div className="bg-gray-50 rounded-lg p-3 mb-6">
             <p className="text-sm text-gray-600">
-              Current role: <span className="font-semibold text-gray-800">{userData.role}</span>
+              Current role:{" "}
+              <span className="font-semibold text-gray-800">
+                {userData.role}
+              </span>
             </p>
           </div>
           <button
@@ -120,7 +138,7 @@ const AdminRoute = ({ children }) => {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // User is authenticated and is admin
@@ -149,7 +167,7 @@ const AdminRoute = ({ children }) => {
       {/* Main content */}
       <div className="flex-1">{children}</div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminRoute
+export default AdminRoute;

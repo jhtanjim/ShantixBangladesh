@@ -7,15 +7,12 @@ import { useShop } from "../../Context/ShopContext";
 import logoImg from "../../assets/images/logo.png";
 
 import useUsersRole from "../../hooks/useUsersRole";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: user, isLoading, error } = useCurrentUser();
 
-
-  const { token, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { isAdmin } = useUsersRole(); // Use the hook to check admin role
   const navigate = useNavigate();
 

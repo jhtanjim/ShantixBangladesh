@@ -1,15 +1,15 @@
 
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createOrder,
-  getOrderById,
+  getAllOrdersAdmin,
   getMyOrders,
+  getOrderById,
+  getOrderStats,
+  removeOrderItem,
   updateOrderStatus,
   uploadPaymentSlip,
-  removeOrderItem,
-  getAllOrdersAdmin,
-  getOrderStats,
 } from "../api/order";
 
 // Create new order

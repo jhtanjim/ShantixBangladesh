@@ -1,36 +1,35 @@
 import { createBrowserRouter } from "react-router-dom";
-import Main from "../layout/Main";
 import About from "../Pages/About/About";
-import ContactUs from "../Pages/ContactUs/ContactUs";
-import CarDetails from "../Pages/AllCar/CarDetails";
-import Enquiry from "../Pages/Enquiry/Enquiry";
-import Register from "../Pages/Auth/Register";
-import Profile from "../Pages/Profile/Profile";
-import UserProfile from "../Pages/Profile/UserProfile";
-import UpdateProfile from "../Pages/Profile/UpdateProfile";
-import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
-import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
-import { UsersPage } from "../Pages/DashBoard/Admin/users/UsersPage";
-import { CreateUserPage } from "../Pages/DashBoard/Admin/users/CreateUserPage";
-import { EditUserPage } from "../Pages/DashBoard/Admin/users/EditUserPage";
-import { CarDetailsPage } from "../Pages/DashBoard/Admin/cars/CarDetailsPage";
 import AllCar from "../Pages/AllCar/AllCar";
-import Cart from "../components/ui/Cart";
-import Wishlist from "../components/ui/wishlist";
-import Home from "../Pages/Home/Home";
-import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage";
-import CreateCarPage from "../Pages/DashBoard/Admin/cars/CreateCarPage";
-import UnderConstruction from "../components/UnderConstruction/UnderConstruction";
-import AdminRoute from "./AdminRoute";
-import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
-import HowToBuy from "../Pages/HowToBuy/HowToBuy";
-import AdminLayout from "../layout/AdminLayout";
+import CarDetails from "../Pages/AllCar/CarDetails";
+import Register from "../Pages/Auth/Register";
 import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
-import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
+import ContactUs from "../Pages/ContactUs/ContactUs";
+import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
 import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
-import { EditCarPage } from "../Pages/DashBoard/Admin/cars/EditCarPage";
+import { CarDetailsPage } from "../Pages/DashBoard/Admin/cars/CarDetailsPage";
+import { CarForm } from "../Pages/DashBoard/Admin/cars/CarForm";
+import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
+import { CreateUserPage } from "../Pages/DashBoard/Admin/users/CreateUserPage";
+import { EditUserPage } from "../Pages/DashBoard/Admin/users/EditUserPage";
+import { UsersPage } from "../Pages/DashBoard/Admin/users/UsersPage";
+import OrderPage from "../Pages/DashBoard/OrderPage/OrderPage";
+import Enquiry from "../Pages/Enquiry/Enquiry";
+import Home from "../Pages/Home/Home";
+import HowToBuy from "../Pages/HowToBuy/HowToBuy";
+import PrivacyPolicy from "../Pages/PrivacyPolicy/PrivacyPolicy";
+import Profile from "../Pages/Profile/Profile";
+import UpdateProfile from "../Pages/Profile/UpdateProfile";
+import UserProfile from "../Pages/Profile/UserProfile";
+import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
 import ShipScheduleDetails from "../Pages/ShipSchedule/ShipScheduleDetails";
+import UnderConstruction from "../components/UnderConstruction/UnderConstruction";
+import Cart from "../components/ui/Cart";
+import Wishlist from "../components/ui/wishlist";
+import AdminLayout from "../layout/AdminLayout";
+import Main from "../layout/Main";
+import AdminRoute from "./AdminRoute";
 
 export const router = createBrowserRouter([
   {
@@ -57,7 +56,7 @@ export const router = createBrowserRouter([
         path: "/howToBuy",
         element: <HowToBuy />,
       },
-     
+
       {
         path: "/allCars",
         element: <AllCar />,
@@ -67,17 +66,17 @@ export const router = createBrowserRouter([
         element: <CarDetails />,
       },
       {
-  path: "/cart",
-  element: <Cart />,
-},
+        path: "/cart",
+        element: <Cart />,
+      },
       {
-  path: "/cart",
-  element: <Cart />,
-},
+        path: "/cart",
+        element: <Cart />,
+      },
       {
-  path: "/wishlist",
-  element: <Wishlist />,
-},
+        path: "/wishlist",
+        element: <Wishlist />,
+      },
 
       {
         path: "/enquiry",
@@ -121,31 +120,29 @@ export const router = createBrowserRouter([
       // },
       { path: "*", element: <UnderConstruction /> },
     ],
-
   },
 
   {
     path: "/admin",
-    element:    
-    <AdminRoute>
+    element: (
+      <AdminRoute>
         <AdminLayout />
-        </AdminRoute>
-      ,
+      </AdminRoute>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: "cars", element: <CarsPage /> },
-          { path: "cars/:id", element: <CarDetailsPage /> }, 
+      { path: "cars/:id", element: <CarDetailsPage /> },
 
-      { path: "cars/create", element: <CreateCarPage/> },
-  
-      { path: "cars/edit/:id", element: <EditCarPage /> },
+      { path: "cars/create", element: <CarForm /> },
+
+      { path: "cars/edit/:id", element: <CarForm /> },
       { path: "users", element: <UsersPage /> },
       { path: "users/create", element: <CreateUserPage /> },
       { path: "users/:id/edit", element: <EditUserPage /> },
       { path: "orders", element: <OrderPage /> },
       { path: "enquiryList", element: <EnquiryList /> },
-      { path: "shipScheduleList", element: <ShipScheduleList /> }
-
+      { path: "shipScheduleList", element: <ShipScheduleList /> },
     ],
   },
 ]);

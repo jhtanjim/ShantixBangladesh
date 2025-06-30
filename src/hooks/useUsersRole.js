@@ -1,34 +1,12 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useAuth } from "../Context/AuthContext"
 
 const useUsersRole = () => {
-  const { user, token } = useAuth()
-  const [userData, setUserData] = useState(null)
+  const { user:userData, token } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        if (token) {
-          const currentUser = await user()
-          setUserData(currentUser)
-        } else {
-          setUserData(null)
-        }
-      } catch (err) {
-        setError("Failed to fetch user data")
-        console.error("Error fetching user:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUserData()
-  }, [token, user])
-
+ 
   // Helper functions
   const isAdmin = () => userData?.role === 'ADMIN'
   const isAuthenticated = () => !!token && !!userData

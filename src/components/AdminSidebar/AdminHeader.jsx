@@ -1,14 +1,9 @@
-
 // AdminHeader.jsx
-import React from 'react'
-import { Menu, Bell, User } from 'lucide-react'
-import { useAuth } from '../../Context/AuthContext';
-import { useCurrentUser } from '../../hooks/useUsers';
+import { Bell, Menu, User } from "lucide-react";
+import { useAuth } from "../../Context/AuthContext";
 
 const AdminHeader = ({ setSidebarOpen }) => {
-     const { data: user, isLoading: userLoading, error: userError } = useCurrentUser()
-      console.log(user, "user data in profile page")
-    
+  const { user } = useAuth();
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
@@ -20,7 +15,7 @@ const AdminHeader = ({ setSidebarOpen }) => {
           >
             <Menu className="w-6 h-6" />
           </button>
-          
+
           <h1 className="ml-4 text-lg font-semibold text-gray-900 md:ml-0">
             Dashboard
           </h1>
@@ -46,7 +41,7 @@ const AdminHeader = ({ setSidebarOpen }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default AdminHeader
+export default AdminHeader;
