@@ -11,7 +11,6 @@ import useUsersRole from "../../hooks/useUsersRole";
 const Navbar = () => {
   const { cartCount, wishlistCount } = useShop();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const { user, token, logout } = useAuth();
   const { isAdmin } = useUsersRole(); // Use the hook to check admin role
   const navigate = useNavigate();

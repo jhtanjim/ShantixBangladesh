@@ -55,6 +55,7 @@ const FixedPriceStock = () => {
               fuel={car.fuel}
               exteriorColor={car.exteriorColor}
               seats={car.seats}
+              status={car.status}
               onAddToCart={() => handleAddToCart(car)}
               onAddToWishlist={() => handleAddToWishlist(car)}
               isInCart={isInCart(car.id)}

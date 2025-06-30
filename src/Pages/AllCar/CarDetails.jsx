@@ -415,6 +415,10 @@ const CarDetailsPage = () => {
                 <div className="w-full py-4 text-lg font-semibold text-center text-red-600 bg-red-100 rounded-lg">
                   This car is currently on hold — negotiation in progress
                 </div>
+              ) : car.status === "SOLD" ? (
+                <div className="w-full py-4 text-lg font-semibold text-center text-red-600 bg-red-100  rounded-lg">
+                  This car has been sold
+                </div>
               ) : (
                 <button
                   className={`w-full py-4 text-lg font-semibold flex items-center justify-center gap-3 rounded-lg transition-all ${
