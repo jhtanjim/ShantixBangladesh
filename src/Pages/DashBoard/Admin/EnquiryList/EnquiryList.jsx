@@ -1,43 +1,69 @@
-import React, { useState, useMemo } from 'react';
-import { useUpdateInquiry, useDeleteInquiry, useInquiry } from '../../../../hooks/useInquiry';
-import { Search, Filter, Eye, Edit, Trash2, MessageCircle, Calendar, User, Mail, Phone, MapPin, Car } from 'lucide-react';
-import Swal from 'sweetalert2';
-import { useAllInquiries } from '../../../../hooks/useInquiry';
+import {
+  Calendar,
+  Car,
+  Eye,
+  Filter,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Trash2,
+  User,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import {
+  useAllInquiries,
+  useDeleteInquiry,
+  useInquiry,
+  useUpdateInquiry,
+} from "../../../../hooks/useInquiry";
 
 const EnquiryList = () => {
   const [filters, setFilters] = useState({
-    status: '',
-    inquiryType: '',
-    country: '',
-    email: '',
-    fromDate: '',
-    toDate: '',
+    status: "",
+    inquiryType: "",
+    country: "",
+    email: "",
+    fromDate: "",
+    toDate: "",
     page: 1,
-    limit: 10
+    limit: 10,
   });
 
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
-  const [adminResponse, setAdminResponse] = useState('');
+  const [adminResponse, setAdminResponse] = useState("");
 
   // Filter out empty string values before sending to API
   const cleanFilters = useMemo(() => {
     const cleaned = {};
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       const value = filters[key];
       // Only include non-empty values (but keep page and limit)
-      if (key === 'page' || key === 'limit' || (value !== '' && value !== null && value !== undefined)) {
+      if (
+        key === "page" ||
+        key === "limit" ||
+        (value !== "" && value !== null && value !== undefined)
+      ) {
         cleaned[key] = value;
       }
     });
     return cleaned;
   }, [filters]);
 
-  const { data: inquiriesData, isLoading, isError, error } = useAllInquiries(cleanFilters);
-  console.log(inquiriesData)
-  const { data: inquiryDetails, isLoading: isLoadingDetails } = useInquiry(selectedInquiry?.id);
+  const {
+    data: inquiriesData,
+    isLoading,
+    isError,
+    error,
+  } = useAllInquiries(cleanFilters);
+  console.log(inquiriesData);
+  const { data: inquiryDetails, isLoading: isLoadingDetails } = useInquiry(
+    selectedInquiry?.id
+  );
   const updateInquiryMutation = useUpdateInquiry();
   const deleteInquiryMutation = useDeleteInquiry();
 
@@ -46,62 +72,66 @@ const EnquiryList = () => {
   const totalPages = Math.ceil(totalCount / filters.limit);
 
   const statusOptions = [
-    { value: '', label: 'All Status' },
-    { value: 'PENDING', label: 'Pending' },
-    { value: 'IN_PROGRESS', label: 'In Progress' },
-    { value: 'RESPONDED', label: 'Responded' },
-    { value: 'CLOSED', label: 'Closed' }
+    { value: "", label: "All Status" },
+    { value: "PENDING", label: "Pending" },
+    { value: "IN_PROGRESS", label: "In Progress" },
+    { value: "RESPONDED", label: "Responded" },
+    { value: "CLOSED", label: "Closed" },
   ];
 
   const inquiryTypeOptions = [
-    { value: '', label: 'All Types' },
-    { value: 'CAR', label: 'Car' },
-    { value: 'BUS', label: 'Bus' },
-    { value: 'TRUCKS', label: 'Trucks' },
-    { value: 'PARTS', label: 'Parts' },
-    { value: 'BIKES', label: 'Bikes' },
-    { value: 'OTHERS', label: 'Others' }
+    { value: "", label: "All Types" },
+    { value: "CAR", label: "Car" },
+    { value: "BUS", label: "Bus" },
+    { value: "TRUCKS", label: "Trucks" },
+    { value: "PARTS", label: "Parts" },
+    { value: "BIKES", label: "Bikes" },
+    { value: "OTHERS", label: "Others" },
   ];
 
   const handleFilterChange = (name, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [name]: value,
-      page: 1 // Reset to first page when filtering
+      page: 1, // Reset to first page when filtering
     }));
   };
 
   const handlePageChange = (newPage) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      page: newPage
+      page: newPage,
     }));
   };
 
   const clearFilters = () => {
     setFilters({
-      status: '',
-      inquiryType: '',
-      country: '',
-      email: '',
-      fromDate: '',
-      toDate: '',
+      status: "",
+      inquiryType: "",
+      country: "",
+      email: "",
+      fromDate: "",
+      toDate: "",
       page: 1,
-      limit: 10
+      limit: 10,
     });
   };
 
   const getStatusBadge = (status) => {
     const statusStyles = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      IN_PROGRESS: 'bg-blue-100 text-blue-800',
-      RESPONDED: 'bg-green-100 text-green-800',
-      CLOSED: 'bg-gray-100 text-gray-800'
+      PENDING: "bg-yellow-100 text-yellow-800",
+      IN_PROGRESS: "bg-blue-100 text-blue-800",
+      RESPONDED: "bg-green-100 text-green-800",
+      CLOSED: "bg-gray-100 text-gray-800",
     };
-    
+
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status?.replace('_', ' ')}
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          statusStyles[status] || "bg-gray-100 text-gray-800"
+        }`}
+      >
+        {status?.replace("_", " ")}
       </span>
     );
   };
@@ -114,50 +144,50 @@ const EnquiryList = () => {
   const handleUpdateStatus = async (inquiryId, newStatus) => {
     try {
       const result = await Swal.fire({
-        title: 'Update Status',
-        text: `Change status to ${newStatus.replace('_', ' ')}?`,
-        icon: 'question',
+        title: "Update Status",
+        text: `Change status to ${newStatus.replace("_", " ")}?`,
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, Update'
+        confirmButtonColor: "#3b82f6",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, Update",
       });
 
       if (result.isConfirmed) {
         await updateInquiryMutation.mutateAsync({
           inquiryId,
-          updateData: { status: newStatus }
+          updateData: { status: newStatus },
         });
 
         Swal.fire({
-          icon: 'success',
-          title: 'Status Updated',
-          text: 'Inquiry status has been updated successfully.',
+          icon: "success",
+          title: "Status Updated",
+          text: "Inquiry status has been updated successfully.",
           timer: 2000,
-          timerProgressBar: true
+          timerProgressBar: true,
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: error.response?.data?.message || 'Failed to update status'
+        icon: "error",
+        title: "Update Failed",
+        text: error.response?.data?.message || "Failed to update status",
       });
     }
   };
 
   const handleRespond = (inquiry) => {
     setSelectedInquiry(inquiry);
-    setAdminResponse(inquiry.adminResponse || '');
+    setAdminResponse(inquiry.adminResponse || "");
     setShowResponseModal(true);
   };
 
   const submitResponse = async () => {
     if (!adminResponse.trim()) {
       Swal.fire({
-        icon: 'error',
-        title: 'Response Required',
-        text: 'Please enter a response message'
+        icon: "error",
+        title: "Response Required",
+        text: "Please enter a response message",
       });
       return;
     }
@@ -166,28 +196,28 @@ const EnquiryList = () => {
       await updateInquiryMutation.mutateAsync({
         inquiryId: selectedInquiry.id,
         updateData: {
-          status: 'RESPONDED',
+          status: "RESPONDED",
           adminResponse: adminResponse.trim(),
-          respondedBy: 'Admin' // You can get this from auth context
-        }
+          respondedBy: "Admin", // You can get this from auth context
+        },
       });
 
       Swal.fire({
-        icon: 'success',
-        title: 'Response Sent',
-        text: 'Your response has been sent successfully.',
+        icon: "success",
+        title: "Response Sent",
+        text: "Your response has been sent successfully.",
         timer: 2000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
 
       setShowResponseModal(false);
-      setAdminResponse('');
+      setAdminResponse("");
       setSelectedInquiry(null);
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Response Failed',
-        text: error.response?.data?.message || 'Failed to send response'
+        icon: "error",
+        title: "Response Failed",
+        text: error.response?.data?.message || "Failed to send response",
       });
     }
   };
@@ -195,31 +225,31 @@ const EnquiryList = () => {
   const handleDelete = async (inquiryId) => {
     try {
       const result = await Swal.fire({
-        title: 'Delete Inquiry',
-        text: 'Are you sure you want to delete this inquiry? This action cannot be undone.',
-        icon: 'warning',
+        title: "Delete Inquiry",
+        text: "Are you sure you want to delete this inquiry? This action cannot be undone.",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, Delete'
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, Delete",
       });
 
       if (result.isConfirmed) {
         await deleteInquiryMutation.mutateAsync(inquiryId);
 
         Swal.fire({
-          icon: 'success',
-          title: 'Deleted',
-          text: 'Inquiry has been deleted successfully.',
+          icon: "success",
+          title: "Deleted",
+          text: "Inquiry has been deleted successfully.",
           timer: 2000,
-          timerProgressBar: true
+          timerProgressBar: true,
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Delete Failed',
-        text: error.response?.data?.message || 'Failed to delete inquiry'
+        icon: "error",
+        title: "Delete Failed",
+        text: error.response?.data?.message || "Failed to delete inquiry",
       });
     }
   };
@@ -228,8 +258,12 @@ const EnquiryList = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Inquiries</h2>
-          <p className="text-gray-600">{error?.message || 'Something went wrong'}</p>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Error Loading Inquiries
+          </h2>
+          <p className="text-gray-600">
+            {error?.message || "Something went wrong"}
+          </p>
         </div>
       </div>
     );
@@ -240,8 +274,12 @@ const EnquiryList = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Inquiry Management</h1>
-          <p className="text-gray-600">Manage customer inquiries and responses</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Inquiry Management
+          </h1>
+          <p className="text-gray-600">
+            Manage customer inquiries and responses
+          </p>
         </div>
 
         {/* Filters */}
@@ -256,7 +294,7 @@ const EnquiryList = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                {showFilters ? "Hide Filters" : "Show Filters"}
               </button>
             </div>
           </div>
@@ -265,13 +303,17 @@ const EnquiryList = () => {
             <div className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
                   <select
                     value={filters.status}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {statusOptions.map(option => (
+                    {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -280,13 +322,17 @@ const EnquiryList = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </label>
                   <select
                     value={filters.inquiryType}
-                    onChange={(e) => handleFilterChange('inquiryType', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("inquiryType", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {inquiryTypeOptions.map(option => (
+                    {inquiryTypeOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -295,43 +341,59 @@ const EnquiryList = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country
+                  </label>
                   <input
                     type="text"
                     value={filters.country}
-                    onChange={(e) => handleFilterChange('country', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("country", e.target.value)
+                    }
                     placeholder="Enter country"
-                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={filters.email}
-                    onChange={(e) => handleFilterChange('email', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("email", e.target.value)
+                    }
                     placeholder="Enter email"
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    From Date
+                  </label>
                   <input
                     type="date"
                     value={filters.fromDate}
-                    onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("fromDate", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    To Date
+                  </label>
                   <input
                     type="date"
                     value={filters.toDate}
-                    onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("toDate", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -422,7 +484,9 @@ const EnquiryList = () => {
                         <div className="text-sm text-gray-900">
                           <div className="flex items-center mb-1">
                             <Car className="h-4 w-4 mr-1 text-gray-400" />
-                            <span className="font-medium">{inquiry.inquiryType}</span>
+                            <span className="font-medium">
+                              {inquiry.inquiryType}
+                            </span>
                           </div>
                           <div className="text-gray-600 line-clamp-2">
                             {inquiry.message}
@@ -440,11 +504,13 @@ const EnquiryList = () => {
                           {getStatusBadge(inquiry.status)}
                           <select
                             value={inquiry.status}
-                            onChange={(e) => handleUpdateStatus(inquiry.id, e.target.value)}
+                            onChange={(e) =>
+                              handleUpdateStatus(inquiry.id, e.target.value)
+                            }
                             className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             disabled={updateInquiryMutation.isLoading}
                           >
-                            {statusOptions.slice(1).map(option => (
+                            {statusOptions.slice(1).map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>
@@ -499,7 +565,9 @@ const EnquiryList = () => {
             <div className="px-6 py-4 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, totalCount)} of {totalCount} results
+                  Showing {(filters.page - 1) * filters.limit + 1} to{" "}
+                  {Math.min(filters.page * filters.limit, totalCount)} of{" "}
+                  {totalCount} results
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -509,24 +577,26 @@ const EnquiryList = () => {
                   >
                     Previous
                   </button>
-                  
+
                   {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                    const page = Math.max(1, Math.min(totalPages - 4, filters.page - 2)) + index;
+                    const page =
+                      Math.max(1, Math.min(totalPages - 4, filters.page - 2)) +
+                      index;
                     return (
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`px-3 py-1 border rounded-md text-sm font-medium ${
                           filters.page === page
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "text-gray-700 bg-white border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {page}
                       </button>
                     );
                   })}
-                  
+
                   <button
                     onClick={() => handlePageChange(filters.page + 1)}
                     disabled={filters.page === totalPages}
@@ -545,16 +615,17 @@ const EnquiryList = () => {
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Inquiry Details</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Inquiry Details
+                </h3>
                 <button
                   onClick={() => setShowDetails(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <span className="sr-only">Close</span>
-                  ✕
+                  <span className="sr-only">Close</span>✕
                 </button>
               </div>
-              
+
               {isLoadingDetails ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -564,65 +635,176 @@ const EnquiryList = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Name</label>
-                      <p className="text-sm text-gray-900">{inquiryDetails.name}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {inquiryDetails.email}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <p className="text-sm text-gray-900">{inquiryDetails.email}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Phone
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {inquiryDetails.mobile || "N/A"}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Phone</label>
-                      <p className="text-sm text-gray-900">{inquiryDetails.phone || 'N/A'}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Country
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {inquiryDetails.country || "N/A"}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Country</label>
-                      <p className="text-sm text-gray-900">{inquiryDetails.country || 'N/A'}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Customer Type
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {inquiryDetails.customerType}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Inquiry Type</label>
-                      <p className="text-sm text-gray-900">{inquiryDetails.inquiryType}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Inquiry Type
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {inquiryDetails.inquiryType}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Status
+                      </label>
                       {getStatusBadge(inquiryDetails.status)}
                     </div>
                   </div>
-                  
+
+                  {/* Car Details Section */}
+                  {inquiryDetails.inquiryType === "CAR" && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-3">
+                        Car Details
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Make
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.make || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Model
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.model || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Year Range
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.yearFrom && inquiryDetails.yearTo
+                              ? `${inquiryDetails.yearFrom} - ${inquiryDetails.yearTo}`
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Steering
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.steering
+                              ? inquiryDetails.steering.replace("_", " ")
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Port
+                          </label>
+                          <p className="text-sm text-gray-900 capitalize">
+                            {inquiryDetails.port || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Message</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Message
+                    </label>
                     <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md mt-1">
                       {inquiryDetails.message}
                     </p>
                   </div>
-                  
+
                   {inquiryDetails.adminResponse && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Admin Response</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Admin Response
+                      </label>
                       <p className="text-sm text-gray-900 bg-blue-50 p-3 rounded-md mt-1">
                         {inquiryDetails.adminResponse}
                       </p>
                       {inquiryDetails.respondedBy && (
                         <p className="text-xs text-gray-500 mt-1">
                           Responded by: {inquiryDetails.respondedBy}
+                          {inquiryDetails.respondedAt && (
+                            <span className="ml-2">
+                              on{" "}
+                              {new Date(
+                                inquiryDetails.respondedAt
+                              ).toLocaleString()}
+                            </span>
+                          )}
                         </p>
                       )}
                     </div>
                   )}
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Created At</label>
-                      <p>{new Date(inquiryDetails.createdAt).toLocaleString()}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Created At
+                      </label>
+                      <p>
+                        {new Date(inquiryDetails.createdAt).toLocaleString()}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Updated At</label>
-                      <p>{new Date(inquiryDetails.updatedAt).toLocaleString()}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Updated At
+                      </label>
+                      <p>
+                        {new Date(inquiryDetails.updatedAt).toLocaleString()}
+                      </p>
                     </div>
+                    {inquiryDetails.emailSentAt && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Email Sent At
+                        </label>
+                        <p>
+                          {new Date(
+                            inquiryDetails.emailSentAt
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
-                <p className="text-center text-gray-600">Failed to load inquiry details</p>
+                <p className="text-center text-gray-600">
+                  Failed to load inquiry details
+                </p>
               )}
             </div>
           </div>
@@ -633,25 +815,30 @@ const EnquiryList = () => {
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Respond to Inquiry</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Respond to Inquiry
+                </h3>
                 <button
                   onClick={() => setShowResponseModal(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <span className="sr-only">Close</span>
-                  ✕
+                  <span className="sr-only">Close</span>✕
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="bg-gray-50 p-3 rounded-md">
-                  <h4 className="font-medium text-gray-900 mb-2">Original Inquiry</h4>
-                  <p className="text-sm text-gray-700">{selectedInquiry.message}</p>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Original Inquiry
+                  </h4>
+                  <p className="text-sm text-gray-700">
+                    {selectedInquiry.message}
+                  </p>
                   <p className="text-xs text-gray-500 mt-2">
                     From: {selectedInquiry.name} ({selectedInquiry.email})
                   </p>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Your Response
@@ -664,7 +851,7 @@ const EnquiryList = () => {
                     placeholder="Enter your response..."
                   />
                 </div>
-                
+
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => setShowResponseModal(false)}
@@ -678,12 +865,13 @@ const EnquiryList = () => {
                     className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                     disabled={updateInquiryMutation.isLoading}
                   >
-                    {updateInquiryMutation.isLoading ? 'Sending...' : 'Send Response'}
+                    {updateInquiryMutation.isLoading
+                      ? "Sending..."
+                      : "Send Response"}
                   </button>
                 </div>
               </div>
             </div>
-       
           </div>
         )}
       </div>
