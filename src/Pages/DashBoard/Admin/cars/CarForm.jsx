@@ -55,13 +55,13 @@ export function CarForm() {
     drive: "",
     exteriorColor: "",
     color: "", // interior color
-    seats: 5,
+    seats: "",
     mileage: "",
     stock: "",
     country: "",
     region: "",
     keywords: "",
-    price: 0,
+    price: "",
     isActive: true,
     features: [],
   });
@@ -240,22 +240,135 @@ export function CarForm() {
   };
 
   const handleSubmit = async () => {
-    // Basic validation
-    if (!formData.title.trim()) return alert("Please enter a car title");
-    if (!formData.make.trim()) return alert("Please enter the car make");
-    if (!formData.model.trim()) return alert("Please enter the car model");
-    if (!formData.fuel) return alert("Please select a fuel type");
-    if (!formData.exteriorColor.trim())
-      return alert("Please enter the exterior color");
-    if (!isEditMode && !formData.mainImage)
-      return alert("Please upload a main image");
+    // Basic validation with Swal
+    if (!formData.title.trim()) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please enter a car title",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (!formData.make.trim()) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please enter the car make",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (!formData.model.trim()) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please enter the car model",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (!formData.fuel) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please select a fuel type",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (!formData.exteriorColor.trim()) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please enter the exterior color",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    // Number validations
+    if (
+      formData.year &&
+      (isNaN(formData.year) ||
+        formData.year < 1900 ||
+        formData.year > new Date().getFullYear() + 1)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Year",
+        text:
+          "Please enter a valid year (1900 - " +
+          (new Date().getFullYear() + 1) +
+          ")",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (
+      formData.price &&
+      (isNaN(formData.price) || Number(formData.price) < 0)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Price",
+        text: "Please enter a valid price (numbers only)",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (
+      formData.seats &&
+      (isNaN(formData.seats) ||
+        Number(formData.seats) < 1 ||
+        Number(formData.seats) > 50)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Seats",
+        text: "Please enter a valid number of seats (1-50)",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (
+      formData.engineCC &&
+      (isNaN(formData.engineCC) ||
+        Number(formData.engineCC) < 100 ||
+        Number(formData.engineCC) > 10000)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Engine CC",
+        text: "Please enter a valid engine CC (100-10000)",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (
+      formData.mileage &&
+      (isNaN(formData.mileage) || Number(formData.mileage) < 0)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Mileage",
+        text: "Please enter a valid mileage (numbers only)",
+        confirmButtonColor: "#ffc107",
+      });
+    }
+
+    if (!isEditMode && !formData.mainImage) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Missing Image",
+        text: "Please upload a main image",
+        confirmButtonColor: "#ffc107",
+      });
+    }
 
     try {
       const submitData = new FormData();
-
       Object.keys(formData).forEach((key) => {
         const value = formData[key];
-
         if (key === "gallery") {
           value.forEach((file) => {
             submitData.append("galleryImages", file); // Adjust field name to match backend
@@ -284,7 +397,6 @@ export function CarForm() {
 
       if (isEditMode) {
         await updateMutation.mutateAsync({ id: carId, data: submitData });
-
         await Swal.fire({
           icon: "success",
           title: "Success!",
@@ -295,7 +407,6 @@ export function CarForm() {
         });
       } else {
         await createMutation.mutateAsync(submitData);
-
         await Swal.fire({
           icon: "success",
           title: "Car Created!",
@@ -305,7 +416,6 @@ export function CarForm() {
           timerProgressBar: true,
         });
       }
-
       navigate("/admin/cars");
     } catch (error) {
       console.error("Failed to save car:", error);
@@ -313,10 +423,10 @@ export function CarForm() {
         icon: "error",
         title: "Error",
         text: "Failed to save car. Please try again.",
+        confirmButtonColor: "#dc3545",
       });
     }
   };
-
   if (isLoading) {
     return (
       <div className="p-6 text-center">
@@ -532,7 +642,7 @@ export function CarForm() {
                   Engine CC
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={formData.engineCC}
                   onChange={(e) =>
                     handleInputChange("engineCC", e.target.value)
@@ -604,7 +714,7 @@ export function CarForm() {
                   Mileage
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={formData.mileage}
                   onChange={(e) => handleInputChange("mileage", e.target.value)}
                   placeholder="Enter mileage (e.g., 50,000 km)"
@@ -945,10 +1055,10 @@ export function CarForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={updateMutation.isPending}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              disabled={updateMutation.isPending || createMutation.isPending}
+              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {updateMutation.isPending ? (
+              {updateMutation.isPending || createMutation.isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Saving...
