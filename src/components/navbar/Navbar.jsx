@@ -16,7 +16,6 @@ const Navbar = () => {
     isLoading: userLoading,
     error: userError,
   } = useCurrentUser();
-  console.log(user, "user data in profile page");
 
   const { token, logout } = useAuth();
   const { isAdmin } = useUsersRole(); // Use the hook to check admin role
@@ -27,9 +26,6 @@ const Navbar = () => {
     isAuthenticated: Boolean(token),
     currentUser: user,
   });
-
-  // Add null check for user.data
-  console.log(user?.data);
 
   useEffect(() => {
     setAuthState({
