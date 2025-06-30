@@ -103,7 +103,7 @@ const CarDetailsPage = () => {
           >
             Car not found
           </div>
-          <Link to="/cars">
+          <Link to="/allCars">
             <button
               className="px-6 py-3 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
               style={{ backgroundColor: "#0072BC" }}
@@ -122,7 +122,7 @@ const CarDetailsPage = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link to="/cars">
+          <Link to="/allCars">
             <button
               className="px-4 py-2 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
               style={{ backgroundColor: "#003366" }}
