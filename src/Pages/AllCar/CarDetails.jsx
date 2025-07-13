@@ -4,65 +4,145 @@ import {
   ArrowLeft,
   Calendar,
   Car,
-  Check,
+  CarIcon,
   ChevronLeft,
   ChevronRight,
   Fuel,
+  LogIn,
   Mail,
   MapPin,
+  MessageCircle,
   Palette,
   Phone,
   Settings,
   Shield,
-  ShoppingCart,
   Sparkles,
   Star,
   Users,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import Swal from "sweetalert2"; // Make sure to import Swal
+import Button from "../../components/ui/Button";
+import LoginRequiredModal from "../../components/ui/LoginRequiredModal";
 import { useShop } from "../../Context/ShopContext";
 import { useCar } from "../../hooks/useCars";
+import { useCreateOrder } from "../../hooks/useOrders";
 
 const CarDetailsPage = () => {
   const { id } = useParams();
-  const { addToCart, isInCart, formatYenPrice, exchangeRateLoading } =
-    useShop();
+  const {
+    addToCart,
+    isInCart,
+    formatYenPrice,
+    exchangeRateLoading,
+    isAuthenticated,
+  } = useShop();
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [showLoginRequired, setShowLoginRequired] = useState(false); // Added missing state
+  const [redirectAfterLogin, setRedirectAfterLogin] = useState(null); // Added missing state
+
+  const { mutate: createOrder } = useCreateOrder();
   const [addingToCart, setAddingToCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const { data: car, isLoading, isError } = useCar(id);
 
-  const handleAddToCart = () => {
-    if (!car) return;
-    setAddingToCart(true);
-    try {
-      addToCart(car);
-      setTimeout(() => setAddingToCart(false), 1000);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      setAddingToCart(false);
+  const handleLoginRequired = () => {
+    setShowLoginRequired(false);
+    // Set redirect URL to current car page or wherever appropriate
+    setRedirectAfterLogin(window.location.pathname);
+    // Redirect to login page
+    window.location.href = "/login";
+  };
+
+  const handleNegotiateOrder = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      setShowLoginRequired(true);
+      return;
     }
+
+    // Check if car is ON_HOLD
+    if (car.status === "ON_HOLD") {
+      Swal.fire({
+        icon: "warning",
+        title: "Negotiation Unavailable",
+        text: "This car is currently ON HOLD and cannot be negotiated or ordered.",
+        confirmButtonText: "Okay",
+      });
+      return;
+    }
+
+    // Check if car is not active
+    if (!car.isActive) {
+      Swal.fire({
+        icon: "warning",
+        title: "Car Not Available",
+        text: "This car is currently not available for order.",
+        confirmButtonText: "Okay",
+      });
+      return;
+    }
+
+    setOrderLoading(true);
+
+    // Create order with single car item
+    const cartItems = [{ ...car, quantity: 1 }];
+
+    createOrder(cartItems, {
+      onSuccess: (data) => {
+        console.log("Order created successfully:", data);
+        setOrderLoading(false);
+
+        // Show SweetAlert before redirecting to WhatsApp
+        Swal.fire({
+          icon: "success",
+          title: "Order Placed",
+          text: "Your order was placed successfully. You'll now be redirected to WhatsApp to negotiate.",
+          showConfirmButton: true,
+          confirmButtonText: "Go to WhatsApp",
+        }).then(() => {
+          const orderId = data.order.id;
+          const whatsappNumber = "8801711123456";
+          const message = `Hello, I just placed an order (ID: ${orderId}) for ${
+            car.title || `${car.make} ${car.model}`
+          }. I'd like to negotiate the price.`;
+          window.open(
+            `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+              message
+            )}`,
+            "_blank"
+          );
+        });
+      },
+      onError: (error) => {
+        console.error("Failed to create order:", error);
+        setOrderLoading(false);
+        Swal.fire({
+          icon: "error",
+          title: "Order Failed",
+          text: "Failed to create order. Please try again later.",
+          confirmButtonText: "Okay",
+        });
+      },
+    });
   };
 
   const getFeatureIcon = (type) => {
     const icons = {
-      Safety: <Shield size={18} className="text-[#0072BC]" />,
-      Interior: <Car size={18} className="text-[#003366]" />,
-      Exterior: <Sparkles size={18} className="text-[#0072BC]" />,
-      Special: <Settings size={18} className="text-[#C9252B]" />,
+      Safety: <Shield size={16} />,
+      Interior: <Car size={16} />,
+      Exterior: <Sparkles size={16} />,
+      Technology: <Settings size={16} />,
+      Performance: <Star size={16} />,
+      Comfort: <Users size={16} />,
+      Entertainment: <Star size={16} />,
     };
-    return icons[type] || <Star size={18} className="text-[#003366]" />;
-  };
-
-  const getFeatureColor = (type) => {
-    const colors = {
-      Safety: "bg-blue-50 border-[#0072BC]/20 text-[#003366]",
-      Interior: "bg-gray-50 border-[#003366]/20 text-[#003366]",
-      Exterior: "bg-blue-50 border-[#0072BC]/20 text-[#003366]",
-      Special: "bg-red-50 border-[#C9252B]/20 text-[#003366]",
-    };
-    return colors[type] || "bg-gray-50 border-gray-200 text-[#003366]";
+    return icons[type] || <Star size={16} />;
   };
 
   const allImages = car
@@ -72,18 +152,10 @@ const CarDetailsPage = () => {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#E5E5E5" }}
-      >
-        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
-          <div
-            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
-            style={{ borderColor: "#0072BC" }}
-          ></div>
-          <div className="text-xl font-medium" style={{ color: "#003366" }}>
-            Loading car details...
-          </div>
+      <div className="min-h-screen bg-[#E5E5E5] flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-sm">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0072BC] mx-auto mb-4"></div>
+          <p className="text-[#003366]">Loading car details...</p>
         </div>
       </div>
     );
@@ -91,24 +163,13 @@ const CarDetailsPage = () => {
 
   if (isError || !car) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#E5E5E5" }}
-      >
-        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
-          <div className="text-6xl mb-4">🚗</div>
-          <div
-            className="text-xl mb-4 font-medium"
-            style={{ color: "#C9252B" }}
-          >
-            Car not found
-          </div>
+      <div className="min-h-screen bg-[#E5E5E5] flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+          <div className="text-4xl mb-4">🚗</div>
+          <p className="text-[#C9252B] text-lg mb-4">Car not found</p>
           <Link to="/allCars">
-            <button
-              className="px-6 py-3 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: "#0072BC" }}
-            >
-              <ArrowLeft size={16} />
+            <button className="bg-[#0072BC] text-white px-6 py-2 rounded hover:opacity-90 transition-opacity">
+              <ArrowLeft size={16} className="inline mr-2" />
               Back to Cars
             </button>
           </Link>
@@ -118,86 +179,74 @@ const CarDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#E5E5E5" }}>
+    <div className="min-h-screen bg-[#E5E5E5]">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           <Link to="/allCars">
-            <button
-              className="px-4 py-2 rounded-lg flex items-center gap-2 text-white font-medium hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: "#003366" }}
-            >
-              <ArrowLeft size={16} />
-              <span className="hidden sm:inline">Back to Cars</span>
+            <button className="bg-[#003366] text-white px-4 py-2 rounded hover:opacity-90 transition-opacity">
+              <ArrowLeft size={16} className="inline mr-2" />
+              Back to Cars
             </button>
           </Link>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Images & Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Car Title & Status */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h1
-                    className="text-3xl font-bold mb-2 capitalize"
-                    style={{ color: "#003366" }}
-                  >
-                    {car.title}
-                  </h1>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        car.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {car.isActive ? "Available" : "Sold Out"}
-                    </span>
-                    <span className="text-gray-500 text-sm">
-                      Listed {new Date(car.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500 mb-1">Price</div>
-                  <div
-                    className="text-3xl font-bold"
-                    style={{ color: "#C9252B" }}
-                  >
-                    ${car.price?.toLocaleString()}
-                  </div>
-                  <div className="text-lg" style={{ color: "#0072BC" }}>
-                    {exchangeRateLoading ? (
-                      <span className="animate-pulse">Loading...</span>
-                    ) : yenPrice ? (
-                      `¥${yenPrice.toLocaleString()}`
-                    ) : (
-                      "¥Price unavailable"
-                    )}
-                  </div>
-                </div>
+      <div className="container mx-auto px-4 py-6">
+        {/* Car Title and Price */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#003366] mb-2 capitalize">
+                {car.title}
+              </h1>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-3 py-1 rounded text-sm font-medium ${
+                    car.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {car.isActive ? "Available" : "Sold Out"}
+                </span>
+                <span className="text-gray-500 text-sm">
+                  Listed {new Date(car.createdAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-[#C9252B] mb-1">
+                ${car.price?.toLocaleString()}
+              </div>
+              <div className="text-lg text-[#0072BC]">
+                {exchangeRateLoading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : yenPrice ? (
+                  `¥${yenPrice.toLocaleString()}`
+                ) : (
+                  "¥Price unavailable"
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {/* Image Gallery */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Images */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
               <div className="relative">
-                <div className="aspect-video relative overflow-hidden">
+                <div className="aspect-video">
                   <img
                     src={
                       allImages[selectedImageIndex] ||
-                      "/placeholder.svg?height=600&width=800"
+                      "/placeholder.svg?height=400&width=600"
                     }
                     alt={`${car.title} - Image ${selectedImageIndex + 1}`}
                     className="w-full h-full object-cover"
                   />
-
                   {allImages.length > 1 && (
                     <>
                       <button
@@ -206,9 +255,9 @@ const CarDetailsPage = () => {
                             prev > 0 ? prev - 1 : allImages.length - 1
                           )
                         }
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-colors"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-md transition-colors"
                       >
-                        <ChevronLeft size={20} />
+                        <ChevronLeft size={18} />
                       </button>
                       <button
                         onClick={() =>
@@ -216,35 +265,31 @@ const CarDetailsPage = () => {
                             prev < allImages.length - 1 ? prev + 1 : 0
                           )
                         }
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-md transition-colors"
                       >
-                        <ChevronRight size={20} />
+                        <ChevronRight size={18} />
                       </button>
-
-                      <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded text-sm">
                         {selectedImageIndex + 1} / {allImages.length}
                       </div>
                     </>
                   )}
                 </div>
-
                 {allImages.length > 1 && (
-                  <div className="p-4 bg-gray-50">
+                  <div className="p-4 bg-gray-50 border-t">
                     <div className="flex gap-2 overflow-x-auto">
                       {allImages.map((image, index) => (
                         <button
                           key={index}
                           onClick={() => setSelectedImageIndex(index)}
-                          className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition-all ${
                             selectedImageIndex === index
-                              ? "border-[#0072BC] ring-2 ring-[#0072BC]/20"
+                              ? "border-[#0072BC]"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
                           <img
-                            src={
-                              image || "/placeholder.svg?height=100&width=100"
-                            }
+                            src={image || "/placeholder.svg?height=80&width=80"}
                             alt={`Thumbnail ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
@@ -257,126 +302,73 @@ const CarDetailsPage = () => {
             </div>
 
             {/* Specifications */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2
-                className="text-2xl font-bold mb-6 flex items-center"
-                style={{ color: "#003366" }}
-              >
-                <Car className="mr-3" style={{ color: "#0072BC" }} size={24} />
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-lg font-bold text-[#003366] mb-4">
                 Specifications
               </h2>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
-                  <Calendar
-                    className="mx-auto mb-3"
-                    style={{ color: "#0072BC" }}
-                    size={28}
-                  />
-                  <h3 className="font-semibold mb-2 text-gray-600">Year</h3>
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: "#003366" }}
-                  >
-                    {car.year}
-                  </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-gray-50 rounded">
+                  <Calendar className="mx-auto mb-2 text-[#0072BC]" size={20} />
+                  <div className="text-sm text-gray-600 mb-1">Year</div>
+                  <div className="font-bold text-[#003366]">{car.year}</div>
                 </div>
-
-                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
-                  <Fuel
-                    className="mx-auto mb-3"
-                    style={{ color: "#0072BC" }}
-                    size={28}
-                  />
-                  <h3 className="font-semibold mb-2 text-gray-600">Fuel</h3>
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: "#003366" }}
-                  >
-                    {car.fuel}
-                  </p>
+                <div className="text-center p-4 bg-gray-50 rounded">
+                  <Fuel className="mx-auto mb-2 text-[#0072BC]" size={20} />
+                  <div className="text-sm text-gray-600 mb-1">Fuel</div>
+                  <div className="font-bold text-[#003366]">{car.fuel}</div>
                 </div>
-
-                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
-                  <Palette
-                    className="mx-auto mb-3"
-                    style={{ color: "#0072BC" }}
-                    size={28}
-                  />
-                  <h3 className="font-semibold mb-2 text-gray-600">Color</h3>
-                  <p
-                    className="text-2xl font-bold capitalize"
-                    style={{ color: "#003366" }}
-                  >
+                <div className="text-center p-4 bg-gray-50 rounded">
+                  <Palette className="mx-auto mb-2 text-[#0072BC]" size={20} />
+                  <div className="text-sm text-gray-600 mb-1">Color</div>
+                  <div className="font-bold text-[#003366] capitalize">
                     {car.exteriorColor}
-                  </p>
+                  </div>
                 </div>
-
-                <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200">
-                  <Users
-                    className="mx-auto mb-3"
-                    style={{ color: "#0072BC" }}
-                    size={28}
-                  />
-                  <h3 className="font-semibold mb-2 text-gray-600">Seats</h3>
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: "#003366" }}
-                  >
-                    {car.seats}
-                  </p>
+                <div className="text-center p-4 bg-gray-50 rounded">
+                  <Users className="mx-auto mb-2 text-[#0072BC]" size={20} />
+                  <div className="text-sm text-gray-600 mb-1">Seats</div>
+                  <div className="font-bold text-[#003366]">{car.seats}</div>
                 </div>
               </div>
             </div>
 
             {/* Features */}
             {car.features && car.features.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2
-                  className="text-2xl font-bold mb-6 flex items-center"
-                  style={{ color: "#003366" }}
-                >
-                  <Star
-                    className="mr-3"
-                    style={{ color: "#C9252B" }}
-                    size={24}
-                  />
-                  Features & Equipment
+              <div className="bg-white rounded-xl shadow p-6">
+                <h2 className="text-xl font-bold text-[#003366] mb-6">
+                  Features
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {["Safety", "Interior", "Exterior", "Special"].map((type) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[
+                    "Safety",
+                    "Interior",
+                    "Exterior",
+                    "Technology",
+                    "Performance",
+                    "Comfort",
+                    "Entertainment",
+                  ].map((type) => {
                     const typeFeatures = car.features.filter(
                       (feature) => feature.type === type
                     );
                     if (typeFeatures.length === 0) return null;
 
                     return (
-                      <div
-                        key={type}
-                        className={`p-6 rounded-xl border-2 ${getFeatureColor(
-                          type
-                        )}`}
-                      >
-                        <div className="flex items-center mb-4">
-                          {getFeatureIcon(type)}
-                          <h3
-                            className="font-bold text-lg ml-2"
-                            style={{ color: "#003366" }}
-                          >
-                            {type}
-                          </h3>
-                        </div>
-                        <ul className="space-y-2">
+                      <div key={type}>
+                        <h3 className="text-md font-semibold text-[#003366] mb-2 border-b pb-1">
+                          {type}
+                        </h3>
+                        <ul className="space-y-1">
                           {typeFeatures.map((feature) => (
-                            <li key={feature.id} className="flex items-start">
-                              <div
-                                className="w-2 h-2 rounded-full mr-3 mt-2 flex-shrink-0"
-                                style={{ backgroundColor: "#0072BC" }}
-                              ></div>
-                              <span className="font-medium text-gray-700">
-                                {feature.name}
+                            <li
+                              key={feature.id}
+                              className="text-sm text-gray-700 flex items-center"
+                            >
+                              <span className="text-[#0072BC] mr-2">
+                                <CarIcon size={19} />
                               </span>
+                              {feature.name}
                             </li>
                           ))}
                         </ul>
@@ -389,18 +381,15 @@ const CarDetailsPage = () => {
           </div>
 
           {/* Right Column - Purchase & Contact */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1">
             {/* Purchase Card */}
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 sticky top-4">
               <div className="text-center mb-6">
-                <div className="text-sm text-gray-500 mb-2">Total Price</div>
-                <div
-                  className="text-4xl font-bold mb-2"
-                  style={{ color: "#C9252B" }}
-                >
+                <div className="text-sm text-gray-600 mb-2">Total Price</div>
+                <div className="text-3xl font-bold text-[#C9252B] mb-2">
                   ${car.price?.toLocaleString()}
                 </div>
-                <div className="text-lg" style={{ color: "#0072BC" }}>
+                <div className="text-lg text-[#0072BC]">
                   {exchangeRateLoading ? (
                     <span className="animate-pulse">Loading yen price...</span>
                   ) : yenPrice ? (
@@ -412,82 +401,65 @@ const CarDetailsPage = () => {
               </div>
 
               {car.status === "ON_HOLD" ? (
-                <div className="w-full py-4 text-lg font-semibold text-center text-red-600 bg-red-100 rounded-lg">
+                <div className="w-full py-3 text-center text-red-600 bg-red-100 rounded font-medium">
                   This car is currently on hold — negotiation in progress
                 </div>
               ) : car.status === "SOLD" ? (
-                <div className="w-full py-4 text-lg font-semibold text-center text-red-600 bg-red-100  rounded-lg">
+                <div className="w-full py-3 text-center text-red-600 bg-red-100 rounded font-medium">
                   This car has been sold
                 </div>
               ) : (
-                <button
-                  className={`w-full py-4 text-lg font-semibold flex items-center justify-center gap-3 rounded-lg transition-all ${
-                    isInCart(car.id)
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "text-white hover:opacity-90"
-                  }`}
-                  style={
-                    !isInCart(car.id) ? { backgroundColor: "#0072BC" } : {}
+                <Button
+                  onClick={handleNegotiateOrder}
+                  disabled={
+                    orderLoading || !car.isActive || car.status === "ON_HOLD"
                   }
-                  onClick={handleAddToCart}
-                  disabled={addingToCart || !car.isActive}
+                  className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                 >
-                  {addingToCart ? (
+                  {car.status === "ON_HOLD" ? (
+                    <>Currently on hold — negotiation in progress</>
+                  ) : orderLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
-                      Adding...
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Creating Order...
                     </>
-                  ) : isInCart(car.id) ? (
+                  ) : !isAuthenticated() ? (
                     <>
-                      <Check size={20} />
-                      Added to Cart
+                      <LogIn size={16} />
+                      Login to Negotiate
                     </>
                   ) : (
                     <>
-                      <ShoppingCart size={20} />
-                      Add to Cart
+                      <MessageCircle size={16} />
+                      Order to Negotiate
                     </>
                   )}
-                </button>
+                </Button>
               )}
 
               {!car.isActive && (
-                <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center border border-red-200">
-                  <span className="text-sm font-medium">
-                    This vehicle is no longer available
-                  </span>
+                <div className="mt-4 p-3 bg-red-100 text-red-700 rounded text-center text-sm">
+                  This vehicle is no longer available
                 </div>
               )}
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3
-                className="text-lg font-bold mb-2"
-                style={{ color: "#003366" }}
-              >
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-bold text-[#003366] mb-1">
                 Contact Dealer
               </h3>
-              <h4
-                className="text-2xl font-bold mb-6"
-                style={{ color: "#0072BC" }}
-              >
+              <h4 className="text-xl font-bold text-[#0072BC] mb-4">
                 SHANTIX Corporation
               </h4>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-start">
-                  <div
-                    className="p-3 rounded-lg mr-4 flex-shrink-0"
-                    style={{ backgroundColor: "#E5E5E5" }}
-                  >
-                    <MapPin className="h-5 w-5" style={{ color: "#0072BC" }} />
+                  <div className="bg-[#E5E5E5] p-2 rounded mr-3">
+                    <MapPin className="h-4 w-4 text-[#0072BC]" />
                   </div>
                   <div>
-                    <p
-                      className="font-semibold mb-1"
-                      style={{ color: "#003366" }}
-                    >
+                    <p className="font-medium text-[#003366] text-sm">
                       Locations
                     </p>
                     <p className="text-gray-600 text-sm">Dhaka, Bangladesh</p>
@@ -498,77 +470,43 @@ const CarDetailsPage = () => {
                 </div>
 
                 <div className="flex items-start">
-                  <div
-                    className="p-3 rounded-lg mr-4 flex-shrink-0"
-                    style={{ backgroundColor: "#E5E5E5" }}
-                  >
-                    <Phone className="h-5 w-5" style={{ color: "#0072BC" }} />
+                  <div className="bg-[#E5E5E5] p-2 rounded mr-3">
+                    <Phone className="h-4 w-4 text-[#0072BC]" />
                   </div>
                   <div>
-                    <p
-                      className="font-semibold mb-1"
-                      style={{ color: "#003366" }}
-                    >
-                      Phone
-                    </p>
+                    <p className="font-medium text-[#003366] text-sm">Phone</p>
                     <p className="text-gray-600 text-sm">+81-45-936-0776</p>
                     <p className="text-gray-600 text-sm">+81-45-932-2376</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div
-                    className="p-3 rounded-lg mr-4 flex-shrink-0"
-                    style={{ backgroundColor: "#E5E5E5" }}
-                  >
-                    <Mail className="h-5 w-5" style={{ color: "#0072BC" }} />
+                  <div className="bg-[#E5E5E5] p-2 rounded mr-3">
+                    <Mail className="h-4 w-4 text-[#0072BC]" />
                   </div>
                   <div>
-                    <p
-                      className="font-semibold mb-1"
-                      style={{ color: "#003366" }}
-                    >
-                      Email
-                    </p>
+                    <p className="font-medium text-[#003366] text-sm">Email</p>
                     <p className="text-gray-600 text-sm">sales@shantix.info</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-500 mb-1">Reference ID</p>
-                <p
-                  className="font-mono text-lg font-bold"
-                  style={{ color: "#003366" }}
-                >
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500">Reference ID</p>
+                <p className="font-mono font-bold text-[#003366]">
                   #{car.id.slice(0, 8).toUpperCase()}
                 </p>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="font-bold mb-4" style={{ color: "#003366" }}>
-                Quick Actions
-              </h3>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="font-bold text-[#003366] mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Link to="/cars" className="block">
-                  <button
-                    className="w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: "#E5E5E5", color: "#003366" }}
-                  >
-                    <ArrowLeft size={16} />
-                    Back to Listings
-                  </button>
-                </Link>
-
-                <Link to="/cart" className="block">
-                  <button
-                    className="w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-white font-medium transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: "#0072BC" }}
-                  >
-                    <ShoppingCart size={16} />
-                    View Cart
+                <Link to="/allCars" className="block">
+                  <button className="w-full py-3 px-4 rounded bg-[#E5E5E5] text-[#003366] font-medium hover:opacity-90 transition-opacity">
+                    <ArrowLeft size={16} className="inline mr-2" />
+                    Back to All Cars
                   </button>
                 </Link>
               </div>
@@ -576,6 +514,13 @@ const CarDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal
+        isOpen={showLoginRequired}
+        onClose={() => setShowLoginRequired(false)}
+        onLogin={handleLoginRequired}
+      />
     </div>
   );
 };

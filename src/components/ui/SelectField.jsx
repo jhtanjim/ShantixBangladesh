@@ -1,8 +1,15 @@
-"use client"
+"use client";
 
-import { ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react";
 
-const SelectField = ({ name, value, onChange, options = [], placeholder, className = "" }) => {
+const SelectField = ({
+  name,
+  value,
+  onChange,
+  options = [],
+  placeholder,
+  className = "",
+}) => {
   return (
     <div className={`relative ${className}`}>
       <select
@@ -23,7 +30,7 @@ const SelectField = ({ name, value, onChange, options = [], placeholder, classNa
         size={20}
       />
     </div>
-  )
-}
+  );
+};
 
-export default SelectField
+export default SelectField;

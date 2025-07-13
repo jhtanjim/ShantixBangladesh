@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import {
+  colorOptions,
+  driveOptions,
+  seatsOptions,
+  transmissionOptions,
+} from "../../api/cardata";
 import SelectField from "../../components/ui/SelectField";
 import { useAuth } from "../../Context/AuthContext";
 import { useCreateInquiry } from "../../hooks/useInquiry";
@@ -11,13 +17,6 @@ const Enquiry = () => {
     steering: "RIGHT_HAND",
     yearFrom: "",
     yearTo: "",
-    engineCC: "",
-    transmission: "",
-    drive: "",
-    exteriorColor: "",
-    color: "",
-    seats: 5,
-    mileage: "",
     country: "",
     port: "",
     email: "",
@@ -58,52 +57,6 @@ const Enquiry = () => {
   };
 
   const yearOptions = generateYearOptions();
-
-  const transmissionOptions = [
-    { value: "", label: "Select Transmission" },
-    { value: "MANUAL", label: "Manual" },
-    { value: "AUTOMATIC", label: "Automatic" },
-    { value: "CVT", label: "CVT" },
-    { value: "SEMI_AUTOMATIC", label: "Semi-Automatic" },
-  ];
-
-  const driveOptions = [
-    { value: "", label: "Select Drive Type" },
-    { value: "2WD", label: "2WD" },
-    { value: "4WD", label: "4WD" },
-    { value: "AWD", label: "AWD" },
-    { value: "FWD", label: "FWD" },
-    { value: "RWD", label: "RWD" },
-  ];
-
-  const colorOptions = [
-    { value: "", label: "Select Color" },
-    { value: "WHITE", label: "White" },
-    { value: "BLACK", label: "Black" },
-    { value: "SILVER", label: "Silver" },
-    { value: "GRAY", label: "Gray" },
-    { value: "RED", label: "Red" },
-    { value: "BLUE", label: "Blue" },
-    { value: "GREEN", label: "Green" },
-    { value: "YELLOW", label: "Yellow" },
-    { value: "BROWN", label: "Brown" },
-    { value: "GOLD", label: "Gold" },
-    { value: "PURPLE", label: "Purple" },
-    { value: "ORANGE", label: "Orange" },
-    { value: "OTHER", label: "Other" },
-  ];
-
-  const seatsOptions = [
-    { value: "", label: "Select Seats" },
-    { value: "2", label: "2 Seats" },
-    { value: "4", label: "4 Seats" },
-    { value: "5", label: "5 Seats" },
-    { value: "6", label: "6 Seats" },
-    { value: "7", label: "7 Seats" },
-    { value: "8", label: "8 Seats" },
-    { value: "9", label: "9 Seats" },
-    { value: "10+", label: "10+ Seats" },
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -227,8 +180,6 @@ const Enquiry = () => {
         ...formData,
         yearFrom: formData.yearFrom ? parseInt(formData.yearFrom) : undefined,
         yearTo: formData.yearTo ? parseInt(formData.yearTo) : undefined,
-        seats: formData.seats ? parseInt(formData.seats) : undefined,
-        mileage: formData.mileage ? parseInt(formData.mileage) : undefined,
       };
 
       // Remove empty fields
@@ -257,13 +208,6 @@ const Enquiry = () => {
         steering: "RIGHT_HAND",
         yearFrom: "",
         yearTo: "",
-        engineCC: "",
-        transmission: "",
-        drive: "",
-        exteriorColor: "",
-        color: "",
-        seats: 5,
-        mileage: "",
         country: "",
         port: "",
         email: user?.email || "",
@@ -312,13 +256,13 @@ const Enquiry = () => {
             {/* Left Column */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Brand</label>
+                <label className="font-medium">Make</label>
                 <input
                   type="text"
                   name="make"
                   value={formData.make}
                   onChange={handleChange}
-                  placeholder="Enter Brand (Ex: Toyota)"
+                  placeholder="Enter Make (Ex: Toyota)"
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
               </div>
@@ -333,58 +277,6 @@ const Enquiry = () => {
                   placeholder="Enter Model (Ex: Corolla)"
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Package/Grade</label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  placeholder="Enter Package/Grade"
-                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Engine CC</label>
-                <input
-                  type="text"
-                  name="engineCC"
-                  value={formData.engineCC}
-                  onChange={handleChange}
-                  placeholder="Enter Engine CC (Ex: 1500)"
-                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Transmission</label>
-                <div className="md:col-span-2">
-                  <SelectField
-                    name="transmission"
-                    value={formData.transmission}
-                    onChange={handleChange}
-                    options={transmissionOptions}
-                    placeholder="Select Transmission"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Drive Type</label>
-                <div className="md:col-span-2">
-                  <SelectField
-                    name="drive"
-                    value={formData.drive}
-                    onChange={handleChange}
-                    options={driveOptions}
-                    placeholder="Select Drive Type"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
@@ -466,10 +358,51 @@ const Enquiry = () => {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Middle Column */}
-            <div className="space-y-4">
+              {/* Engine CC */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Engine CC</label>
+                <input
+                  type="text"
+                  name="engineCC"
+                  value={formData.engineCC}
+                  onChange={handleChange}
+                  placeholder="Enter Engine CC (Ex: 1500)"
+                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              {/* Transmission */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Transmission</label>
+                <div className="md:col-span-2">
+                  <SelectField
+                    name="transmission"
+                    value={formData.transmission}
+                    onChange={handleChange}
+                    options={transmissionOptions}
+                    placeholder="Select Transmission"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Drive Type */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Drive Type</label>
+                <div className="md:col-span-2">
+                  <SelectField
+                    name="drive"
+                    value={formData.drive}
+                    onChange={handleChange}
+                    options={driveOptions}
+                    placeholder="Select Drive Type"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Exterior Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Exterior Color</label>
                 <input
@@ -482,6 +415,7 @@ const Enquiry = () => {
                 />
               </div>
 
+              {/* Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Color</label>
                 <div className="md:col-span-2">
@@ -496,6 +430,7 @@ const Enquiry = () => {
                 </div>
               </div>
 
+              {/* Seats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Seats</label>
                 <div className="md:col-span-2">
@@ -510,6 +445,7 @@ const Enquiry = () => {
                 </div>
               </div>
 
+              {/* Mileage */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Mileage</label>
                 <input
@@ -521,7 +457,10 @@ const Enquiry = () => {
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
               </div>
+            </div>
 
+            {/* Middle Column */}
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">
                   Country <span className="text-red-500">*</span>
@@ -692,73 +631,6 @@ const Enquiry = () => {
       </div>
 
       {/* Process Section */}
-      <div className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-              <div className="bg-gray-200 h-64 lg:h-full w-full rounded-lg overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/5428833/pexels-photo-5428833.jpeg"
-                  alt="Support agent"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              <h3 className="text-2xl text-blue-600 font-bold mb-6">
-                HOW IT WORKS
-              </h3>
-              <div className="space-y-6">
-                {[
-                  {
-                    icon: "📝",
-                    title: "SUBMIT INQUIRY FORM",
-                    desc: "Fill in the inquiry form with your vehicle requirements and submit it to us. We'll process your inquiry and match it with the most suitable options available in our inventory.",
-                  },
-                  {
-                    icon: "🔍",
-                    title: "GET BEST OFFERS",
-                    desc: "Our team will send you the best vehicle matches within 24 hours. You'll receive competitive offers from our trusted dealer network.",
-                  },
-                  {
-                    icon: "🚗",
-                    title: "CHOOSE VEHICLE & GET PROFORMA",
-                    desc: "Select your preferred vehicle and receive a detailed proforma invoice with full pricing breakdown including shipping and other costs.",
-                  },
-                  {
-                    icon: "💰",
-                    title: "NEGOTIATE & MAKE PAYMENT",
-                    desc: "Discuss pricing details if needed and complete the payment securely. We offer various payment methods for your convenience.",
-                  },
-                  {
-                    icon: "🚢",
-                    title: "SHIPPING & DOCUMENTS",
-                    desc: "Once payment is received, we'll arrange shipping and prepare all necessary export documents for smooth customs clearance at destination.",
-                  },
-                  {
-                    icon: "✅",
-                    title: "RECEIVE YOUR VEHICLE",
-                    desc: "Track your shipment online and receive your vehicle at your local port. Our team will assist with any post-delivery support you might need.",
-                  },
-                ].map((step, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="text-blue-600 text-2xl flex-shrink-0">
-                      {step.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-lg mb-2">{step.title}</h4>
-                      <p className="text-gray-600 leading-relaxed">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

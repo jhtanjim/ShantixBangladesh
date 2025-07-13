@@ -118,3 +118,50 @@ export const featureOptions = {
     "Wireless Audio Streaming",
   ],
 };
+
+
+   export const transmissionOptions = [
+    { value: "", label: "Select Transmission" },
+    { value: "MANUAL", label: "Manual" },
+    { value: "AUTOMATIC", label: "Automatic" },
+    { value: "CVT", label: "CVT" },
+    { value: "SEMI_AUTOMATIC", label: "Semi-Automatic" },
+  ];
+
+  export const driveOptions = [
+    { value: "", label: "Select Drive Type" },
+    { value: "2WD", label: "2WD" },
+    { value: "4WD", label: "4WD" },
+    { value: "AWD", label: "AWD" },
+    { value: "FWD", label: "FWD" },
+    { value: "RWD", label: "RWD" },
+  ];
+
+ export const colorOptions = [
+    { value: "", label: "Select Color" },
+    { value: "WHITE", label: "White" },
+    { value: "BLACK", label: "Black" },
+    { value: "SILVER", label: "Silver" },
+    { value: "GRAY", label: "Gray" },
+    { value: "RED", label: "Red" },
+    { value: "BLUE", label: "Blue" },
+    { value: "GREEN", label: "Green" },
+    { value: "YELLOW", label: "Yellow" },
+    { value: "BROWN", label: "Brown" },
+    { value: "GOLD", label: "Gold" },
+    { value: "PURPLE", label: "Purple" },
+    { value: "ORANGE", label: "Orange" },
+    { value: "OTHER", label: "Other" },
+  ];
+
+ export const seatsOptions = [
+    { value: "", label: "Select Seats" },
+    { value: "2", label: "2 Seats" },
+    { value: "4", label: "4 Seats" },
+    { value: "5", label: "5 Seats" },
+    { value: "6", label: "6 Seats" },
+    { value: "7", label: "7 Seats" },
+    { value: "8", label: "8 Seats" },
+    { value: "9", label: "9 Seats" },
+    { value: "10+", label: "10+ Seats" },
+  ];

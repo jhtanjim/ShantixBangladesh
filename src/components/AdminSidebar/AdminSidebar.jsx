@@ -60,6 +60,18 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
       path: "/admin/orders",
     },
     {
+      title: "Team Management",
+      icon: Users,
+      key: "team",
+      path: "/admin/team",
+    },
+    {
+      title: "Gallery Management",
+      icon: Users,
+      key: "gallery",
+      path: "/admin/galleryManagement",
+    },
+    {
       title: "Back TO Home",
       icon: Home,
       key: "home",

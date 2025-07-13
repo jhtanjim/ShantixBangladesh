@@ -1,21 +1,102 @@
-import { useState } from "react"
-import { Heart, ShoppingCart, Trash2, ArrowLeft, Grid, List } from 'lucide-react'
-import { useShop } from "../../Context/ShopContext"
-import { Link } from "react-router-dom"
+import {
+  ArrowLeft,
+  Grid,
+  Heart,
+  List,
+  LogIn,
+  MessageCircle,
+} from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
+import { useAuth } from "../../Context/AuthContext"; // Add this import
+import { useShop } from "../../Context/ShopContext";
+import { useCreateOrder } from "../../hooks/useOrders";
+import Button from "./Button";
+import LoginRequiredModal from "./LoginRequiredModal";
 
 export default function Wishlist() {
-  const { wishlistItems, removeFromWishlist, addToCart, isInCart, wishlistCount } = useShop()
-  const [viewType, setViewType] = useState("grid")
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const { wishlistItems, removeFromWishlist, isInCart, wishlistCount } =
+    useShop();
+  const { user, token, logout } = useAuth(); // Use the auth context
+  const [viewType, setViewType] = useState("grid");
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
+  const [orderLoading, setOrderLoading] = useState(false);
 
-  const handleAddToCart = (car) => {
-    addToCart(car)
-  }
+  const { mutate: createOrder } = useCreateOrder();
+
+  // Updated authentication check function
+  const isAuthenticated = () => {
+    return !!(user && token); // Use the auth context instead of localStorage
+  };
+
+  const handleLoginRequired = () => {
+    setShowLoginRequired(false);
+    // Store the current page URL for redirect after login
+    localStorage.setItem("redirectAfterLogin", window.location.pathname);
+    // Redirect to login page
+    window.location.href = "/login";
+  };
+
+  const handleNegotiateOrder = (car) => {
+    if (!isAuthenticated()) {
+      setShowLoginRequired(true);
+      return;
+    }
+
+    if (!car.isActive || car.status === "ON_HOLD") {
+      return;
+    }
+
+    setOrderLoading(true);
+
+    // Create order with single car item
+    const cartItems = [{ ...car, quantity: 1 }];
+
+    createOrder(cartItems, {
+      onSuccess: (data) => {
+        console.log("Order created successfully:", data);
+        setOrderLoading(false);
+
+        // Show SweetAlert before redirecting to WhatsApp
+        Swal.fire({
+          icon: "success",
+          title: "Order Placed",
+          text: "Your order was placed successfully. You'll now be redirected to WhatsApp to negotiate.",
+          showConfirmButton: true,
+          confirmButtonText: "Go to WhatsApp",
+        }).then(() => {
+          const orderId = data.order.id;
+          const whatsappNumber = "8801711123456";
+          const message = `Hello, I just placed an order (ID: ${orderId}) for ${
+            car.title || `${car.make} ${car.model}`
+          }. I'd like to negotiate the price.`;
+          window.open(
+            `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+              message
+            )}`,
+            "_blank"
+          );
+        });
+      },
+      onError: (error) => {
+        console.error("Failed to create order:", error);
+        setOrderLoading(false);
+        Swal.fire({
+          icon: "error",
+          title: "Order Failed",
+          text: "Failed to create order. Please try again later.",
+          confirmButtonText: "Okay",
+        });
+      },
+    });
+  };
 
   const handleClearWishlist = () => {
-    wishlistItems.forEach(item => removeFromWishlist(item.id))
-    setShowClearConfirm(false)
-  }
+    wishlistItems.forEach((item) => removeFromWishlist(item.id));
+    setShowClearConfirm(false);
+  };
 
   if (wishlistItems.length === 0) {
     return (
@@ -24,9 +105,12 @@ export default function Wishlist() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="bg-white rounded-2xl shadow-lg p-12">
               <Heart size={64} className="mx-auto text-gray-300 mb-6" />
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Your Wishlist is Empty</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Your Wishlist is Empty
+              </h2>
               <p className="text-gray-600 mb-8 text-lg">
-                Save your favorite cars to your wishlist and never lose track of them!
+                Save your favorite cars to your wishlist and never lose track of
+                them!
               </p>
               <Link to="/allCars" className="inline-block">
                 <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors">
@@ -37,7 +121,7 @@ export default function Wishlist() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -63,7 +147,9 @@ export default function Wishlist() {
               <button
                 onClick={() => setViewType("grid")}
                 className={`p-2 rounded-md transition-colors ${
-                  viewType === "grid" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                  viewType === "grid"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <Grid size={18} />
@@ -71,7 +157,9 @@ export default function Wishlist() {
               <button
                 onClick={() => setViewType("list")}
                 className={`p-2 rounded-md transition-colors ${
-                  viewType === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                  viewType === "list"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <List size={18} />
@@ -91,11 +179,13 @@ export default function Wishlist() {
         </div>
 
         {/* Wishlist Items */}
-        <div className={`${
-          viewType === "grid" 
-            ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" 
-            : "space-y-4"
-        }`}>
+        <div
+          className={`${
+            viewType === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+              : "space-y-4"
+          }`}
+        >
           {wishlistItems.map((car) => (
             <div
               key={car.id}
@@ -104,15 +194,17 @@ export default function Wishlist() {
               }`}
             >
               {/* Image */}
-              <div className={`relative overflow-hidden ${
-                viewType === "list" ? "w-48 flex-shrink-0" : "aspect-[4/3]"
-              }`}>
+              <div
+                className={`relative overflow-hidden ${
+                  viewType === "list" ? "w-48 flex-shrink-0" : "aspect-[4/3]"
+                }`}
+              >
                 <img
                   src={car.mainImage || "/placeholder.svg?height=200&width=300"}
                   alt={car.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                
+
                 {/* Remove from Wishlist */}
                 <button
                   onClick={() => removeFromWishlist(car.id)}
@@ -128,7 +220,7 @@ export default function Wishlist() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
                     {car.title}
                   </h3>
-                  
+
                   <div className="flex justify-between items-center mb-4">
                     <div className="text-2xl font-bold text-red-600">
                       ${car.price?.toLocaleString() || "N/A"}
@@ -161,35 +253,39 @@ export default function Wishlist() {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                 <Link
-  to={`/cars/${car.id}`}
-  className="flex-1 text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
->
-  View Details
-</Link>
-
-                  
-                  <button
-                    onClick={() => handleAddToCart(car)}
-                    disabled={!car.isActive}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isInCart(car.id)
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : "bg-red-600 hover:bg-red-700 text-white"
-                    } ${!car.isActive ? "opacity-50 cursor-not-allowed" : ""}`}
+                  <Link
+                    to={`/cars/${car.id}`}
+                    className="flex-1 text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    {isInCart(car.id) ? (
+                    View Details
+                  </Link>
+
+                  <Button
+                    onClick={() => handleNegotiateOrder(car)}
+                    disabled={
+                      orderLoading || !car.isActive || car.status === "ON_HOLD"
+                    }
+                    className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {car.status === "ON_HOLD" ? (
+                      <>Currently on hold — negotiation in progress</>
+                    ) : orderLoading ? (
                       <>
-                        <ShoppingCart size={16} />
-                        In Cart
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Creating Order...
+                      </>
+                    ) : !isAuthenticated() ? (
+                      <>
+                        <LogIn size={16} />
+                        Login to Negotiate
                       </>
                     ) : (
                       <>
-                        <ShoppingCart size={16} />
-                        Add to Cart
+                        <MessageCircle size={16} />
+                        Order to Negotiate
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -204,10 +300,11 @@ export default function Wishlist() {
                 <Heart size={48} className="mx-auto text-red-500 mb-4" />
                 <h3 className="text-xl font-bold mb-2">Clear Wishlist?</h3>
                 <p className="text-gray-600">
-                  Are you sure you want to remove all cars from your wishlist? This action cannot be undone.
+                  Are you sure you want to remove all cars from your wishlist?
+                  This action cannot be undone.
                 </p>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowClearConfirm(false)}
@@ -225,7 +322,14 @@ export default function Wishlist() {
             </div>
           </div>
         )}
+
+        {/* Login Required Modal */}
+        <LoginRequiredModal
+          isOpen={showLoginRequired}
+          onClose={() => setShowLoginRequired(false)}
+          onLogin={handleLoginRequired}
+        />
       </div>
     </div>
-  )
+  );
 }

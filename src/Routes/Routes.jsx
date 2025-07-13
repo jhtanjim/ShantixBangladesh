@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import About from "../Pages/About/About";
+import Team from "../Pages/About/Team";
 import AllCar from "../Pages/AllCar/AllCar";
 import CarDetails from "../Pages/AllCar/CarDetails";
 import Register from "../Pages/Auth/Register";
@@ -7,7 +8,9 @@ import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
 import ContactUs from "../Pages/ContactUs/ContactUs";
 import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
+import GalleryManagement from "../Pages/DashBoard/Admin/GalleryManagement/GalleryManagement";
 import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
+import TeamManagement from "../Pages/DashBoard/Admin/Team/TeamManageMent";
 import { CarDetailsPage } from "../Pages/DashBoard/Admin/cars/CarDetailsPage";
 import { CarForm } from "../Pages/DashBoard/Admin/cars/CarForm";
 import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
@@ -39,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/team",
+        element: <Team />,
       },
       {
         path: "/about",
@@ -143,6 +150,8 @@ export const router = createBrowserRouter([
       { path: "orders", element: <OrderPage /> },
       { path: "enquiryList", element: <EnquiryList /> },
       { path: "shipScheduleList", element: <ShipScheduleList /> },
+      { path: "team", element: <TeamManagement /> },
+      { path: "galleryManagement", element: <GalleryManagement /> },
     ],
   },
 ]);

@@ -28,7 +28,7 @@ const Navbar = () => {
     });
   }, [token, user]);
 
-  console.log(user);
+  // console.log(user);
 
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 

@@ -17,6 +17,21 @@ import Swal from "sweetalert2";
 import { registerUser } from "../../api/auth";
 import logoImg from "../../assets/images/logo.png";
 
+// Validation helpers
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password) => {
+  return password.length >= 8;
+};
+
+const validatePhone = (phone) => {
+  const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
+  return phoneRegex.test(phone) && phone.replace(/\D/g, "").length >= 10;
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -29,40 +44,53 @@ const Register = () => {
     companyName: "",
     confirmCheckbox: false,
   });
+
   const [countries, setCountries] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loadingCountries, setLoadingCountries] = useState(true);
+  const [errors, setErrors] = useState({});
 
-  // Fetch countries from REST Countries API
+  // Enhanced country fetching with dial codes
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const response = await fetch(
-          "https://restcountries.com/v3.1/all?fields=name,flag"
+          "https://restcountries.com/v3.1/all?fields=name,flag,idd,cca2"
         );
         const data = await response.json();
-        const sortedCountries = data
-          .map((country) => ({
-            name: country.name.common,
-            flag: country.flag,
-          }))
+
+        const processedCountries = data
+          .map((country) => {
+            const dialCode = country.idd?.root
+              ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
+              : "";
+
+            return {
+              name: country.name.common,
+              flag: country.flag,
+              dialCode,
+              code: country.cca2,
+            };
+          })
+          .filter((country) => country.dialCode) // Only include countries with dial codes
           .sort((a, b) => a.name.localeCompare(b.name));
-        setCountries(sortedCountries);
+
+        setCountries(processedCountries);
       } catch (error) {
         console.error("Failed to fetch countries:", error);
-        // Fallback countries
+        // Enhanced fallback with dial codes
         setCountries([
-          { name: "United States", flag: "🇺🇸" },
-          { name: "United Kingdom", flag: "🇬🇧" },
-          { name: "Canada", flag: "🇨🇦" },
-          { name: "Australia", flag: "🇦🇺" },
-          { name: "Germany", flag: "🇩🇪" },
-          { name: "France", flag: "🇫🇷" },
-          { name: "Japan", flag: "🇯🇵" },
-          { name: "Bangladesh", flag: "🇧🇩" },
-          { name: "India", flag: "🇮🇳" },
-          { name: "China", flag: "🇨🇳" },
+          { name: "United States", flag: "🇺🇸", dialCode: "+1", code: "US" },
+          { name: "United Kingdom", flag: "🇬🇧", dialCode: "+44", code: "GB" },
+          { name: "Canada", flag: "🇨🇦", dialCode: "+1", code: "CA" },
+          { name: "Australia", flag: "🇦🇺", dialCode: "+61", code: "AU" },
+          { name: "Germany", flag: "🇩🇪", dialCode: "+49", code: "DE" },
+          { name: "France", flag: "🇫🇷", dialCode: "+33", code: "FR" },
+          { name: "Japan", flag: "🇯🇵", dialCode: "+81", code: "JP" },
+          { name: "Bangladesh", flag: "🇧🇩", dialCode: "+880", code: "BD" },
+          { name: "India", flag: "🇮🇳", dialCode: "+91", code: "IN" },
+          { name: "China", flag: "🇨🇳", dialCode: "+86", code: "CN" },
         ]);
       } finally {
         setLoadingCountries(false);
@@ -71,12 +99,52 @@ const Register = () => {
     fetchCountries();
   }, []);
 
+  // Auto-add country code when country is selected
+  useEffect(() => {
+    if (form.country) {
+      const selectedCountry = countries.find((c) => c.name === form.country);
+      if (selectedCountry && selectedCountry.dialCode) {
+        // Only add dial code if phone doesn't already start with it
+        if (!form.phone.startsWith(selectedCountry.dialCode)) {
+          const phoneWithoutCode = form.phone.replace(/^\+\d+\s*/, "");
+          setForm((prev) => ({
+            ...prev,
+            phone: `${selectedCountry.dialCode} ${phoneWithoutCode}`.trim(),
+          }));
+        }
+      }
+    }
+  }, [form.country, countries]);
+
+  // Real-time validation
+  useEffect(() => {
+    const newErrors = {};
+
+    if (form.email && !validateEmail(form.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (form.password && !validatePassword(form.password)) {
+      newErrors.password = "Password must be at least 8 characters long";
+    }
+
+    if (form.confirmPassword && form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (form.phone && !validatePhone(form.phone)) {
+      newErrors.phone = "Please enter a valid phone number";
+    }
+
+    setErrors(newErrors);
+  }, [form.email, form.password, form.confirmPassword, form.phone]);
+
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
       Swal.fire({
         title: "Success!",
-        text: "Registration successful!",
+        text: "Registration successful! Welcome to CarHub!",
         icon: "success",
         confirmButtonText: "Continue",
         confirmButtonColor: "#0072BC",
@@ -103,12 +171,32 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!form.confirmCheckbox) {
+    // Validate all fields
+    if (!form.fullName.trim()) {
       Swal.fire({
-        title: "Terms & Conditions",
-        text: "Please confirm that you agree to the terms and conditions",
+        title: "Missing Information",
+        text: "Please enter your full name",
         icon: "warning",
-        confirmButtonText: "OK",
+        confirmButtonColor: "#0072BC",
+      });
+      return;
+    }
+
+    if (!validateEmail(form.email)) {
+      Swal.fire({
+        title: "Invalid Email",
+        text: "Please enter a valid email address",
+        icon: "warning",
+        confirmButtonColor: "#0072BC",
+      });
+      return;
+    }
+
+    if (!validatePassword(form.password)) {
+      Swal.fire({
+        title: "Invalid Password",
+        text: "Password must be at least 8 characters long",
+        icon: "warning",
         confirmButtonColor: "#0072BC",
       });
       return;
@@ -119,13 +207,42 @@ const Register = () => {
         title: "Password Mismatch",
         text: "Passwords do not match. Please check and try again.",
         icon: "error",
-        confirmButtonText: "OK",
         confirmButtonColor: "#0072BC",
       });
       return;
     }
 
-    // Create the data object to send to API (excluding confirmPassword)
+    if (!validatePhone(form.phone)) {
+      Swal.fire({
+        title: "Invalid Phone Number",
+        text: "Please enter a valid phone number",
+        icon: "warning",
+        confirmButtonColor: "#0072BC",
+      });
+      return;
+    }
+
+    if (!form.country) {
+      Swal.fire({
+        title: "Missing Country",
+        text: "Please select your country",
+        icon: "warning",
+        confirmButtonColor: "#0072BC",
+      });
+      return;
+    }
+
+    if (!form.confirmCheckbox) {
+      Swal.fire({
+        title: "Terms & Conditions",
+        text: "Please confirm that you agree to the terms and conditions",
+        icon: "warning",
+        confirmButtonColor: "#0072BC",
+      });
+      return;
+    }
+
+    // Create the data object to send to API
     const { confirmPassword, confirmCheckbox, ...registrationData } = form;
     mutation.mutate(registrationData);
   };
@@ -134,21 +251,35 @@ const Register = () => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const isFormValid = () => {
+    return (
+      form.fullName.trim() &&
+      validateEmail(form.email) &&
+      validatePassword(form.password) &&
+      form.password === form.confirmPassword &&
+      validatePhone(form.phone) &&
+      form.country &&
+      form.confirmCheckbox &&
+      Object.keys(errors).length === 0
+    );
+  };
+
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-8"
-      style={{
-        background: "#003366",
-      }}
+      style={{ background: "#003366" }}
     >
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 ">
-            <span className="text-3xl">
-              <img src={logoImg} alt="" />
-            </span>
+          <div className="inline-flex items-center justify-center w-20 h-20">
+            <img
+              src={logoImg}
+              alt="CarHub Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
+          <h1 className="text-white text-2xl font-bold mt-4">Join CarHub</h1>
           <p className="text-blue-200">Create your account to get started</p>
         </div>
 
@@ -158,7 +289,7 @@ const Register = () => {
             {/* Full Name Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+                Full Name *
               </label>
               <div className="relative group">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
@@ -178,7 +309,7 @@ const Register = () => {
             {/* Email Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                Email Address *
               </label>
               <div className="relative group">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
@@ -187,34 +318,23 @@ const Register = () => {
                   placeholder="Enter your email"
                   value={form.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                  className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${
+                    errors.email
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   required
                 />
               </div>
-            </div>
-
-            {/* Phone Field */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <div className="relative group">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={form.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
-                  required
-                />
-              </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Country Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
+                Country *
               </label>
               <div className="relative group">
                 <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10" />
@@ -231,8 +351,11 @@ const Register = () => {
                       : "Select your country"}
                   </option>
                   {countries.map((country) => (
-                    <option key={country.name} value={country.name}>
-                      {country.flag} {country.name}
+                    <option
+                      key={country.code || country.name}
+                      value={country.name}
+                    >
+                      {country.name}
                     </option>
                   ))}
                 </select>
@@ -254,7 +377,32 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Company Name Field (Optional) */}
+            {/* Phone Field */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number *
+              </label>
+              <div className="relative group">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="tel"
+                  placeholder="Phone number will auto-format with country code"
+                  value={form.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${
+                    errors.phone
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
+                  required
+                />
+              </div>
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              )}
+            </div>
+
+            {/* Company Name Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Company Name{" "}
@@ -277,7 +425,7 @@ const Register = () => {
             {/* Password Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                Password *
               </label>
               <div className="relative group">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
@@ -288,7 +436,11 @@ const Register = () => {
                   onChange={(e) =>
                     handleInputChange("password", e.target.value)
                   }
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400"
+                  className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${
+                    errors.password
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   required
                 />
                 <button
@@ -303,12 +455,18 @@ const Register = () => {
                   )}
                 </button>
               </div>
+              <span className="text-red-500 text-xs mt-1">
+                Password must be at least 8 characters long
+              </span>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Confirm Password Field */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Re-type Password
+                Confirm Password *
               </label>
               <div className="relative group">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
@@ -320,8 +478,7 @@ const Register = () => {
                     handleInputChange("confirmPassword", e.target.value)
                   }
                   className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-gray-400 ${
-                    form.confirmPassword &&
-                    form.password !== form.confirmPassword
+                    errors.confirmPassword
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300"
                   }`}
@@ -339,15 +496,14 @@ const Register = () => {
                   )}
                 </button>
               </div>
-              {form.confirmPassword &&
-                form.password !== form.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">
-                    Passwords do not match
-                  </p>
-                )}
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
-            {/* Confirmation Checkbox */}
+            {/* Terms Checkbox */}
             <div className="flex items-start space-x-3">
               <div className="relative">
                 <input
@@ -378,22 +534,20 @@ const Register = () => {
                 className="text-sm text-gray-600 cursor-pointer leading-5"
               >
                 I agree to the{" "}
-                <Link to={"/privacyPolicy"}>
-                  <span
-                    className="font-semibold hover:underline cursor-pointer transition-colors"
-                    style={{ color: "#0072BC" }}
-                  >
-                    Terms & Conditions
-                  </span>{" "}
-                </Link>
+                <Link
+                  to="/privacyPolicy"
+                  className="font-semibold hover:underline transition-colors"
+                  style={{ color: "#0072BC" }}
+                >
+                  Terms & Conditions
+                </Link>{" "}
                 and{" "}
-                <Link to={"/privacyPolicy"}>
-                  <span
-                    className="font-semibold hover:underline cursor-pointer transition-colors"
-                    style={{ color: "#0072BC" }}
-                  >
-                    Privacy Policy
-                  </span>
+                <Link
+                  to="/privacyPolicy"
+                  className="font-semibold hover:underline transition-colors"
+                  style={{ color: "#0072BC" }}
+                >
+                  Privacy Policy
                 </Link>
               </label>
             </div>
@@ -401,17 +555,14 @@ const Register = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={
-                mutation.isPending ||
-                !form.confirmCheckbox ||
-                form.password !== form.confirmPassword
-              }
-              className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden cursor-pointer"
+              disabled={mutation.isPending || !isFormValid()}
+              className={`w-full py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg relative overflow-hidden ${
+                isFormValid() ? "cursor-pointer" : "cursor-not-allowed"
+              }`}
               style={{
-                background:
-                  form.confirmCheckbox && form.password === form.confirmPassword
-                    ? "linear-gradient(135deg, #0072BC 0%, #003366 100%)"
-                    : "#9CA3AF",
+                background: isFormValid()
+                  ? "linear-gradient(135deg, #0072BC 0%, #003366 100%)"
+                  : "#9CA3AF",
               }}
             >
               {mutation.isPending ? (
@@ -420,14 +571,12 @@ const Register = () => {
                   <span>Creating Account...</span>
                 </div>
               ) : (
-                <span className="relative z-10">Register</span>
+                <span className="relative z-10">Create Account</span>
               )}
 
-              {form.confirmCheckbox &&
-                form.password === form.confirmPassword &&
-                !mutation.isPending && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
-                )}
+              {isFormValid() && !mutation.isPending && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-700"></div>
+              )}
             </button>
           </form>
 
