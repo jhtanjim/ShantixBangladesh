@@ -52,7 +52,10 @@ const ShipSchedule = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div
+      className="max-w-7xl mx-auto p-4"
+      style={{ backgroundColor: "#E5E5E5" }}
+    >
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Ship Schedules
@@ -89,10 +92,60 @@ const ShipSchedule = () => {
                   </div>
                 )}
 
+                {/* PDF Logo Overlay */}
+                {schedule.pdf && (
+                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="w-6 h-6"
+                        style={{ color: "#C9252B" }}
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <span className="text-sm font-medium text-gray-700">
+                        PDF
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {schedule.isActive && (
-                  <div className="absolute top-4 left-4 px-3 py-1 text-xs font-semibold bg-emerald-500 text-white rounded-full shadow-lg">
+                  <div
+                    className="absolute top-4 left-4 px-3 py-1 text-xs font-semibold text-white rounded-full shadow-lg"
+                    style={{ backgroundColor: "#0072BC" }}
+                  >
                     Active
                   </div>
+                )}
+
+                {/* PDF Download Button */}
+                {schedule.pdf && (
+                  <a
+                    href={schedule.pdf}
+                    download
+                    onClick={(e) => e.stopPropagation()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
+                    style={{ backgroundColor: "#0072BC" }}
+                    title="Download PDF"
+                  >
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </a>
                 )}
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
@@ -111,7 +164,7 @@ const ShipSchedule = () => {
                     {schedule.description?.length > 100 && (
                       <button
                         onClick={(e) => {
-                          e.preventDefault(); // Prevent Link navigation
+                          e.preventDefault();
                           toggleExpand(schedule.id);
                         }}
                         className="mt-1 text-xs underline hover:text-white transition"
@@ -119,24 +172,6 @@ const ShipSchedule = () => {
                         {expandedId === schedule.id ? "Read less" : "Read more"}
                       </button>
                     )}
-                  </div>
-                </div>
-
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                  <div className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
-                    <svg
-                      className="w-4 h-4 text-gray-700"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
                   </div>
                 </div>
               </div>

@@ -9,7 +9,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 
 const ShipScheduleForm = ({
@@ -23,52 +23,98 @@ const ShipScheduleForm = ({
   const [formData, setFormData] = useState({
     title: initialData.title || "",
     image: initialData.image || "",
+    pdf: initialData.pdf || "",
     description: initialData.description || "",
     isActive: initialData.isActive !== undefined ? initialData.isActive : true,
   });
 
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(initialData.image || "");
+  const [imagePreview, setImagePreview] = useState("");
+
   const [dragOver, setDragOver] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formErrors, setFormErrors] = useState({});
   const [compressionInfo, setCompressionInfo] = useState(null);
+  const [fileType, setFileType] = useState(null);
 
   const fileInputRef = useRef(null);
 
-  // Enhanced image compression function with better quality control
-  const compressImage = useCallback(
-    (file, maxWidth = 1200, maxHeight = 800, quality = 0.85) => {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
+  // Initialize preview and file type based on initial data
+  useEffect(() => {
+    if (initialData.pdf) {
+      setImagePreview(initialData.pdf);
+      setFileType("application/pdf");
+    } else if (initialData.image) {
+      setImagePreview(initialData.image);
+      setFileType("image");
+    }
+  }, [initialData.pdf, initialData.image]);
 
-        img.onload = () => {
-          let { width, height } = img;
-          const originalSize = file.size;
+  // Optimized image compression with progressive quality and size limits
+  const compressImage = useCallback(async (file) => {
+    return new Promise((resolve, reject) => {
+      const originalSize = file.size;
 
-          // Calculate new dimensions while maintaining aspect ratio
-          const aspectRatio = width / height;
+      // Skip compression for small files (< 500KB)
+      if (originalSize < 500 * 1024) {
+        setCompressionInfo({
+          originalSize: (originalSize / 1024 / 1024).toFixed(2),
+          compressedSize: (originalSize / 1024 / 1024).toFixed(2),
+          compressionRatio: "0",
+        });
+        resolve(file);
+        return;
+      }
 
-          if (width > maxWidth || height > maxHeight) {
-            if (aspectRatio > 1) {
-              // Landscape
-              width = Math.min(width, maxWidth);
-              height = width / aspectRatio;
-            } else {
-              // Portrait
-              height = Math.min(height, maxHeight);
-              width = height * aspectRatio;
-            }
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Progressive sizing based on file size
+        let maxWidth, maxHeight, quality;
+
+        if (originalSize > 5 * 1024 * 1024) {
+          // > 5MB
+          maxWidth = 800;
+          maxHeight = 600;
+          quality = 0.7;
+        } else if (originalSize > 2 * 1024 * 1024) {
+          // > 2MB
+          maxWidth = 1000;
+          maxHeight = 750;
+          quality = 0.75;
+        } else {
+          maxWidth = 1200;
+          maxHeight = 800;
+          quality = 0.8;
+        }
+
+        // Calculate new dimensions maintaining aspect ratio
+        const aspectRatio = width / height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (aspectRatio > 1) {
+            width = Math.min(width, maxWidth);
+            height = width / aspectRatio;
+          } else {
+            height = Math.min(height, maxHeight);
+            width = height * aspectRatio;
           }
+        }
 
-          canvas.width = width;
-          canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
 
-          // Use better image rendering
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = "high";
+        // Optimize canvas rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Use requestAnimationFrame for smooth processing
+        requestAnimationFrame(() => {
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
@@ -78,6 +124,7 @@ const ShipScheduleForm = ({
                   ((originalSize - blob.size) / originalSize) *
                   100
                 ).toFixed(1);
+
                 setCompressionInfo({
                   originalSize: (originalSize / 1024 / 1024).toFixed(2),
                   compressedSize: (blob.size / 1024 / 1024).toFixed(2),
@@ -91,13 +138,81 @@ const ShipScheduleForm = ({
             "image/jpeg",
             quality
           );
-        };
+        });
+      };
 
-        img.onerror = () => reject(new Error("Failed to load image"));
-        img.src = URL.createObjectURL(file);
-      });
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  // Optimized file handling with immediate preview
+  const handleFileSelect = useCallback(
+    async (file) => {
+      if (!file) return;
+
+      const maxSize = 15 * 1024 * 1024; // 15MB
+      if (file.size > maxSize) {
+        Swal.fire({
+          title: "File Too Large",
+          text: "Please select a file smaller than 15MB.",
+          icon: "error",
+          confirmButtonColor: "#3b82f6",
+        });
+        return;
+      }
+
+      setImageUploading(true);
+      setUploadProgress(10);
+
+      try {
+        const fileType = file.type;
+        setFileType(fileType);
+
+        if (fileType === "application/pdf") {
+          // Handle PDF files
+          const previewUrl = URL.createObjectURL(file);
+          setImagePreview(previewUrl);
+          setImageFile(file);
+          setUploadProgress(100);
+          setFormData((prev) => ({ ...prev, image: "", pdf: "" }));
+        } else {
+          // Handle image files with immediate preview
+          const previewUrl = URL.createObjectURL(file);
+          setImagePreview(previewUrl);
+          setUploadProgress(50);
+
+          // Compress in background (non-blocking)
+          setTimeout(async () => {
+            try {
+              const compressedFile = await compressImage(file);
+              setImageFile(compressedFile);
+              setUploadProgress(100);
+              setFormData((prev) => ({ ...prev, image: "", pdf: "" }));
+            } catch (error) {
+              console.error("Compression failed:", error);
+              // Fallback to original file
+              setImageFile(file);
+              setUploadProgress(100);
+            }
+          }, 100);
+        }
+      } catch (error) {
+        console.error("File processing error:", error);
+        Swal.fire({
+          title: "Upload Error",
+          text: "Failed to process the selected file. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#3b82f6",
+        });
+      } finally {
+        setTimeout(() => {
+          setImageUploading(false);
+          setUploadProgress(0);
+        }, 500);
+      }
     },
-    []
+    [compressImage]
   );
 
   // Form validation with enhanced checks
@@ -138,8 +253,6 @@ const ShipScheduleForm = ({
     }
 
     try {
-      setImageUploading(true);
-
       // Create FormData object to send both text data and file
       const submitFormData = new FormData();
 
@@ -148,18 +261,16 @@ const ShipScheduleForm = ({
       submitFormData.append("description", formData.description.trim());
       submitFormData.append("isActive", formData.isActive);
 
-      // Add image file if present
+      // Handle file upload based on type
       if (imageFile) {
-        try {
-          const compressedFile = await compressImage(imageFile);
-          submitFormData.append("image", compressedFile, "schedule-image.jpg");
-        } catch (compressionError) {
-          console.error("Image compression failed:", compressionError);
-          // Fallback to original file if compression fails
-          submitFormData.append("image", imageFile);
+        if (fileType === "application/pdf") {
+          submitFormData.append("pdf", imageFile);
+        } else {
+          // Image file is already processed/compressed
+          submitFormData.append("image", imageFile, "schedule-image.jpg");
         }
       } else if (formData.image && formData.image !== initialData.image) {
-        // If it's a new URL, send it as text
+        // If it's a new image URL, send it as text to image field
         submitFormData.append("imageUrl", formData.image);
       }
 
@@ -168,8 +279,6 @@ const ShipScheduleForm = ({
     } catch (error) {
       console.error("Form submission error:", error);
       // Error handling is done in parent components
-    } finally {
-      setImageUploading(false);
     }
   };
 
@@ -202,53 +311,15 @@ const ShipScheduleForm = ({
     }
   };
 
-  const handleFileSelect = async (file) => {
-    if (!file) return;
-
-    // Allowed types: Images and PDF
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/pdf",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      Swal.fire({
-        title: "Invalid File Type",
-        text: "Please select a valid image (JPEG, PNG, GIF, WebP) or PDF file.",
-        icon: "error",
-        confirmButtonColor: "#3b82f6",
-      });
-      return;
+  const removeImage = () => {
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
     }
-
-    const maxSize = 15 * 1024 * 1024; // 15MB
-    if (file.size > maxSize) {
-      Swal.fire({
-        title: "File Too Large",
-        text: "Please select a file smaller than 15MB.",
-        icon: "error",
-        confirmButtonColor: "#3b82f6",
-      });
-      return;
-    }
-
+    setImagePreview("");
+    setImageFile(null);
+    setFileType(null);
     setCompressionInfo(null);
-    setImageFile(file);
-
-    // Handle preview for image and pdf
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    if (file.type === "application/pdf") {
-      reader.readAsDataURL(file); // We'll preview PDF as embedded object or icon
-    } else {
-      reader.readAsDataURL(file); // Image preview
-    }
+    setFormData({ ...formData, image: "", pdf: "" });
   };
 
   const handleDrop = (e) => {
@@ -266,13 +337,6 @@ const ShipScheduleForm = ({
   const handleDragLeave = (e) => {
     e.preventDefault();
     setDragOver(false);
-  };
-
-  const removeImage = () => {
-    setImagePreview("");
-    setImageFile(null);
-    setCompressionInfo(null);
-    setFormData({ ...formData, image: "" });
   };
 
   return (
@@ -325,7 +389,6 @@ const ShipScheduleForm = ({
             </p>
           </div>
 
-          {/* Image Upload */}
           {/* File Upload (Image or PDF) */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -352,23 +415,32 @@ const ShipScheduleForm = ({
                   className="hidden"
                 />
 
-                {/* Uploading overlay */}
+                {/* Upload Progress */}
                 {imageUploading && (
-                  <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-xl z-10">
-                    <div className="text-center">
+                  <div className="absolute inset-0 bg-white bg-opacity-95 flex items-center justify-center rounded-xl z-10">
+                    <div className="text-center w-full px-8">
                       <Loader
-                        className="animate-spin text-blue-600 mx-auto mb-2"
+                        className="animate-spin text-blue-600 mx-auto mb-3"
                         size={32}
                       />
-                      <p className="text-blue-600 font-medium">
+                      <p className="text-blue-600 font-medium mb-2">
                         Processing file...
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {uploadProgress}%
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* PDF Preview */}
-                {imagePreview && imageFile?.type === "application/pdf" ? (
+                {imagePreview && fileType === "application/pdf" ? (
                   <div className="relative">
                     <embed
                       src={imagePreview}
@@ -393,6 +465,7 @@ const ShipScheduleForm = ({
                       src={imagePreview}
                       alt="Preview"
                       className="max-h-48 mx-auto rounded-lg shadow-md"
+                      loading="lazy"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         e.currentTarget.nextElementSibling.style.display =
@@ -428,17 +501,21 @@ const ShipScheduleForm = ({
                 )}
               </div>
 
-              {/* Compression Info (image only) */}
+              {/* Compression Info */}
               {compressionInfo && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-green-800">
                     <Info size={16} />
-                    <span className="font-medium">Image Optimized</span>
+                    <span className="font-medium">
+                      {compressionInfo.compressionRatio === "0"
+                        ? "File Ready"
+                        : "Image Optimized"}
+                    </span>
                   </div>
                   <div className="text-sm text-green-700 mt-1">
-                    Original: {compressionInfo.originalSize}MB → Compressed:{" "}
-                    {compressionInfo.compressedSize}MB (
-                    {compressionInfo.compressionRatio}% reduction)
+                    {compressionInfo.compressionRatio === "0"
+                      ? `Size: ${compressionInfo.originalSize}MB (No compression needed)`
+                      : `Original: ${compressionInfo.originalSize}MB → Compressed: ${compressionInfo.compressedSize}MB (${compressionInfo.compressionRatio}% reduction)`}
                   </div>
                 </div>
               )}
@@ -455,7 +532,7 @@ const ShipScheduleForm = ({
                 </div>
               </div>
 
-              {/* URL Input (images only) */}
+              {/* URL Input */}
               <input
                 type="url"
                 value={formData.image}
@@ -464,6 +541,7 @@ const ShipScheduleForm = ({
                   if (e.target.value) {
                     setImagePreview(e.target.value);
                     setImageFile(null);
+                    setFileType("image");
                     setCompressionInfo(null);
                   }
                 }}
@@ -545,7 +623,7 @@ const ShipScheduleForm = ({
               disabled={isSubmitting || imageUploading}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting || imageUploading ? (
+              {isSubmitting ? (
                 <Loader className="animate-spin" size={18} />
               ) : (
                 <Save size={18} />

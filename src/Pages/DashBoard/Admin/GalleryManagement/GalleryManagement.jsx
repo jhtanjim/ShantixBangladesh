@@ -4,7 +4,6 @@ import {
   Edit,
   Eye,
   EyeOff,
-  GripVertical,
   Image as ImageIcon,
   Loader2,
   Plus,
@@ -495,7 +494,7 @@ const GalleryItem = ({
       onDragStart={(e) => onDragStart(e, item)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, item)}
-      className={`bg-white border-2 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-move ${
+      className={`bg-white border-2 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 onmouse-pointer   ${
         isSelected
           ? "border-blue-500 ring-2 ring-blue-200"
           : "border-gray-200 hover:border-gray-300"
@@ -509,15 +508,15 @@ const GalleryItem = ({
         />
 
         <div className="absolute top-2 left-2 flex space-x-2">
-          <input
+          {/* <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onSelect(item.id)}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-          />
-          <button className="text-white hover:text-gray-200 bg-black bg-opacity-50 rounded p-1">
+          /> */}
+          {/* <button className="text-white hover:text-gray-200 bg-black bg-opacity-50 rounded p-1">
             <GripVertical className="h-4 w-4" />
-          </button>
+          </button> */}
         </div>
 
         <div className="absolute top-2 right-2">
@@ -533,9 +532,9 @@ const GalleryItem = ({
         </div>
 
         <div className="absolute bottom-2 right-2">
-          <span className="px-2 py-1 text-xs bg-black bg-opacity-50 text-white rounded">
+          {/* <span className="px-2 py-1 text-xs bg-black bg-opacity-50 text-white rounded">
             #{item.order}
-          </span>
+          </span> */}
         </div>
       </div>
 
@@ -616,7 +615,7 @@ const GalleryManagement = () => {
   } = useGallery();
 
   const { data: galleryData, isLoading, error, refetch } = useGetAllGallery();
-  const galleryItems = Array.isArray(galleryData?.data) ? galleryData.data : [];
+  const galleryItems = Array.isArray(galleryData) ? galleryData : [];
 
   const createMutation = useCreateGalleryItem();
   const bulkUploadMutation = useBulkUploadGallery();
@@ -932,7 +931,7 @@ const GalleryManagement = () => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-lg p-4 border">
           <div className="text-2xl font-bold text-blue-600">
             {galleryItems.length}
@@ -951,16 +950,10 @@ const GalleryManagement = () => {
           </div>
           <div className="text-sm text-gray-600">Inactive Items</div>
         </div>
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="text-2xl font-bold text-purple-600">
-            {selectedItems.length}
-          </div>
-          <div className="text-sm text-gray-600">Selected Items</div>
-        </div>
       </div>
 
       {/* Bulk Actions */}
-      {galleryItems.length > 0 && (
+      {/* {galleryItems.length > 0 && (
         <div className="bg-white rounded-lg p-4 border mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -991,7 +984,7 @@ const GalleryManagement = () => {
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Gallery Grid */}
       {galleryItems.length === 0 ? (

@@ -47,14 +47,15 @@ export const useCreateTeam = () => {
   });
 };
 
-export const useUpdateTeam = (id) => {
+// ✅ FIXED: Accept ID in the mutation call
+export const useUpdateTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data) => updateTeamMember(id, data),
-    onSuccess: () => {
+    mutationFn: ({ id, ...data }) => updateTeamMember(id, data),
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
-      if (id) {
-        queryClient.invalidateQueries({ queryKey: ["team", id] });
+      if (variables.id) {
+        queryClient.invalidateQueries({ queryKey: ["team", variables.id] });
       }
     },
   });
@@ -93,14 +94,15 @@ export const useUploadTeamImage = () => {
   });
 };
 
-export const useRemoveTeamImage = (id) => {
+// ✅ FIXED: Accept ID in the mutation call
+export const useRemoveTeamImage = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => removeTeamImage(id),
-    onSuccess: () => {
+    mutationFn: ({ id }) => removeTeamImage(id),
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
-      if (id) {
-        queryClient.invalidateQueries({ queryKey: ["team", id] });
+      if (variables.id) {
+        queryClient.invalidateQueries({ queryKey: ["team", variables.id] });
       }
     },
   });

@@ -1,8 +1,8 @@
 // components/ShipSchedule/ShipScheduleEdit.jsx
-import React, { useState } from 'react';
-import ShipScheduleForm from './ShipScheduleForm';
-import useShipSchedule from '../../../../hooks/useShipSchedule';
-import Swal from 'sweetalert2';
+import { useState } from "react";
+import Swal from "sweetalert2";
+import useShipSchedule from "../../../../hooks/useShipSchedule";
+import ShipScheduleForm from "./ShipScheduleForm";
 
 const ShipScheduleEdit = ({ schedule, onClose, onSuccess }) => {
   const { updateMutation } = useShipSchedule();
@@ -11,32 +11,32 @@ const ShipScheduleEdit = ({ schedule, onClose, onSuccess }) => {
   const handleSubmit = async (formData) => {
     try {
       setIsSubmitting(true);
-      const result = await updateMutation.mutateAsync({ 
-        id: schedule.id, 
-        data: formData 
+      const result = await updateMutation.mutateAsync({
+        id: schedule.id,
+        data: formData,
       });
-      
-      if (result && (result.success !== false)) {
+
+      if (result && result.success !== false) {
         Swal.fire({
-          title: 'Updated!',
-          text: 'Schedule has been updated successfully.',
-          icon: 'success',
-          confirmButtonColor: '#3b82f6',
+          title: "Updated!",
+          text: "Schedule has been updated successfully.",
+          icon: "success",
+          confirmButtonColor: "#3b82f6",
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
         onSuccess?.();
         onClose?.();
       } else {
-        throw new Error(result?.message || 'Update failed');
+        throw new Error(result?.message || "Update failed");
       }
     } catch (error) {
-      console.error('Update schedule error:', error);
+      console.error("Update schedule error:", error);
       Swal.fire({
-        title: 'Error',
-        text: error.message || 'Failed to update schedule. Please try again.',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6'
+        title: "Error",
+        text: error.message || "Failed to update schedule. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#3b82f6",
       });
     } finally {
       setIsSubmitting(false);
@@ -44,10 +44,11 @@ const ShipScheduleEdit = ({ schedule, onClose, onSuccess }) => {
   };
 
   const initialData = {
-    title: schedule?.title || '',
-    image: schedule?.image || '',
-    description: schedule?.description || '',
-    isActive: schedule?.isActive !== undefined ? schedule.isActive : true
+    title: schedule?.title || "",
+    image: schedule?.image || "",
+    pdf: schedule?.pdf || "",
+    description: schedule?.description || "",
+    isActive: schedule?.isActive !== undefined ? schedule.isActive : true,
   };
 
   return (

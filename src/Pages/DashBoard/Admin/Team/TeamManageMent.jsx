@@ -160,18 +160,6 @@ const TeamManagement = () => {
     }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -308,6 +296,138 @@ const TeamManagement = () => {
     }
   };
 
+  // Add this compression function at the top of your component or in a separate utils file
+  const compressImage = (
+    file,
+    maxWidth = 1200,
+    maxHeight = 800,
+    quality = 0.8
+  ) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        if (width > height && width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        } else if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file); // fallback if blob is null
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          file.type,
+          quality
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Replace your existing handleImageChange function with this:
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/jpg",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid File Type",
+          text: "Please select a valid image file (JPEG, PNG, WebP)",
+        });
+        return;
+      }
+
+      // Show loading while compressing
+      Swal.fire({
+        title: "Compressing image...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // Compress image with your custom function
+      const compressedFile = await compressImage(
+        file,
+        1200, // maxWidth
+        800, // maxHeight
+        0.8 // quality
+      );
+
+      // Close loading
+      Swal.close();
+
+      // Set compressed file
+      setImageFile(compressedFile);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(compressedFile);
+
+      // Show success message with size info
+      const originalSizeKB = Math.round(file.size / 1024);
+      const compressedSizeKB = Math.round(compressedFile.size / 1024);
+      const compressionRatio = Math.round(
+        (1 - compressedFile.size / file.size) * 100
+      );
+
+      // Only show compression stats if there was actual compression
+      if (compressedFile.size < file.size) {
+        Swal.fire({
+          icon: "success",
+          title: "Image compressed successfully!",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "info",
+          title: "Image ready!",
+          text: "Image is already optimized.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      console.error("Image processing failed:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Processing Failed",
+        text: "Failed to process image. Please try again.",
+      });
+    }
+  };
+
+  // Replace your existing handleImageUpload function with this:
   const handleImageUpload = async (memberId, memberName) => {
     const { value: file } = await Swal.fire({
       title: `Upload image for ${memberName}`,
@@ -322,27 +442,80 @@ const TeamManagement = () => {
     });
 
     if (file) {
-      const formData = new FormData();
-      formData.append("image", file);
-
       try {
+        // Validate file type
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/jpg",
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          Swal.fire({
+            icon: "error",
+            title: "Invalid File Type",
+            text: "Please select a valid image file (JPEG, PNG, WebP)",
+          });
+          return;
+        }
+
+        // Show compression progress
+        Swal.fire({
+          title: "Processing image...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        // Compress image with your custom function
+        const compressedFile = await compressImage(
+          file,
+          1200, // maxWidth
+          800, // maxHeight
+          0.8 // quality
+        );
+
+        // Create FormData with compressed file
+        const formData = new FormData();
+        formData.append("image", compressedFile);
+
+        // Upload compressed image
         await uploadImageMutation.mutateAsync({
           id: memberId,
           formData,
         });
 
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Image uploaded successfully",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        // Show success with compression info
+        const originalSizeKB = Math.round(file.size / 1024);
+        const compressedSizeKB = Math.round(compressedFile.size / 1024);
+        const compressionRatio = Math.round(
+          (1 - compressedFile.size / file.size) * 100
+        );
+
+        if (compressedFile.size < file.size) {
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Image uploaded successfully!",
+            timer: 3000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Image uploaded successfully!",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
       } catch (error) {
+        console.error("Image upload failed:", error);
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: error.response?.data?.message || "Failed to upload image",
+          text: error.message || "Failed to upload image",
         });
       }
     }

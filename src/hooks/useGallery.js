@@ -19,6 +19,7 @@ export const useGallery = () => {
       queryKey: ["gallery"],
       queryFn: getGallery,
     });
+
   const useGetAllGallery = () =>
     useQuery({
       queryKey: ["gallery"],
@@ -63,18 +64,29 @@ export const useGallery = () => {
 
   const useBulkDeleteGalleryItems = () =>
     useMutation({
-      mutationFn: bulkDeleteGalleryItems,
+      mutationFn: (data) => {
+        // Add validation to ensure data is in correct format
+        if (!data || !data.ids || !Array.isArray(data.ids)) {
+          throw new Error('Invalid data format for bulk delete. Expected { ids: [...] }');
+        }
+        return bulkDeleteGalleryItems(data);
+      },
       onSuccess: () => queryClient.invalidateQueries({ queryKey: ["gallery"] }),
+      onError: (error) => {
+        console.error('Bulk delete error:', error);
+        // You can add additional error handling here
+      },
     });
 
   return {
     useGetGallery,
+    useGetAllGallery,
     useCreateGalleryItem,
     useBulkUploadGallery,
     useDeleteGalleryItem,
     useSoftDeleteGalleryItem,
     useUpdateGalleryItem,
     useReorderGalleryItems,
-    useBulkDeleteGalleryItems,useGetAllGallery
+    useBulkDeleteGalleryItems,
   };
 };
