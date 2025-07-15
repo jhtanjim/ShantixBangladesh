@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BsFilePdf } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import useShipSchedule from "../../hooks/useShipSchedule";
 
@@ -73,7 +74,7 @@ const ShipSchedule = () => {
             className="group block"
           >
             <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2">
-              <div className="relative w-full h-64 bg-gray-100 overflow-hidden">
+              <div className="relative w-full h-64 bg-gray-100 overflow-hidden group">
                 {schedule.image ? (
                   <img
                     src={schedule.image}
@@ -81,16 +82,35 @@ const ShipSchedule = () => {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
-                    <svg
-                      className="w-16 h-16 text-blue-400 transition-transform duration-500 group-hover:scale-125"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-                    </svg>
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 relative">
+                    {schedule.pdf ? (
+                      <a
+                        href={schedule.pdf}
+                        download
+                        onClick={(e) => e.stopPropagation()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center text-red-600 hover:text-red-800 transition-transform duration-300 group-hover:scale-110"
+                        title="Download PDF"
+                      >
+                        <BsFilePdf className="w-16 h-16" />
+                        <span className="mt-2 text-sm font-semibold">
+                          PDF Document
+                        </span>
+                      </a>
+                    ) : (
+                      <svg
+                        className="w-16 h-16 text-blue-400 transition-transform duration-500 group-hover:scale-125"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+                      </svg>
+                    )}
                   </div>
                 )}
+
+                {/* The rest of your component remains unchanged... */}
 
                 {/* PDF Logo Overlay */}
                 {schedule.pdf && (

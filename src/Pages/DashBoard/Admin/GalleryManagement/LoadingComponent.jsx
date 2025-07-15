@@ -1,5 +1,3 @@
-import { Loader2 } from "lucide-react";
-
 // Loading Component
 export const LoadingSpinner = ({ size = "md" }) => {
   const sizeClasses = {
@@ -14,4 +12,3 @@ export const LoadingSpinner = ({ size = "md" }) => {
     </div>
   );
 };
-export default LoadingSpinner;

@@ -1,6 +1,7 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 
-export const ErrorMessage = ({ message, onRetry }) => (
+// Error Component
+const ErrorMessage = ({ message, onRetry }) => (
   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
     <div className="flex items-center justify-between">
       <div className="flex items-center">

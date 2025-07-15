@@ -1,1062 +1,1098 @@
 import {
   AlertCircle,
-  Check,
+  Camera,
   Edit,
   Eye,
   EyeOff,
-  Image as ImageIcon,
-  Loader2,
+  Grid,
+  List,
   Plus,
-  RefreshCw,
-  Save,
+  Search,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Swal from "sweetalert2";
 import { useGallery } from "../../../../hooks/useGallery";
 
-// Mock SweetAlert2 for demo - replace with actual import
-const Swal = {
-  fire: (options) => {
-    if (options.title === "Are you sure?") {
-      return Promise.resolve({ isConfirmed: window.confirm(options.text) });
-    }
-    if (options.icon === "success") {
-      alert(options.title);
-      return Promise.resolve();
-    }
-    if (options.icon === "error") {
-      alert(`Error: ${options.title}`);
-      return Promise.resolve();
-    }
-    return Promise.resolve({ isConfirmed: true });
-  },
-  mixin: () => ({
-    fire: (options) => {
-      const toastDiv = document.createElement("div");
-      toastDiv.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white shadow-lg transition-all duration-300 ${
-        options.icon === "success" ? "bg-green-500" : "bg-red-500"
-      }`;
-      toastDiv.textContent = options.title;
-      document.body.appendChild(toastDiv);
-      setTimeout(() => {
-        toastDiv.remove();
-      }, 3000);
-    },
-  }),
-};
+const GalleryManagement = () => {
+  const {
+    useGetAllGallery,
+    useCreateGalleryItem,
+    useUpdateGalleryItem,
+    useDeleteGalleryItem,
+    useSoftDeleteGalleryItem,
+    useBulkUploadGallery,
+  } = useGallery();
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top-end",
-  showConfirmButton: false,
-  timer: 3000,
-});
+  const { data: galleryItems = [], isLoading, error } = useGetAllGallery();
+  const createMutation = useCreateGalleryItem();
+  const updateMutation = useUpdateGalleryItem();
+  const deleteMutation = useDeleteGalleryItem();
+  const softDeleteMutation = useSoftDeleteGalleryItem();
+  const bulkUploadMutation = useBulkUploadGallery();
 
-// Loading Component
-const LoadingSpinner = ({ size = "md" }) => {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-8 w-8",
-    lg: "h-12 w-12",
-  };
-
-  return (
-    <div className="flex items-center justify-center">
-      <Loader2 className={`animate-spin ${sizeClasses[size]} text-blue-600`} />
-    </div>
-  );
-};
-
-// Error Component
-const ErrorMessage = ({ message, onRetry }) => (
-  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-        <span className="text-red-800">{message}</span>
-      </div>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="flex items-center px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm transition-colors"
-        >
-          <RefreshCw className="h-4 w-4 mr-1" />
-          Retry
-        </button>
-      )}
-    </div>
-  </div>
-);
-
-// Success Message Component
-const SuccessMessage = ({ message, onClose }) => (
-  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <Check className="h-5 w-5 text-green-600 mr-2" />
-        <span className="text-green-800">{message}</span>
-      </div>
-      <button onClick={onClose} className="text-green-600 hover:text-green-800">
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  </div>
-);
-
-// Image Preview Component
-const ImagePreview = ({ src, alt, className = "" }) => {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-
-  return (
-    <div className={`relative ${className}`}>
-      {!loaded && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded">
-          <LoadingSpinner size="sm" />
-        </div>
-      )}
-      <img
-        src={src}
-        alt={alt}
-        className={`w-full h-full object-cover rounded transition-opacity duration-300 ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
-        onLoad={() => setLoaded(true)}
-        onError={() => {
-          setError(true);
-          setLoaded(true);
-        }}
-      />
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded">
-          <div className="text-center text-gray-500">
-            <ImageIcon className="h-8 w-8 mx-auto mb-2" />
-            <p className="text-xs">Image not found</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Edit Form Component
-const EditForm = ({ item, onSave, onCancel, isLoading }) => {
-  const [formData, setFormData] = useState({
-    image: item.image || "",
-    description: item.description || "",
-    order: item.order || 0,
-    isActive: item.isActive ?? true,
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.description.trim()) {
-      Toast.fire({
-        icon: "error",
-        title: "Description is required",
-      });
-      return;
-    }
-    onSave(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Image URL
-        </label>
-        <input
-          type="url"
-          value={formData.image}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, image: e.target.value }))
-          }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="https://example.com/image.jpg"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description *
-        </label>
-        <textarea
-          value={formData.description}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, description: e.target.value }))
-          }
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Enter description..."
-          required
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Order
-          </label>
-          <input
-            type="number"
-            value={formData.order}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                order: parseInt(e.target.value) || 0,
-              }))
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Status
-          </label>
-          <select
-            value={formData.isActive.toString()}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                isActive: e.target.value === "true",
-              }))
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-        >
-          {isLoading ? (
-            <>
-              <LoadingSpinner size="sm" />
-              <span className="ml-2">Saving...</span>
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </>
-          )}
-        </button>
-      </div>
-    </form>
-  );
-};
-
-// Add Item Form Component
-const AddItemForm = ({ onClose, onSubmit, isLoading }) => {
+  // State management
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterActive, setFilterActive] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [sortBy, setSortBy] = useState("order");
   const [formData, setFormData] = useState({
     image: "",
     description: "",
-    order: 0,
+    order: "",
     isActive: true,
   });
-  const fileInputRef = useRef(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.description.trim()) {
-      Toast.fire({
-        icon: "error",
-        title: "Description is required",
-      });
-      return;
-    }
-    onSubmit(formData);
+  // Enhanced image compression function with better quality control
+  const compressImage = async (
+    file,
+    maxWidth = 1200,
+    maxHeight = 1200,
+    initialQuality = 0.8,
+    maxFileSize = 2 * 1024 * 1024 // 2MB target
+  ) => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = async () => {
+        try {
+          // Calculate new dimensions while maintaining aspect ratio
+          let { width, height } = img;
+          const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+
+          width = Math.floor(width * scale);
+          height = Math.floor(height * scale);
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Use better image rendering
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Progressive compression - reduce quality until file size is acceptable
+          let quality = initialQuality;
+          let compressedBlob;
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          do {
+            compressedBlob = await new Promise((resolve) => {
+              canvas.toBlob(resolve, "image/jpeg", quality);
+            });
+
+            console.log(
+              `Compression attempt ${attempts + 1}: ${quality.toFixed(
+                2
+              )} quality, ${(compressedBlob.size / 1024 / 1024).toFixed(2)}MB`
+            );
+
+            // If file size is acceptable or we've tried enough times, stop
+            if (compressedBlob.size <= maxFileSize || attempts >= maxAttempts) {
+              break;
+            }
+
+            // Reduce quality for next attempt
+            quality -= 0.1;
+            attempts++;
+          } while (quality > 0.1);
+
+          // If still too large, try reducing dimensions
+          if (compressedBlob.size > maxFileSize && quality <= 0.1) {
+            console.log("File still too large, reducing dimensions...");
+
+            // Reduce dimensions by 80%
+            const newWidth = Math.floor(width * 0.8);
+            const newHeight = Math.floor(height * 0.8);
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            compressedBlob = await new Promise((resolve) => {
+              canvas.toBlob(resolve, "image/jpeg", 0.7);
+            });
+          }
+
+          if (compressedBlob) {
+            resolve(compressedBlob);
+          } else {
+            reject(new Error("Failed to compress image"));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
   };
 
-  const handleFileUpload = (e) => {
+  // Handle file selection and compression for both add and edit
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      Toast.fire({
+      Swal.fire({
+        title: "Invalid File!",
+        text: "Please select a valid image file.",
         icon: "error",
-        title: "Please select a valid image file",
+        confirmButtonColor: "#ef4444",
       });
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      Toast.fire({
+    // Validate file size (50MB limit for initial upload)
+    if (file.size > 50 * 1024 * 1024) {
+      Swal.fire({
+        title: "File Too Large!",
+        text: "Please select an image smaller than 50MB.",
         icon: "error",
-        title: "File size should be less than 5MB",
+        confirmButtonColor: "#ef4444",
       });
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setFormData((prev) => ({ ...prev, image: e.target.result }));
-    };
-    reader.onerror = () => {
-      Toast.fire({
-        icon: "error",
-        title: "Error reading file",
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+    setIsCompressing(true);
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Add New Item</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image
-              </label>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Choose File
-                  </button>
-                  <span className="text-sm text-gray-500">or</span>
-                </div>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, image: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter image URL"
-                />
-                {formData.image && (
-                  <div className="mt-3">
-                    <ImagePreview
-                      src={formData.image}
-                      alt="Preview"
-                      className="h-32 w-32 rounded-lg"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter description..."
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Order
-                </label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      order: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.isActive.toString()}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isActive: e.target.value === "true",
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-6">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    <span className="ml-2">Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Item
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileUpload}
-        className="hidden"
-      />
-    </div>
-  );
-};
-
-// Gallery Item Component
-const GalleryItem = ({
-  item,
-  isSelected,
-  isEditing,
-  onSelect,
-  onEdit,
-  onSave,
-  onCancelEdit,
-  onDelete,
-  onToggleStatus,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  isLoading,
-}) => {
-  return (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, item)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, item)}
-      className={`bg-white border-2 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 onmouse-pointer   ${
-        isSelected
-          ? "border-blue-500 ring-2 ring-blue-200"
-          : "border-gray-200 hover:border-gray-300"
-      }`}
-    >
-      <div className="relative">
-        <ImagePreview
-          src={item.image}
-          alt={item.description}
-          className="h-48 w-full"
-        />
-
-        <div className="absolute top-2 left-2 flex space-x-2">
-          {/* <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(item.id)}
-            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-          /> */}
-          {/* <button className="text-white hover:text-gray-200 bg-black bg-opacity-50 rounded p-1">
-            <GripVertical className="h-4 w-4" />
-          </button> */}
-        </div>
-
-        <div className="absolute top-2 right-2">
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              item.isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {item.isActive ? "Active" : "Inactive"}
-          </span>
-        </div>
-
-        <div className="absolute bottom-2 right-2">
-          {/* <span className="px-2 py-1 text-xs bg-black bg-opacity-50 text-white rounded">
-            #{item.order}
-          </span> */}
-        </div>
-      </div>
-
-      <div className="p-4">
-        {isEditing ? (
-          <EditForm
-            item={item}
-            onSave={onSave}
-            onCancel={onCancelEdit}
-            isLoading={isLoading}
-          />
-        ) : (
-          <>
-            <p className="text-sm text-gray-700 mb-3 line-clamp-2">
-              {item.description}
-            </p>
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-              <span>ID: {item.id}</span>
-              <span>Order: {item.order}</span>
-            </div>
-            <div className="flex justify-center space-x-2">
-              <button
-                onClick={() => onEdit(item.id)}
-                className="flex items-center px-3 py-1 text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
-                title="Edit item"
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </button>
-              <button
-                onClick={() => onToggleStatus(item.id)}
-                className={`flex items-center px-3 py-1 rounded transition-colors ${
-                  item.isActive
-                    ? "text-yellow-600 bg-yellow-50 hover:bg-yellow-100"
-                    : "text-green-600 bg-green-50 hover:bg-green-100"
-                }`}
-                title={item.isActive ? "Deactivate" : "Activate"}
-              >
-                {item.isActive ? (
-                  <>
-                    <EyeOff className="h-4 w-4 mr-1" />
-                    Hide
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4 mr-1" />
-                    Show
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => onDelete(item.id)}
-                className="flex items-center px-3 py-1 text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                title="Delete permanently"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Main Gallery Management Component
-const GalleryManagement = () => {
-  const {
-    useGetAllGallery,
-    useCreateGalleryItem,
-    useBulkUploadGallery,
-    useDeleteGalleryItem,
-    useSoftDeleteGalleryItem,
-    useUpdateGalleryItem,
-    useReorderGalleryItems,
-    useBulkDeleteGalleryItems,
-  } = useGallery();
-
-  const { data: galleryData, isLoading, error, refetch } = useGetAllGallery();
-  const galleryItems = Array.isArray(galleryData) ? galleryData : [];
-
-  const createMutation = useCreateGalleryItem();
-  const bulkUploadMutation = useBulkUploadGallery();
-  const deleteMutation = useDeleteGalleryItem();
-  const softDeleteMutation = useSoftDeleteGalleryItem();
-  const updateMutation = useUpdateGalleryItem();
-  const reorderMutation = useReorderGalleryItems();
-  const bulkDeleteMutation = useBulkDeleteGalleryItems();
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const bulkFileInputRef = useRef(null);
-
-  // Load data on component mount
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  // Auto-hide success message
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  const handleCreateItem = async (formData) => {
     try {
-      await createMutation.mutateAsync(formData);
-      setShowAddForm(false);
-      setSuccessMessage("Gallery item created successfully!");
-      Toast.fire({
+      // Show compression progress
+      const originalSize = (file.size / 1024 / 1024).toFixed(2);
+
+      // Compress the image
+      const compressedFile = await compressImage(file, 1200, 1200, 0.85);
+
+      // Show compression results
+      const compressedSize = (compressedFile.size / 1024 / 1024).toFixed(2);
+
+      console.log(
+        `Image compressed from ${originalSize}MB to ${compressedSize}MB`
+      );
+
+      // Create preview
+      const previewUrl = URL.createObjectURL(compressedFile);
+      setImagePreview(previewUrl);
+      setImageFile(compressedFile);
+
+      // Convert to base64 for form data
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({ ...formData, image: event.target.result });
+      };
+      reader.readAsDataURL(compressedFile);
+
+      // Show success message with compression info
+      Swal.fire({
+        title: "Image Compressed Successfully!",
+        text: `Size reduced from ${originalSize}MB to ${compressedSize}MB`,
         icon: "success",
-        title: "Item created successfully!",
+        confirmButtonColor: "#3b82f6",
+        timer: 2000,
+        timerProgressBar: true,
       });
     } catch (error) {
-      Toast.fire({
+      console.error("Compression error:", error);
+      Swal.fire({
+        title: "Compression Failed!",
+        text: "Failed to process the image. Please try again with a different image.",
         icon: "error",
-        title: error.message || "Failed to create item",
+        confirmButtonColor: "#ef4444",
       });
+    } finally {
+      setIsCompressing(false);
     }
   };
 
-  const handleUpdateItem = async (id, data) => {
+  // Handle bulk upload with compression
+  // Handle bulk upload with compression - FIXED VERSION
+  // Handle bulk upload with compression and SweetAlert - FIXED VERSION
+  const handleBulkUpload = async (e) => {
+    const files = Array.from(e.target.files);
+
+    if (files.length === 0) return;
+
+    // Validate files and show individual error messages
+    const validFiles = [];
+    const invalidFiles = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) {
+        invalidFiles.push({ file, reason: "Not an image file" });
+        continue;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        // 50MB limit before compression
+        invalidFiles.push({ file, reason: "File too large (>50MB)" });
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    // Show validation results
+    if (invalidFiles.length > 0) {
+      const invalidList = invalidFiles
+        .map(({ file, reason }) => `• ${file.name}: ${reason}`)
+        .join("\n");
+
+      await Swal.fire({
+        title: "Some Files Skipped",
+        text: `${invalidFiles.length} file(s) were skipped:\n\n${invalidList}`,
+        icon: "warning",
+        confirmButtonColor: "#f59e0b",
+      });
+    }
+
+    if (validFiles.length === 0) {
+      Swal.fire({
+        title: "No Valid Images!",
+        text: "Please select valid image files.",
+        icon: "error",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
     try {
-      await updateMutation.mutateAsync({ id, data });
-      setEditingItem(null);
-      setSuccessMessage("Gallery item updated successfully!");
-      Toast.fire({
-        icon: "success",
-        title: "Item updated successfully!",
+      // Show compression progress
+      Swal.fire({
+        title: "Processing Images...",
+        text: `Compressing and uploading ${validFiles.length} image(s)`,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
       });
+
+      // Compress all images
+      const compressedFiles = await Promise.all(
+        validFiles.map(async (file, index) => {
+          try {
+            // Update progress text
+            Swal.update({
+              text: `Compressing image ${index + 1} of ${validFiles.length}...`,
+            });
+
+            const compressedFile = await compressImage(file, 1200, 1200, 0.85);
+
+            // Create a new File object with the original name
+            return new File([compressedFile], file.name, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+          } catch (error) {
+            console.error(`Failed to compress ${file.name}:`, error);
+            return null; // Skip failed files
+          }
+        })
+      );
+
+      // Filter out failed compressions
+      const successfulFiles = compressedFiles.filter((file) => file !== null);
+
+      if (successfulFiles.length === 0) {
+        throw new Error("All images failed to compress");
+      }
+
+      // Update progress for upload
+      Swal.update({
+        text: `Uploading ${successfulFiles.length} compressed images...`,
+      });
+
+      // Create FormData with compressed files
+      const formData = new FormData();
+      successfulFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      // Upload using the existing mutation
+      await bulkUploadMutation.mutateAsync(formData);
+
+      // Show success message
+      Swal.fire({
+        title: "Upload Successful!",
+        text: `${successfulFiles.length} images uploaded successfully!`,
+        icon: "success",
+        confirmButtonColor: "#3b82f6",
+        timer: 3000,
+        timerProgressBar: true,
+      });
+
+      // Show compression summary if there were compressions
+      const originalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+      const compressedSize = successfulFiles.reduce(
+        (sum, file) => sum + file.size,
+        0
+      );
+      const compressionRatio = (
+        ((originalSize - compressedSize) / originalSize) *
+        100
+      ).toFixed(1);
+
+      if (compressionRatio > 0) {
+        setTimeout(() => {}, 3500);
+      }
     } catch (error) {
-      Toast.fire({
+      console.error("Bulk upload error:", error);
+      Swal.fire({
+        title: "Upload Failed!",
+        text: error.message || "Failed to upload images. Please try again.",
         icon: "error",
-        title: error.message || "Failed to update item",
+        confirmButtonColor: "#ef4444",
+      });
+    }
+  };
+  // Clear image selection
+  const clearImageSelection = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setFormData({ ...formData, image: "" });
+
+    // Clean up object URL to prevent memory leaks
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // Validate required fields
+      if (!formData.image) {
+        Swal.fire({
+          title: "Missing Image!",
+          text: "Please select an image for the gallery item.",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      if (!formData.description.trim()) {
+        Swal.fire({
+          title: "Missing Description!",
+          text: "Please provide a description for the gallery item.",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      if (!formData.order || formData.order < 0) {
+        Swal.fire({
+          title: "Invalid Order!",
+          text: "Please provide a valid display order.",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      if (editingItem) {
+        await updateMutation.mutateAsync({
+          id: editingItem.id,
+          data: {
+            ...formData,
+            order: parseInt(formData.order),
+          },
+        });
+
+        Swal.fire({
+          title: "Success!",
+          text: "Gallery item updated successfully",
+          icon: "success",
+          confirmButtonColor: "#3b82f6",
+        });
+      } else {
+        await createMutation.mutateAsync({
+          ...formData,
+          order: parseInt(formData.order),
+        });
+
+        Swal.fire({
+          title: "Success!",
+          text: "Gallery item created successfully",
+          icon: "success",
+          confirmButtonColor: "#3b82f6",
+        });
+      }
+
+      handleCloseModal();
+    } catch (error) {
+      Swal.fire({
+        title: "Error!",
+        text: error.message || "Something went wrong",
+        icon: "error",
+        confirmButtonColor: "#ef4444",
       });
     }
   };
 
-  const handleDeleteItem = async (id) => {
+  // Handle delete
+  const handleDelete = async (item) => {
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "This action cannot be undone!",
+      text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#dc2626",
+      confirmButtonColor: "#ef4444",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Yes, delete it!",
     });
 
     if (result.isConfirmed) {
       try {
-        await deleteMutation.mutateAsync(id);
-        setSuccessMessage("Gallery item deleted successfully!");
-        Toast.fire({
+        await deleteMutation.mutateAsync(item.id);
+        Swal.fire({
+          title: "Deleted!",
+          text: "Gallery item has been deleted.",
           icon: "success",
-          title: "Item deleted successfully!",
+          confirmButtonColor: "#3b82f6",
         });
       } catch (error) {
-        Toast.fire({
+        Swal.fire({
+          title: "Error!",
+          text: error.message || "Failed to delete item",
           icon: "error",
-          title: error.message || "Failed to delete item",
+          confirmButtonColor: "#ef4444",
         });
       }
     }
   };
 
-  const handleToggleStatus = async (id) => {
+  // Handle soft delete (toggle active status)
+  const handleToggleActive = async (item) => {
     try {
-      const item = galleryItems.find((item) => item.id === id);
-      const updatedData = { ...item, isActive: !item.isActive };
+      await updateMutation.mutateAsync({
+        id: item.id,
+        data: {
+          isActive: !item.isActive, // Toggle the current state
+        },
+      });
 
-      await updateMutation.mutateAsync({ id, data: updatedData });
-      setSuccessMessage("Item status updated successfully!");
-      Toast.fire({
+      Swal.fire({
+        title: "Success!",
+        text: `Gallery item ${
+          item.isActive ? "deactivated" : "activated"
+        } successfully`,
         icon: "success",
-        title: "Status updated successfully!",
+        confirmButtonColor: "#3b82f6",
       });
     } catch (error) {
-      Toast.fire({
+      Swal.fire({
+        title: "Error!",
+        text: error.message || "Failed to update status",
         icon: "error",
-        title: error.message || "Failed to update status",
+        confirmButtonColor: "#ef4444",
       });
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedItems.length === 0) return;
+  // Modal handlers
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditingItem(item);
+      setFormData({
+        image: item.image || "",
+        description: item.description || "",
+        order: item.order || "",
+        isActive: item.isActive,
+      });
+      setImagePreview(item.image || "");
+    } else {
+      setEditingItem(null);
+      setFormData({
+        image: "",
+        description: "",
+        order: "",
+        isActive: true,
+      });
+      setImagePreview("");
+    }
+    setImageFile(null);
+    setShowModal(true);
+  };
 
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: `Delete ${selectedItems.length} selected items? This action cannot be undone!`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete them!",
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingItem(null);
+    setFormData({
+      image: "",
+      description: "",
+      order: "",
+      isActive: true,
     });
+    setImageFile(null);
 
-    if (result.isConfirmed) {
-      try {
-        await bulkDeleteMutation.mutateAsync({ ids: selectedItems }); // Pass { ids: [...] }
-        setSelectedItems([]);
-        setSuccessMessage(
-          `${selectedItems.length} items deleted successfully!`
-        );
-        Toast.fire({
-          icon: "success",
-          title: "Items deleted successfully!",
-        });
-      } catch (error) {
-        Toast.fire({
-          icon: "error",
-          title: error.message || "Failed to delete items",
-        });
-      }
+    // Clean up object URL
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
     }
+    setImagePreview("");
+    setIsCompressing(false);
   };
 
-  const handleBulkUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    const validFiles = files.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        Toast.fire({
-          icon: "error",
-          title: `Skipping non-image file: ${file.name}`,
-        });
-        return false;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        Toast.fire({
-          icon: "error",
-          title: `File too large: ${file.name}`,
-        });
-        return false;
-      }
-      return true;
+  // Filter and sort items
+  const filteredItems = galleryItems
+    .filter((item) => {
+      const matchesSearch =
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.image?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter =
+        filterActive === "all" ||
+        (filterActive === "active" && item.isActive) ||
+        (filterActive === "inactive" && !item.isActive);
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      if (sortBy === "order") return (a.order || 0) - (b.order || 0);
+      if (sortBy === "description")
+        return (a.description || "").localeCompare(b.description || "");
+      if (sortBy === "status") return b.isActive - a.isActive;
+      return 0;
     });
-
-    if (validFiles.length === 0) {
-      Toast.fire({
-        icon: "error",
-        title: "No valid image files selected",
-      });
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      validFiles.forEach((file) => {
-        formData.append("images", file);
-      });
-      await bulkUploadMutation.mutateAsync(formData);
-      setSuccessMessage(`${validFiles.length} images uploaded successfully!`);
-      Toast.fire({
-        icon: "success",
-        title: "Images uploaded successfully!",
-      });
-    } catch (error) {
-      Toast.fire({
-        icon: "error",
-        title: error.message || "Failed to upload images",
-      });
-    }
-  };
-
-  const handleDragStart = (e, item) => {
-    setDraggedItem(item);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = async (e, targetItem) => {
-    e.preventDefault();
-    if (!draggedItem || draggedItem.id === targetItem.id) return;
-
-    const reorderedItems = [...galleryItems];
-    const draggedIndex = reorderedItems.findIndex(
-      (item) => item.id === draggedItem.id
-    );
-    const targetIndex = reorderedItems.findIndex(
-      (item) => item.id === targetItem.id
-    );
-
-    reorderedItems.splice(draggedIndex, 1);
-    reorderedItems.splice(targetIndex, 0, draggedItem);
-
-    const reorderData = reorderedItems.map((item, index) => ({
-      id: item.id,
-      order: index + 1,
-    }));
-
-    try {
-      await reorderMutation.mutateAsync(reorderData);
-      Toast.fire({
-        icon: "success",
-        title: "Items reordered successfully!",
-      });
-    } catch (error) {
-      Toast.fire({
-        icon: "error",
-        title: error.message || "Failed to reorder items",
-      });
-    }
-
-    setDraggedItem(null);
-  };
-
-  const toggleItemSelection = (id) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
-  };
-
-  const selectAllItems = () => {
-    setSelectedItems(galleryItems.map((item) => item.id));
-  };
-
-  const clearSelection = () => {
-    setSelectedItems([]);
-  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading gallery...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <ErrorMessage
-          message={`Error loading gallery: ${error.message}`}
-          onRetry={refetch}
-        />
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        Error loading gallery: {error.message}
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gallery Management
-          </h1>
-          <p className="text-gray-600">
-            Manage your gallery items with drag-and-drop reordering
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => bulkFileInputRef.current?.click()}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Bulk Upload
-          </button>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-          </button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Gallery Management
+        </h1>
+        <p className="text-gray-600">
+          Manage your gallery images and organize your content
+        </p>
       </div>
-
-      {/* Success Message */}
-      {successMessage && (
-        <SuccessMessage
-          message={successMessage}
-          onClose={() => setSuccessMessage("")}
-        />
-      )}
-
-      {/* Stats */}
+      {/* Gallery Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="text-2xl font-bold text-blue-600">
-            {galleryItems.length}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Gallery Items</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {galleryItems.length}
+              </p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Camera className="w-6 h-6 text-blue-600" />
+            </div>
           </div>
-          <div className="text-sm text-gray-600">Total Items</div>
         </div>
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="text-2xl font-bold text-green-600">
-            {galleryItems.filter((item) => item.isActive).length}
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Gallery Items</p>
+              <p className="text-2xl font-bold text-green-600">
+                {galleryItems.filter((item) => item.isActive).length}
+              </p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <Eye className="w-6 h-6 text-green-600" />
+            </div>
           </div>
-          <div className="text-sm text-gray-600">Active Items</div>
         </div>
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="text-2xl font-bold text-red-600">
-            {galleryItems.filter((item) => !item.isActive).length}
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Inactive Gallery Items</p>
+              <p className="text-2xl font-bold text-red-600">
+                {galleryItems.filter((item) => !item.isActive).length}
+              </p>
+            </div>
+            <div className="bg-red-100 p-3 rounded-full">
+              <EyeOff className="w-6 h-6 text-red-600" />
+            </div>
           </div>
-          <div className="text-sm text-gray-600">Inactive Items</div>
+        </div>
+      </div>
+      {/* Actions Bar */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search gallery..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Filter */}
+            <select
+              value={filterActive}
+              onChange={(e) => setFilterActive(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Items</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="order">Sort by Order</option>
+              <option value="description">Sort by Description</option>
+              <option value="status">Sort by Status</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 ${
+                  viewMode === "grid"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-700"
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 ${
+                  viewMode === "list"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-700"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Bulk Upload */}
+            <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 transition-colors">
+              <Upload className="w-4 h-4" />
+              Bulk Upload
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleBulkUpload}
+                className="hidden"
+              />
+            </label>
+
+            {/* Add New */}
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add New
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Bulk Actions */}
-      {/* {galleryItems.length > 0 && (
-        <div className="bg-white rounded-lg p-4 border mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={selectAllItems}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                Select All
-              </button>
-              <button
-                onClick={clearSelection}
-                className="text-gray-600 hover:text-gray-800 text-sm font-medium"
-              >
-                Clear Selection
-              </button>
-              <span className="text-sm text-gray-600">
-                {selectedItems.length} of {galleryItems.length} selected
-              </span>
+      {/* Gallery Items */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {filteredItems.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-lg mb-2">
+              No gallery items found
             </div>
-            {selectedItems.length > 0 && (
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Selected ({selectedItems.length})
-              </button>
-            )}
+            <p className="text-gray-500">
+              Start by adding your first gallery item
+            </p>
           </div>
-        </div>
-      )} */}
+        ) : viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-gray-50 rounded-lg overflow-hidden shadow-sm border border-gray-200"
+              >
+                <div className="aspect-square bg-gray-200 flex items-center justify-center">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.description}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-gray-400">No Image</div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-500">
+                      Order: {item.order}
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        item.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {item.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+                    {item.description || "No description"}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOpenModal(item)}
+                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                    >
+                      <Edit className="w-3 h-3 inline mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleToggleActive(item)}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        item.isActive
+                          ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                          : "bg-green-500 hover:bg-green-600 text-white"
+                      }`}
+                    >
+                      {item.isActive ? (
+                        <EyeOff className="w-3 h-3" />
+                      ) : (
+                        <Eye className="w-3 h-3" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Image
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.description}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="text-gray-400 text-xs">No Image</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs truncate">
+                        {item.description || "No description"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.order}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          item.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleOpenModal(item)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(item)}
+                          className={`${
+                            item.isActive
+                              ? "text-yellow-600 hover:text-yellow-900"
+                              : "text-green-600 hover:text-green-900"
+                          }`}
+                        >
+                          {item.isActive ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-      {/* Gallery Grid */}
-      {galleryItems.length === 0 ? (
-        <div className="text-center py-12">
-          <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No gallery items yet
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Start by adding your first gallery item
-          </p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center mx-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add First Item
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {galleryItems.map((item) => (
-            <GalleryItem
-              key={item.id}
-              item={item}
-              isSelected={selectedItems.includes(item.id)}
-              isEditing={editingItem === item.id}
-              onSelect={toggleItemSelection}
-              onEdit={setEditingItem}
-              onSave={(data) => handleUpdateItem(item.id, data)}
-              onCancelEdit={() => setEditingItem(null)}
-              onDelete={handleDeleteItem}
-              onToggleStatus={handleToggleStatus}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              isLoading={updateMutation.isLoading}
-            />
-          ))}
-        </div>
-      )}
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {editingItem ? "Edit Gallery Item" : "Add New Gallery Item"}
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
 
-      {/* Add Item Modal */}
-      {showAddForm && (
-        <AddItemForm
-          onClose={() => setShowAddForm(false)}
-          onSubmit={handleCreateItem}
-          isLoading={createMutation.isLoading}
-        />
-      )}
+              <div className="space-y-4">
+                {/* Image Upload Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gallery Image *
+                  </label>
 
-      {/* Hidden Bulk Upload Input */}
-      <input
-        ref={bulkFileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleBulkUpload}
-        className="hidden"
-      />
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="mb-4 relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImageSelection}
+                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
-      {/* Loading Overlay */}
-      {(createMutation.isLoading ||
-        updateMutation.isLoading ||
-        deleteMutation.isLoading ||
-        bulkDeleteMutation.isLoading ||
-        bulkUploadMutation.isLoading ||
-        reorderMutation.isLoading) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 flex items-center space-x-3">
-            <LoadingSpinner size="sm" />
-            <span className="text-gray-700">Processing...</span>
+                  {/* Upload Button */}
+                  <div className="flex gap-3">
+                    <label className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2 transition-colors">
+                      <Camera className="w-4 h-4" />
+                      {isCompressing ? "Compressing..." : "Choose Image"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        disabled={isCompressing}
+                      />
+                    </label>
+
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={clearImageSelection}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Upload Info */}
+                  <div className="mt-2 text-sm text-gray-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>
+                      Images will be automatically compressed to optimize file
+                      size. Max upload: 50MB
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description *
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows="3"
+                    placeholder="Enter a detailed description of the image..."
+                    required
+                  />
+                  <div className="mt-1 text-sm text-gray-500">
+                    {formData.description.length}/500 characters
+                  </div>
+                </div>
+
+                {/* Order */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Display Order *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.order}
+                    onChange={(e) =>
+                      setFormData({ ...formData, order: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter display order (e.g., 1, 2, 3...)"
+                    min="0"
+                    required
+                  />
+                  <div className="mt-1 text-sm text-gray-500">
+                    Lower numbers appear first in the gallery
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isActive"
+                        checked={formData.isActive === true}
+                        onChange={() =>
+                          setFormData({ ...formData, isActive: true })
+                        }
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 flex items-center gap-1">
+                        <Eye className="w-4 h-4 text-green-500" />
+                        Active (Visible)
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isActive"
+                        checked={formData.isActive === false}
+                        onChange={() =>
+                          setFormData({ ...formData, isActive: false })
+                        }
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 flex items-center gap-1">
+                        <EyeOff className="w-4 h-4 text-red-500" />
+                        Inactive (Hidden)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={
+                      createMutation.isPending ||
+                      updateMutation.isPending ||
+                      isCompressing ||
+                      !formData.image
+                    }
+                    className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {createMutation.isPending || updateMutation.isPending ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Saving...
+                      </div>
+                    ) : editingItem ? (
+                      "Update Gallery Item"
+                    ) : (
+                      "Add to Gallery"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -155,7 +155,7 @@ const ShipScheduleDetails = () => {
                 <h1 className="text-3xl font-bold text-white mb-2">
                   {schedule.title}
                 </h1>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       schedule.isActive
@@ -170,7 +170,7 @@ const ShipScheduleDetails = () => {
                     ></span>
                     {schedule.isActive ? "Active" : "Inactive"}
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* PDF Download Button in Header */}
@@ -240,26 +240,35 @@ const ShipScheduleDetails = () => {
                 // If no image, show PDF placeholder
                 schedule.pdf && (
                   <div className="w-full h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-md flex items-center justify-center">
-                    <div className="text-center">
-                      <svg
-                        className="w-16 h-16 mx-auto mb-4"
-                        style={{ color: "#C9252B" }}
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" />
-                        <path d="M14 2v6h6" />
-                        <path d="M16 13H8" />
-                        <path d="M16 17H8" />
-                        <path d="M10 9H8" />
-                      </svg>
-                      <p className="text-lg font-semibold text-gray-700">
-                        PDF Document
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Click download to view
-                      </p>
-                    </div>
+                    <a
+                      href={schedule.pdf}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-all duration-300"
+                      title="Download PDF"
+                    >
+                      <div className="text-center">
+                        <svg
+                          className="w-16 h-16 mx-auto mb-4"
+                          style={{ color: "#C9252B" }}
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" />
+                          <path d="M14 2v6h6" />
+                          <path d="M16 13H8" />
+                          <path d="M16 17H8" />
+                          <path d="M10 9H8" />
+                        </svg>
+                        <p className="text-lg font-semibold text-gray-700">
+                          {schedule.title}.pdf
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Click download to view
+                        </p>
+                      </div>
+                    </a>
                   </div>
                 )
               )}

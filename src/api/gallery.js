@@ -4,7 +4,7 @@ import api from "./axios"; // assuming this is the file you shared above
 
 // Get all gallery items
 export const getAllGallery = async () => {
-  const response = await api.get('/gallery');
+  const response = await api.get('/gallery/all');
   return response.data;
 };
 
