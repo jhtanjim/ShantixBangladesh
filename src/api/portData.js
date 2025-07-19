@@ -354,6 +354,14 @@ export const portData = {
     { value: "Abidjan", label: "Abidjan Port" },
     { value: "San Pedro", label: "San Pedro Port" },
   ],
+  MU: [
+  { value: "Port Louis", label: "Port Louis Port" },
+  { value: "Pointe des Galets", label: "Pointe des Galets Port" },
+],
+MN: [
+  { value: "Ulaanbaatar", label: "Ulaanbaatar (via Tianjin/Dalian)" },
+  { value: "Zamyn-Uud", label: "Zamyn-Uud Border (via China ports)" },
+],
   SN: [
     { value: "Dakar", label: "Dakar Port" },
   ],

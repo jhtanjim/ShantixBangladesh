@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import Banner from "./Banner";
 import FixedPriceStock from "./FixedPriceStock/FixedPriceStock";
 import LowCostStock from "./LowCostStock/LowCostStock";
@@ -23,15 +23,47 @@ const Home = () => {
   const [filteredCars, setFilteredCars] = useState([]);
   const [searchKey, setSearchKey] = useState(0);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchParams] = useSearchParams();
   const location = useLocation();
 
   // Get cars data from the hook
   const { data: allCars = [], isLoading, error } = useAllCars();
 
+  // Handle search from URL parameter
+  useEffect(() => {
+    const searchQuery = searchParams.get("search");
+    if (searchQuery && allCars.length > 0) {
+      // Filter cars based on search query
+      const filtered = allCars.filter((car) => {
+        const searchText = searchQuery.toLowerCase();
+        const searchFields = [
+          car.title,
+          car.make,
+          car.model,
+          car.keywords,
+          car.modelCode,
+        ]
+          .filter((field) => field)
+          .join(" ")
+          .toLowerCase();
+        return searchFields.includes(searchText);
+      });
+
+      setFilteredCars(filtered);
+      setShowSearchResults(true);
+      setSearchKey((prev) => prev + 1);
+    } else if (!searchQuery) {
+      // Clear search results when no search query
+      setFilteredCars([]);
+      setShowSearchResults(false);
+      setSearchKey((prev) => prev + 1);
+    }
+  }, [searchParams, allCars]);
+
   const handleFilteredCars = (filtered) => {
     setFilteredCars(filtered);
     setShowSearchResults(filtered.length > 0);
-    setSearchKey((prev) => prev + 1); // Force re-render
+    setSearchKey((prev) => prev + 1);
   };
 
   const handleAddToCart = (car) => {
@@ -42,6 +74,15 @@ const Home = () => {
   const handleAddToWishlist = (car) => {
     // Implement add to wishlist functionality
     console.log("Added to wishlist:", car);
+  };
+
+  const clearSearch = () => {
+    setFilteredCars([]);
+    setShowSearchResults(false);
+    setSearchKey((prev) => prev + 1);
+    // Remove search parameter from URL
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
   };
 
   if (isLoading) {
@@ -62,6 +103,8 @@ const Home = () => {
     );
   }
 
+  const searchQuery = searchParams.get("search");
+
   return (
     <div>
       <Banner />
@@ -74,14 +117,37 @@ const Home = () => {
       {/* Search Results Section */}
       {showSearchResults && (
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Search Results
-            </h2>
-            <p className="text-gray-600">
-              Found {filteredCars.length} car
-              {filteredCars.length !== 1 ? "s" : ""} matching your criteria
-            </p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                {searchQuery
+                  ? `Search Results for "${searchQuery}"`
+                  : "Search Results"}
+              </h2>
+              <p className="text-gray-600">
+                Found {filteredCars.length} car
+                {filteredCars.length !== 1 ? "s" : ""} matching your criteria
+              </p>
+            </div>
+            <button
+              onClick={clearSearch}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Clear Search
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

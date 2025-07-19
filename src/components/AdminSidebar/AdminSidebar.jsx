@@ -14,8 +14,21 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
+  const { user, token, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Successfully logged out");
+    navigate("/");
+    // Force update auth state immediately
+    setAuthState({
+      isAuthenticated: false,
+      currentUser: null,
+    });
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const [openDropdowns, setOpenDropdowns] = useState({});
@@ -212,10 +225,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
                 {/* Logout button */}
                 <button
-                  onClick={() => {
-                    // Add your logout logic here
-                    navigate("/login");
-                  }}
+                  onClick={handleLogout}
                   className="flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-[#1a2639] hover:text-white mt-8 border-t border-gray-700 pt-4"
                 >
                   <LogOut className="w-5 h-5 mr-3" />

@@ -1,9 +1,21 @@
 // AdminHeader.jsx
-import { Bell, Menu, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../Context/AuthContext";
 
 const AdminHeader = ({ setSidebarOpen }) => {
-  const { user } = useAuth();
+  const { user, token, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Successfully logged out");
+    navigate("/");
+    // Force update auth state immediately
+    setAuthState({
+      isAuthenticated: false,
+      currentUser: null,
+    });
+  };
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
@@ -23,19 +35,23 @@ const AdminHeader = ({ setSidebarOpen }) => {
 
         {/* Right side - User menu and notifications */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full">
-            <Bell className="w-5 h-5" />
-          </button>
-
           {/* User profile */}
           <div className="flex items-center space-x-3">
             <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-gray-900">Admin User</p>
-              <p className="text-xs text-gray-500">Administrator</p>
+              <p className="text-sm font-medium text-gray-900">
+                {user?.fullName}
+              </p>
+              <p className="text-xs text-gray-500">{user?.role}</p>
             </div>
-            <button className="flex items-center p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full">
+            <button className="flex items-center p-2 text-white hover:text-white hover:bg-blue bg-red-600 rounded-full">
               <User className="w-6 h-6" />
+
+              <button
+                onClick={handleLogout}
+                className=" transition-colors px-2 py-1 rounded"
+              >
+                Logout
+              </button>
             </button>
           </div>
         </div>

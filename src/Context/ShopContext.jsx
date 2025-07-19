@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser } from "../api/users";
+import useExchangeRate from "../hooks/useExchangeRate";
 import { useAuth } from "./AuthContext"; // Import your auth context
 
 const ShopContext = createContext();
@@ -13,9 +14,14 @@ export function ShopProvider({ children }) {
   const { token, user } = useAuth(); // Get token and user from auth context
   const [currentUser, setCurrentUser] = useState(null);
   const [previousUser, setPreviousUser] = useState(null); // Track previous user state
-
+  const {
+    exchangeRate: exchangeRateFromGoogle,
+    convertToJPY,
+    formatCurrency,
+    loading,
+  } = useExchangeRate();
   // ✅ Hardcoded exchange rate
-  const exchangeRate = 142.08;
+  const exchangeRate = exchangeRateFromGoogle;
 
   // Get current user data
   useEffect(() => {

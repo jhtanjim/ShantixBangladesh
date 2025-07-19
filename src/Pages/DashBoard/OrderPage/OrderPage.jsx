@@ -1,74 +1,103 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Eye, Edit, Trash2, Search, Filter, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, User, Car, MessageSquare, Upload, Package, Calendar, FileText, Phone, Mail, Copy, Check, Anchor } from 'lucide-react';
-import { 
-  useOrderStats, 
-  useUpdateOrderStatus, 
-  useRemoveOrderItem 
-} from '../../../hooks/useOrders';
-import { useAllOrders } from '../../../hooks/useOrders';
+import {
+  AlertCircle,
+  Anchor,
+  Car,
+  Check,
+  CheckCircle,
+  Copy,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  MessageSquare,
+  Package,
+  Search,
+  ShoppingCart,
+  Trash2,
+  Upload,
+  User,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
+import Swal from "sweetalert2";
+import {
+  useAllOrders,
+  useOrderStats,
+  useRemoveOrderItem,
+  useUpdateOrderStatus,
+} from "../../../hooks/useOrders";
 
 const AdminOrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [copiedOrderId, setCopiedOrderId] = useState(null);
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
-  console.log(ordersData)
+  // console.log(ordersData);
   const { data: statsData } = useOrderStats();
   const updateOrderMutation = useUpdateOrderStatus();
   const removeItemMutation = useRemoveOrderItem();
 
   const orders = ordersData?.orders || [];
 
-const statusConfig = {
-  NEGOTIATING: { color: 'yellow', icon: MessageSquare, label: 'Negotiating' },
-  CONFIRMED: { color: 'blue', icon: AlertCircle, label: 'Confirmed' },
-  PENDING_PAYMENT: { color: 'orange', icon: DollarSign, label: 'Payment Pending' },
-  PAYMENT_UPLOADED: { color: 'amber', icon: Upload, label: 'Payment Uploaded' },
-  PAID: { color: 'green', icon: CheckCircle, label: 'Paid' },
-  SHIPPING: { color: 'purple', icon: Package, label: 'Shipped' },
-  DELIVERED: { color: 'emerald', icon: CheckCircle, label: 'Delivered' },
-  CANCELLED: { color: 'red', icon: XCircle, label: 'Cancelled' }
-};
+  const statusConfig = {
+    NEGOTIATING: { color: "yellow", icon: MessageSquare, label: "Negotiating" },
+    CONFIRMED: { color: "blue", icon: AlertCircle, label: "Confirmed" },
+    PENDING_PAYMENT: {
+      color: "orange",
+      icon: DollarSign,
+      label: "Payment Pending",
+    },
+    PAYMENT_UPLOADED: {
+      color: "amber",
+      icon: Upload,
+      label: "Payment Uploaded",
+    },
+    PAID: { color: "green", icon: CheckCircle, label: "Paid" },
+    SHIPPING: { color: "purple", icon: Package, label: "Shipped" },
+    DELIVERED: { color: "emerald", icon: CheckCircle, label: "Delivered" },
+    CANCELLED: { color: "red", icon: XCircle, label: "Cancelled" },
+  };
 
-const portOptions = [
-  { value: 'mongla', label: 'Mongla Port' },
-  { value: 'chittagong', label: 'Chittagong Port' },
-  { value: 'payra', label: 'Payra Port' },
-  { value: 'bondor', label: 'Bondor Port' },
-  { value: 'dhaka', label: 'Dhaka Port' },
-  { value: 'sylhet', label: 'Sylhet Port' }
-];
+  const portOptions = [
+    { value: "mongla", label: "Mongla Port" },
+    { value: "chittagong", label: "Chittagong Port" },
+    { value: "payra", label: "Payra Port" },
+    { value: "bondor", label: "Bondor Port" },
+    { value: "dhaka", label: "Dhaka Port" },
+    { value: "sylhet", label: "Sylhet Port" },
+  ];
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
       order.user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.orderItems?.some(item => 
+      order.orderItems?.some((item) =>
         item.car?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
- const copyToClipboard = async (orderId) => {
+  const copyToClipboard = async (orderId) => {
     try {
       await navigator.clipboard.writeText(orderId);
       setCopiedOrderId(orderId);
       setTimeout(() => setCopiedOrderId(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
       // Fallback for older browsers
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = orderId;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       setCopiedOrderId(orderId);
       setTimeout(() => setCopiedOrderId(null), 2000);
@@ -78,22 +107,21 @@ const portOptions = [
     try {
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { status: newStatus }
+        statusData: { status: newStatus },
       });
     } catch (error) {
-      console.error('Failed to update order status:', error);
+      console.error("Failed to update order status:", error);
     }
   };
 
-  const handlePortUpdate = async (orderId, newPort,newStatus) => {
+  const handlePortUpdate = async (orderId, newPort, newStatus) => {
     try {
-      
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: {status: newStatus , port: newPort }
+        statusData: { status: newStatus, port: newPort },
       });
     } catch (error) {
-      console.error('Failed to update order port:', error);
+      console.error("Failed to update order port:", error);
     }
   };
 
@@ -101,37 +129,67 @@ const portOptions = [
     try {
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { negotiatedPrice: parseFloat(newPrice) }
+        statusData: { negotiatedPrice: parseFloat(newPrice) },
       });
     } catch (error) {
-      console.error('Failed to update price:', error);
+      console.error("Failed to update price:", error);
     }
   };
 
   const handleRemoveItem = async (orderId, itemId) => {
-    if (window.confirm('Are you sure you want to remove this item from the order?')) {
+    if (
+      window.confirm(
+        "Are you sure you want to remove this item from the order?"
+      )
+    ) {
       try {
         await removeItemMutation.mutateAsync({ orderId, itemId });
       } catch (error) {
-        console.error('Failed to remove item:', error);
+        console.error("Failed to remove item:", error);
       }
     }
   };
 
   const openEditModal = (order) => {
-    setEditingOrder({ 
+    setEditingOrder({
       ...order,
       negotiatedPrice: order.negotiatedPrice || order.totalOriginalPrice,
-      notes: order.notes || '',
-      trackingInfo: order.trackingInfo || '',
-      estimatedDelivery: order.estimatedDelivery || '',
-      port: order.port || 'mongla'
+      notes: order.notes || "",
+      trackingInfo: order.trackingInfo || "",
+      estimatedDelivery: order.estimatedDelivery || "",
+      port: order.port || "mongla",
     });
     setShowEditModal(true);
   };
 
+  // Replace your existing saveOrder function with this one
   const saveOrder = async () => {
     try {
+      // Convert estimatedDelivery to ISO 8601 format if it exists
+      let estimatedDeliveryISO = null;
+      if (editingOrder.estimatedDelivery) {
+        try {
+          // Handle both date and datetime-local input formats
+          let dateStr = editingOrder.estimatedDelivery;
+
+          // If it's just a date (YYYY-MM-DD), add time
+          if (dateStr.length === 10) {
+            dateStr += "T12:00:00";
+          }
+
+          const deliveryDate = new Date(dateStr);
+
+          // Check if date is valid
+          if (isNaN(deliveryDate.getTime())) {
+            throw new Error("Invalid date format");
+          }
+
+          estimatedDeliveryISO = deliveryDate.toISOString();
+        } catch (dateError) {
+          throw new Error("Invalid estimated delivery date");
+        }
+      }
+
       await updateOrderMutation.mutateAsync({
         orderId: editingOrder.id,
         statusData: {
@@ -139,36 +197,56 @@ const portOptions = [
           negotiatedPrice: editingOrder.negotiatedPrice,
           notes: editingOrder.notes,
           trackingInfo: editingOrder.trackingInfo,
-          estimatedDelivery: editingOrder.estimatedDelivery,
-          port: editingOrder.port
-        }
+          estimatedDelivery: estimatedDeliveryISO,
+          port: editingOrder.port,
+        },
       });
+
       setShowEditModal(false);
       setEditingOrder(null);
+
+      // Success notification
+      Swal.fire({
+        title: "Success!",
+        text: "Order updated successfully",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      console.error('Failed to save order:', error);
+      console.error("Failed to save order:", error);
+
+      // Error notification
+      Swal.fire({
+        title: "Error!",
+        text:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update order",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
-
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getStatusCounts = () => {
     const counts = {};
-    Object.keys(statusConfig).forEach(status => {
-      counts[status] = orders.filter(order => order.status === status).length;
+    Object.keys(statusConfig).forEach((status) => {
+      counts[status] = orders.filter((order) => order.status === status).length;
     });
     return counts;
   };
 
   const getPortLabel = (portValue) => {
-    const port = portOptions.find(p => p.value === portValue);
-    return port ? port.label : 'Not Selected';
+    const port = portOptions.find((p) => p.value === portValue);
+    return port ? port.label : "Not Selected";
   };
 
   const statusCounts = getStatusCounts();
@@ -215,7 +293,9 @@ const portOptions = [
             <div key={status} className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-600">{config.label}</p>
+                  <p className="text-xs font-medium text-gray-600">
+                    {config.label}
+                  </p>
                   <p className="text-xl font-bold text-gray-900">{count}</p>
                 </div>
                 <div className={`p-2 rounded-full bg-${config.color}-100`}>
@@ -249,7 +329,9 @@ const portOptions = [
             >
               <option value="all">All Status</option>
               {Object.entries(statusConfig).map(([status, config]) => (
-                <option key={status} value={status}>{config.label}</option>
+                <option key={status} value={status}>
+                  {config.label}
+                </option>
               ))}
             </select>
           </div>
@@ -262,37 +344,53 @@ const portOptions = [
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Port</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Order ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Items
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Port
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => {
-                const StatusIcon = statusConfig[order.status]?.icon || AlertCircle;
-                const statusColor = statusConfig[order.status]?.color || 'gray';
-                
+                const StatusIcon =
+                  statusConfig[order.status]?.icon || AlertCircle;
+                const statusColor = statusConfig[order.status]?.color || "gray";
+
                 return (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      
- <div 
-                            className="text-sm font-medium text-gray-900 font-mono cursor-pointer hover:text-blue-600 flex items-center gap-1"
-                            onClick={() => copyToClipboard(order.id)}
-                            title="Click to copy Order ID"
-                          >
-                            {order.id.substring(0, 8)}...
-                            {copiedOrderId === order.id ? (
-                              <Check className="h-3 w-3 text-green-600" />
-                            ) : (
-                              <Copy className="h-3 w-3 text-gray-400 hover:text-blue-600" />
-                            )}
-                          </div>
+                      <div
+                        className="text-sm font-medium text-gray-900 font-mono cursor-pointer hover:text-blue-600 flex items-center gap-1"
+                        onClick={() => copyToClipboard(order.id)}
+                        title="Click to copy Order ID"
+                      >
+                        {order.id.substring(0, 8)}...
+                        {copiedOrderId === order.id ? (
+                          <Check className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <Copy className="h-3 w-3 text-gray-400 hover:text-blue-600" />
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500">
                         Updated: {formatDate(order.updatedAt)}
                       </div>
@@ -304,8 +402,12 @@ const portOptions = [
                           <div className="text-sm font-medium text-gray-900">
                             {order.user?.firstName} {order.user?.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">{order.user?.email}</div>
-                          <div className="text-sm text-gray-500">{order.user?.phone}</div>
+                          <div className="text-sm text-gray-500">
+                            {order.user?.email}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {order.user?.phone}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -314,7 +416,9 @@ const portOptions = [
                         {order.orderItems?.map((item, index) => (
                           <div key={item.id} className="flex items-center mb-1">
                             <Car className="h-4 w-4 text-gray-400 mr-2" />
-                            <span>{item.car?.title} ({item.car?.year})</span>
+                            <span>
+                              {item.car?.title} ({item.car?.year})
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -324,37 +428,59 @@ const portOptions = [
                         <div className="flex items-center">
                           <DollarSign className="h-4 w-4 text-green-600 mr-1" />
                           <span className="font-medium">
-                            ${(order.negotiatedPrice || order.finalPrice || order.totalOriginalPrice).toLocaleString()}
+                            $
+                            {(
+                              order.negotiatedPrice ||
+                              order.finalPrice ||
+                              order.totalOriginalPrice
+                            ).toLocaleString()}
                           </span>
                         </div>
-                        {order.negotiatedPrice && order.negotiatedPrice !== order.totalOriginalPrice && (
-                          <div className="text-xs text-gray-500 line-through">
-                            Original: ${order.totalOriginalPrice.toLocaleString()}
-                          </div>
-                        )}
+                        {order.negotiatedPrice &&
+                          order.negotiatedPrice !==
+                            order.totalOriginalPrice && (
+                            <div className="text-xs text-gray-500 line-through">
+                              Original: $
+                              {order.totalOriginalPrice.toLocaleString()}
+                            </div>
+                          )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={order.status}
-                        onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                        onChange={(e) =>
+                          handleStatusUpdate(order.id, e.target.value)
+                        }
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 bg-${statusColor}-100 text-${statusColor}-800 focus:ring-2 focus:ring-${statusColor}-500`}
                         disabled={updateOrderMutation.isPending}
                       >
-                        {Object.entries(statusConfig).map(([status, config]) => (
-                          <option key={status} value={status}>{config.label}</option>
-                        ))}
+                        {Object.entries(statusConfig).map(
+                          ([status, config]) => (
+                            <option key={status} value={status}>
+                              {config.label}
+                            </option>
+                          )
+                        )}
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
-                        value={order.port || 'mongla'}
-                        onChange={(e) => handlePortUpdate(order.id, e.target.value,order.status)}
+                        value={order.port || "mongla"}
+                        onChange={(e) =>
+                          handlePortUpdate(
+                            order.id,
+                            e.target.value,
+                            order.status
+                          )
+                        }
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 bg-blue-100 text-blue-800 focus:ring-2 focus:ring-blue-500"
                         disabled={updateOrderMutation.isPending}
                       >
                         {portOptions.map((port) => (
-                          <option key={port.value} value={port.value}>{port.label}</option>
+                          <option key={port.value} value={port.value}>
+                            {port.label}
+                          </option>
                         ))}
                       </select>
                     </td>
@@ -382,11 +508,13 @@ const portOptions = [
               })}
             </tbody>
           </table>
-          
+
           {filteredOrders.length === 0 && (
             <div className="text-center py-12">
               <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No orders found matching your criteria.</p>
+              <p className="text-gray-500">
+                No orders found matching your criteria.
+              </p>
             </div>
           )}
         </div>
@@ -397,7 +525,9 @@ const portOptions = [
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Order Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Order Details
+              </h3>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -409,45 +539,82 @@ const portOptions = [
               {/* Order Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Order Information</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    Order Information
+                  </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Order ID</label>
-                      <p className="text-gray-900 font-mono text-sm">{selectedOrder.id}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Order ID
+                      </label>
+                      <p className="text-gray-900 font-mono text-sm">
+                        {selectedOrder.id}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Status</label>
-                      <p className="text-gray-900 capitalize">{statusConfig[selectedOrder.status]?.label}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Status
+                      </label>
+                      <p className="text-gray-900 capitalize">
+                        {statusConfig[selectedOrder.status]?.label}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Port</label>
-                      <p className="text-gray-900">{getPortLabel(selectedOrder.port)}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Port
+                      </label>
+                      <p className="text-gray-900">
+                        {getPortLabel(selectedOrder.port)}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Created Date</label>
-                      <p className="text-gray-900">{formatDate(selectedOrder.createdAt)}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Created Date
+                      </label>
+                      <p className="text-gray-900">
+                        {formatDate(selectedOrder.createdAt)}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Last Updated</label>
-                      <p className="text-gray-900">{formatDate(selectedOrder.updatedAt)}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Last Updated
+                      </label>
+                      <p className="text-gray-900">
+                        {formatDate(selectedOrder.updatedAt)}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Customer Information</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    Customer Information
+                  </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-gray-900">{selectedOrder.user?.firstName} {selectedOrder.user?.lastName}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Name
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedOrder.user?.firstName}{" "}
+                        {selectedOrder.user?.lastName}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="text-gray-900">{selectedOrder.user?.email}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Email
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedOrder.user?.email}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Phone</label>
-                      <p className="text-gray-900">{selectedOrder.user?.phone}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedOrder.user?.phone}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -455,31 +622,43 @@ const portOptions = [
 
               {/* Order Items */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Order Items</h4>
+                <h4 className="font-semibold text-gray-900 mb-4">
+                  Order Items
+                </h4>
                 <div className="space-y-4">
                   {selectedOrder.orderItems?.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-4 flex items-center space-x-4">
-                      <img 
-                        src={item.car?.mainImage || "/placeholder.svg"} 
+                    <div
+                      key={item.id}
+                      className="border rounded-lg p-4 flex items-center space-x-4"
+                    >
+                      <img
+                        src={item.car?.mainImage || "/placeholder.svg"}
                         alt={item.car?.title}
                         className="w-16 h-16 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">{item.car?.title}</h5>
-                        <p className="text-sm text-gray-600">Year: {item.car?.year}</p>
+                        <h5 className="font-medium text-gray-900">
+                          {item.car?.title}
+                        </h5>
+                        <p className="text-sm text-gray-600">
+                          Year: {item.car?.year}
+                        </p>
                         <div className="flex items-center space-x-4 mt-2">
                           <span className="text-sm text-gray-500">
                             Original: ${item.originalPrice?.toLocaleString()}
                           </span>
                           {item.negotiatedPrice && (
                             <span className="text-sm font-medium text-green-600">
-                              Negotiated: ${item.negotiatedPrice.toLocaleString()}
+                              Negotiated: $
+                              {item.negotiatedPrice.toLocaleString()}
                             </span>
                           )}
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemoveItem(selectedOrder.id, item.id)}
+                        onClick={() =>
+                          handleRemoveItem(selectedOrder.id, item.id)
+                        }
                         className="text-red-600 hover:text-red-800 p-2"
                         title="Remove item"
                       >
@@ -494,31 +673,52 @@ const portOptions = [
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total Amount:</span>
-                  <span>${(selectedOrder.negotiatedPrice || selectedOrder.finalPrice || selectedOrder.totalOriginalPrice).toLocaleString()}</span>
+                  <span>
+                    $
+                    {(
+                      selectedOrder.negotiatedPrice ||
+                      selectedOrder.finalPrice ||
+                      selectedOrder.totalOriginalPrice
+                    ).toLocaleString()}
+                  </span>
                 </div>
               </div>
 
               {/* Additional Information */}
-              {(selectedOrder.notes || selectedOrder.trackingInfo || selectedOrder.paymentScreenshot) && (
+              {(selectedOrder.notes ||
+                selectedOrder.trackingInfo ||
+                selectedOrder.paymentScreenshot) && (
                 <div className="border-t pt-4 space-y-4">
-                  <h4 className="font-semibold text-gray-900">Additional Information</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    Additional Information
+                  </h4>
                   {selectedOrder.notes && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Notes</label>
+                      <label className="text-sm font-medium text-gray-500">
+                        Notes
+                      </label>
                       <p className="text-gray-900">{selectedOrder.notes}</p>
                     </div>
                   )}
                   {selectedOrder.trackingInfo && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Tracking Info</label>
-                      <p className="text-gray-900">{selectedOrder.trackingInfo}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Tracking Info
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedOrder.trackingInfo}
+                      </p>
                     </div>
                   )}
                   {selectedOrder.paymentScreenshot && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Payment Screenshot</label>
-                      <img 
-                        src={selectedOrder.paymentScreenshot || "/placeholder.svg"} 
+                      <label className="text-sm font-medium text-gray-500">
+                        Payment Screenshot
+                      </label>
+                      <img
+                        src={
+                          selectedOrder.paymentScreenshot || "/placeholder.svg"
+                        }
                         alt="Payment screenshot"
                         className="mt-2 max-w-sm rounded border"
                       />
@@ -533,49 +733,70 @@ const portOptions = [
 
       {/* Edit Order Modal */}
       {showEditModal && editingOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Edit Order</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Edit Order
+              </h3>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   value={editingOrder.status}
-                  onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value})}
+                  onChange={(e) =>
+                    setEditingOrder({ ...editingOrder, status: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {Object.entries(statusConfig).map(([status, config]) => (
-                    <option key={status} value={status}>{config.label}</option>
+                    <option key={status} value={status}>
+                      {config.label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Port
+                </label>
                 <div className="relative">
                   <Anchor className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <select
-                    value={editingOrder.port || 'mongla'}
-                    onChange={(e) => setEditingOrder({...editingOrder, port: e.target.value})}
+                    value={editingOrder.port || "mongla"}
+                    onChange={(e) =>
+                      setEditingOrder({ ...editingOrder, port: e.target.value })
+                    }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {portOptions.map((port) => (
-                      <option key={port.value} value={port.value}>{port.label}</option>
+                      <option key={port.value} value={port.value}>
+                        {port.label}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Negotiated Price</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Negotiated Price
+                </label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
                     type="number"
-                    value={editingOrder.negotiatedPrice || ''}
-                    onChange={(e) => setEditingOrder({...editingOrder, negotiatedPrice: parseFloat(e.target.value) || 0})}
+                    value={editingOrder.negotiatedPrice || ""}
+                    onChange={(e) =>
+                      setEditingOrder({
+                        ...editingOrder,
+                        negotiatedPrice: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter negotiated price"
                   />
@@ -583,31 +804,50 @@ const portOptions = [
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tracking Information</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tracking Information
+                </label>
                 <input
                   type="text"
-                  value={editingOrder.trackingInfo || ''}
-                  onChange={(e) => setEditingOrder({...editingOrder, trackingInfo: e.target.value})}
+                  value={editingOrder.trackingInfo || ""}
+                  onChange={(e) =>
+                    setEditingOrder({
+                      ...editingOrder,
+                      trackingInfo: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter tracking number or info"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estimated Delivery
+                </label>
                 <input
                   type="date"
-                  value={editingOrder.estimatedDelivery || ''}
-                  onChange={(e) => setEditingOrder({...editingOrder, estimatedDelivery: e.target.value})}
+                  required
+                  value={editingOrder.estimatedDelivery || ""}
+                  onChange={(e) =>
+                    setEditingOrder({
+                      ...editingOrder,
+                      estimatedDelivery: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
                 <textarea
-                  value={editingOrder.notes || ''}
-                  onChange={(e) => setEditingOrder({...editingOrder, notes: e.target.value})}
+                  value={editingOrder.notes || ""}
+                  onChange={(e) =>
+                    setEditingOrder({ ...editingOrder, notes: e.target.value })
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Add notes about this order..."
@@ -627,7 +867,7 @@ const portOptions = [
                   disabled={updateOrderMutation.isPending}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {updateOrderMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateOrderMutation.isPending ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
