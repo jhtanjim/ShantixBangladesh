@@ -38,7 +38,6 @@ const AdminOrderManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copiedOrderId, setCopiedOrderId] = useState(null);
-  const [showPaymentDetails, setShowPaymentDetails] = useState(null);
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
@@ -89,6 +88,7 @@ const AdminOrderManagement = () => {
       setTimeout(() => setCopiedOrderId(null), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
+      // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = orderId;
       document.body.appendChild(textArea);
@@ -102,6 +102,7 @@ const AdminOrderManagement = () => {
 
   const handleSetFinalPrice = async (orderId, finalPrice) => {
     try {
+      // Find the current order to get its current status
       const currentOrder = orders.find((order) => order.id === orderId);
       if (!currentOrder) {
         throw new Error("Order not found");
@@ -111,7 +112,7 @@ const AdminOrderManagement = () => {
         orderId,
         statusData: {
           finalPrice: Number.parseFloat(finalPrice),
-          status: currentOrder.status,
+          status: currentOrder.status, // Include current status to avoid validation error
         },
       });
 
@@ -268,6 +269,7 @@ const AdminOrderManagement = () => {
     }
   };
 
+  // Handle payment approval with improved error handling
   const handlePaymentApproval = (payment) => {
     Swal.fire({
       title: "Verify Payment",
@@ -386,10 +388,6 @@ const AdminOrderManagement = () => {
         });
       }
     });
-  };
-
-  const viewPaymentDetails = (payment) => {
-    setShowPaymentDetails(payment);
   };
 
   const formatDate = (dateString) => {
@@ -750,20 +748,13 @@ const AdminOrderManagement = () => {
                                     ? "Rejected"
                                     : "Pending"}
                                 </span>
-                                <button
-                                  onClick={() => viewPaymentDetails(payment)}
-                                  className="text-blue-600 hover:text-blue-800 p-1 rounded"
-                                  title="View Payment Details"
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </button>
                                 {!payment.isVerified &&
                                   payment.isApproved !== false && (
                                     <button
                                       onClick={() =>
                                         handlePaymentApproval(payment)
                                       }
-                                      className="text-green-600 hover:text-green-800 p-1 rounded"
+                                      className="text-blue-600 hover:text-blue-800 p-1 rounded"
                                       title="Verify Payment"
                                       disabled={verifyPaymentMutation.isPending}
                                     >
@@ -823,117 +814,6 @@ const AdminOrderManagement = () => {
           )}
         </div>
       </div>
-
-      {/* Payment Details Modal */}
-      {showPaymentDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Payment Details
-              </h3>
-              <button
-                onClick={() => setShowPaymentDetails(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <XCircle className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Amount
-                </label>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatPrice(showPaymentDetails.amount)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Payment Method
-                </label>
-                <p className="text-gray-900">
-                  {showPaymentDetails.paymentMethod}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Transaction Reference
-                </label>
-                <p className="text-gray-900 font-mono">
-                  {showPaymentDetails.transactionRef}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Status
-                </label>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    showPaymentDetails.isVerified
-                      ? "bg-green-100 text-green-800"
-                      : showPaymentDetails.isApproved === false
-                      ? "bg-red-100 text-red-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {showPaymentDetails.isVerified
-                    ? "Verified"
-                    : showPaymentDetails.isApproved === false
-                    ? "Rejected"
-                    : "Pending"}
-                </span>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Date
-                </label>
-                <p className="text-gray-900">
-                  {formatDate(showPaymentDetails.createdAt)}
-                </p>
-              </div>
-              {showPaymentDetails.notes && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Admin Notes
-                  </label>
-                  <p className="text-gray-900">{showPaymentDetails.notes}</p>
-                </div>
-              )}
-              {showPaymentDetails.rejectionReason && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Rejection Reason
-                  </label>
-                  <p className="text-red-600">
-                    {showPaymentDetails.rejectionReason}
-                  </p>
-                </div>
-              )}
-              <div className="flex gap-2 pt-4">
-                {!showPaymentDetails.isVerified &&
-                  showPaymentDetails.isApproved !== false && (
-                    <button
-                      onClick={() => {
-                        setShowPaymentDetails(null);
-                        handlePaymentApproval(showPaymentDetails);
-                      }}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Verify Payment
-                    </button>
-                  )}
-                <button
-                  onClick={() => setShowPaymentDetails(null)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -1147,26 +1027,18 @@ const AdminOrderManagement = () => {
                             </p>
                           )}
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => viewPaymentDetails(payment)}
-                            className="px-3 py-1 text-blue-600 hover:text-blue-800 border border-blue-300 rounded text-sm"
-                          >
-                            View
-                          </button>
-                          {!payment.isVerified &&
-                            payment.isApproved !== false && (
-                              <button
-                                onClick={() => handlePaymentApproval(payment)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-                                disabled={verifyPaymentMutation.isPending}
-                              >
-                                {verifyPaymentMutation.isPending
-                                  ? "Verifying..."
-                                  : "Verify"}
-                              </button>
-                            )}
-                        </div>
+                        {!payment.isVerified &&
+                          payment.isApproved !== false && (
+                            <button
+                              onClick={() => handlePaymentApproval(payment)}
+                              className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                              disabled={verifyPaymentMutation.isPending}
+                            >
+                              {verifyPaymentMutation.isPending
+                                ? "Verifying..."
+                                : "Verify"}
+                            </button>
+                          )}
                       </div>
                     ))}
                   </div>
