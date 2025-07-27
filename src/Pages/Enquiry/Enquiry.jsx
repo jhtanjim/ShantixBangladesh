@@ -2,13 +2,47 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
   colorOptions,
-  driveOptions,
   seatsOptions,
   transmissionOptions,
 } from "../../api/cardata";
+import { portData } from "../../api/portData"; // Import your port data
 import SelectField from "../../components/ui/SelectField";
 import { useAuth } from "../../Context/AuthContext";
 import { useCreateInquiry } from "../../hooks/useInquiry";
+
+// Define drive type options to match API enum requirements
+const driveTypeOptions = [
+  { value: "", label: "Select Drive Type" },
+  { value: "FWD", label: "Front-Wheel Drive (FWD)" },
+  { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
+  { value: "AWD", label: "All-Wheel Drive (AWD)" },
+  { value: "FOUR_WD", label: "Four-Wheel Drive (4WD)" },
+  { value: "OTHER", label: "Other" },
+];
+
+// Country data with country codes for phone numbers
+const countryData = {
+  "": { label: "Select Country", code: "", dialCode: "" },
+  US: { label: "United States", code: "US", dialCode: "+1" },
+  JP: { label: "Japan", code: "JP", dialCode: "+81" },
+  UK: { label: "United Kingdom", code: "UK", dialCode: "+44" },
+  AU: { label: "Australia", code: "AU", dialCode: "+61" },
+  BD: { label: "Bangladesh", code: "BD", dialCode: "+880" },
+  IN: { label: "India", code: "IN", dialCode: "+91" },
+  MY: { label: "Malaysia", code: "MY", dialCode: "+60" },
+  TH: { label: "Thailand", code: "TH", dialCode: "+66" },
+  SG: { label: "Singapore", code: "SG", dialCode: "+65" },
+  KE: { label: "Kenya", code: "KE", dialCode: "+254" },
+  TZ: { label: "Tanzania", code: "TZ", dialCode: "+255" },
+  UG: { label: "Uganda", code: "UG", dialCode: "+256" },
+  ZA: { label: "South Africa", code: "ZA", dialCode: "+27" },
+  NG: { label: "Nigeria", code: "NG", dialCode: "+234" },
+  GH: { label: "Ghana", code: "GH", dialCode: "+233" },
+  CI: { label: "Ivory Coast", code: "CI", dialCode: "+225" },
+  SN: { label: "Senegal", code: "SN", dialCode: "+221" },
+  CM: { label: "Cameroon", code: "CM", dialCode: "+237" },
+  ZW: { label: "Zimbabwe", code: "ZW", dialCode: "+263" },
+};
 
 const Enquiry = () => {
   const [formData, setFormData] = useState({
@@ -17,18 +51,27 @@ const Enquiry = () => {
     steering: "RIGHT_HAND",
     yearFrom: "",
     yearTo: "",
+    engineCC: "",
+    transmission: "",
+    driveType: "",
+    exteriorColor: "",
+    color: "",
+    seats: "",
+    mileage: "",
+    message: "",
     country: "",
     port: "",
     email: "",
     mobile: "",
-    customerType: "INDIVIDUAL",
-    message: "",
     inquiryType: "CAR",
+    customerType: "INDIVIDUAL",
   });
+
+  const [availablePorts, setAvailablePorts] = useState([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
 
   const createInquiryMutation = useCreateInquiry();
   const { user, isAuthenticated } = useAuth();
-  console.log(user);
 
   // Auto-populate email if user is logged in
   useEffect(() => {
@@ -40,6 +83,44 @@ const Enquiry = () => {
       }));
     }
   }, [user, formData.email]);
+
+  // Update available ports when country changes
+  useEffect(() => {
+    if (formData.country && portData[formData.country]) {
+      const ports = [
+        { value: "", label: "Select Port" },
+        ...portData[formData.country],
+      ];
+      setAvailablePorts(ports);
+
+      // Update country code for phone number
+      const countryInfo = countryData[formData.country];
+      if (countryInfo) {
+        setSelectedCountryCode(countryInfo.dialCode);
+
+        // Auto-add country code to mobile if it doesn't already have it
+        if (
+          formData.mobile &&
+          !formData.mobile.startsWith(countryInfo.dialCode)
+        ) {
+          // Remove any existing country code first
+          const cleanMobile = formData.mobile.replace(/^\+\d{1,3}\s?/, "");
+          setFormData((prev) => ({
+            ...prev,
+            mobile: countryInfo.dialCode + " " + cleanMobile,
+            port: "", // Reset port when country changes
+          }));
+        }
+      }
+    } else {
+      setAvailablePorts([{ value: "", label: "Select Port" }]);
+      setSelectedCountryCode("");
+      setFormData((prev) => ({
+        ...prev,
+        port: "",
+      }));
+    }
+  }, [formData.country]);
 
   // Generate year options (from 1990 to current year + 2)
   const generateYearOptions = () => {
@@ -58,6 +139,12 @@ const Enquiry = () => {
 
   const yearOptions = generateYearOptions();
 
+  // Create country options from countryData
+  const countryOptions = Object.entries(countryData).map(([code, info]) => ({
+    value: code,
+    label: info.label,
+  }));
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -73,28 +160,24 @@ const Enquiry = () => {
     }));
   };
 
-  const countryOptions = [
-    { value: "", label: "Select Country" },
-    { value: "US", label: "United States" },
-    { value: "JP", label: "Japan" },
-    { value: "UK", label: "United Kingdom" },
-    { value: "AU", label: "Australia" },
-    { value: "BD", label: "Bangladesh" },
-    { value: "IN", label: "India" },
-    { value: "MY", label: "Malaysia" },
-    { value: "TH", label: "Thailand" },
-    { value: "SG", label: "Singapore" },
-    { value: "KE", label: "Kenya" },
-    { value: "TZ", label: "Tanzania" },
-    { value: "UG", label: "Uganda" },
-    { value: "ZA", label: "South Africa" },
-    { value: "NG", label: "Nigeria" },
-    { value: "GH", label: "Ghana" },
-    { value: "CI", label: "Ivory Coast" },
-    { value: "SN", label: "Senegal" },
-    { value: "CM", label: "Cameroon" },
-    { value: "ZW", label: "Zimbabwe" },
-  ];
+  const handleMobileChange = (e) => {
+    let value = e.target.value;
+
+    // If user manually types and removes country code, add it back
+    if (selectedCountryCode && !value.startsWith(selectedCountryCode)) {
+      // Check if user is typing a new number or just editing
+      if (value.length < selectedCountryCode.length) {
+        value = selectedCountryCode + " ";
+      } else if (!value.startsWith("+")) {
+        value = selectedCountryCode + " " + value;
+      }
+    }
+
+    setFormData((prevState) => ({
+      ...prevState,
+      mobile: value,
+    }));
+  };
 
   const validateForm = () => {
     const requiredFields = [
@@ -177,14 +260,30 @@ const Enquiry = () => {
 
       // Prepare data for API
       const apiData = {
-        ...formData,
+        make: formData.make || undefined,
+        model: formData.model || undefined,
+        steering: formData.steering,
         yearFrom: formData.yearFrom ? parseInt(formData.yearFrom) : undefined,
         yearTo: formData.yearTo ? parseInt(formData.yearTo) : undefined,
+        engineCC: formData.engineCC ? parseInt(formData.engineCC) : undefined,
+        transmission: formData.transmission || undefined,
+        driveType: formData.driveType || undefined,
+        exteriorColor: formData.exteriorColor || undefined,
+        color: formData.color || undefined,
+        seats: formData.seats ? parseInt(formData.seats) : undefined,
+        mileage: formData.mileage ? parseInt(formData.mileage) : undefined,
+        message: formData.message || undefined,
+        country: formData.country,
+        port: formData.port || undefined,
+        email: formData.email,
+        mobile: formData.mobile,
+        inquiryType: formData.inquiryType,
+        customerType: formData.customerType,
       };
 
-      // Remove empty fields
+      // Remove undefined fields
       Object.keys(apiData).forEach((key) => {
-        if (apiData[key] === "" || apiData[key] === undefined) {
+        if (apiData[key] === undefined) {
           delete apiData[key];
         }
       });
@@ -208,14 +307,23 @@ const Enquiry = () => {
         steering: "RIGHT_HAND",
         yearFrom: "",
         yearTo: "",
+        engineCC: "",
+        transmission: "",
+        driveType: "",
+        exteriorColor: "",
+        color: "",
+        seats: "",
+        mileage: "",
+        message: "",
         country: "",
         port: "",
         email: user?.email || "",
         mobile: user?.mobile || "",
         customerType: "INDIVIDUAL",
-        message: "",
         inquiryType: "CAR",
       });
+      setSelectedCountryCode("");
+      setAvailablePorts([{ value: "", label: "Select Port" }]);
     } catch (error) {
       console.error("Inquiry submission error:", error);
 
@@ -363,7 +471,7 @@ const Enquiry = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Engine CC</label>
                 <input
-                  type="text"
+                  type="number"
                   name="engineCC"
                   value={formData.engineCC}
                   onChange={handleChange}
@@ -392,10 +500,10 @@ const Enquiry = () => {
                 <label className="font-medium">Drive Type</label>
                 <div className="md:col-span-2">
                   <SelectField
-                    name="drive"
-                    value={formData.drive}
+                    name="driveType"
+                    value={formData.driveType}
                     onChange={handleChange}
-                    options={driveOptions}
+                    options={driveTypeOptions}
                     placeholder="Select Drive Type"
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -447,7 +555,7 @@ const Enquiry = () => {
 
               {/* Mileage */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Mileage</label>
+                <label className="font-medium">Mileage (km)</label>
                 <input
                   type="number"
                   name="mileage"
@@ -480,14 +588,19 @@ const Enquiry = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Port</label>
-                <input
-                  type="text"
-                  name="port"
-                  value={formData.port}
-                  onChange={handleChange}
-                  placeholder="Enter Destination Port"
-                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                />
+                <div className="md:col-span-2">
+                  <SelectField
+                    name="port"
+                    value={formData.port}
+                    onChange={handleChange}
+                    options={availablePorts}
+                    placeholder={
+                      formData.country ? "Select Port" : "Select Country First"
+                    }
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!formData.country || availablePorts.length <= 1}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
@@ -512,15 +625,31 @@ const Enquiry = () => {
                     (With Country Code)
                   </span>
                 </label>
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  placeholder="e.g., +8801234567890"
-                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                  required
-                />
+                <div className="md:col-span-2 relative">
+                  {selectedCountryCode && (
+                    <div className="absolute left-2 top-2 text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm z-10">
+                      {selectedCountryCode}
+                    </div>
+                  )}
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleMobileChange}
+                    placeholder={
+                      selectedCountryCode
+                        ? `${selectedCountryCode} 1234567890`
+                        : "e.g., +8801234567890"
+                    }
+                    className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    style={{
+                      paddingLeft: selectedCountryCode
+                        ? `${selectedCountryCode.length * 8 + 20}px`
+                        : "8px",
+                    }}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">

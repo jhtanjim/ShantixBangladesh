@@ -48,3 +48,32 @@ export const getOrderStats = async () => {
   const response = await axios.get("/orders/admin/stats");
   return response.data;
 };
+// Add a payment to an order
+export const addPaymentToOrder = async (id, paymentData) => {
+  const response = await axios.post(`/orders/${id}/payments`, paymentData);
+  return response.data;
+};
+
+// Get all payments for an order
+export const getPaymentsForOrder = async (id) => {
+  const response = await axios.get(`/orders/${id}/payments`);
+  return response.data;
+};
+
+// Verify a payment (Admin only)
+export const verifyPayment = async (paymentId) => {
+  const response = await axios.patch(`/orders/payments/${paymentId}/verify`);
+  return response.data;
+};
+
+// Get payment transaction details
+export const getPaymentDetails = async (paymentId) => {
+  const response = await axios.get(`/orders/payments/${paymentId}`);
+  return response.data;
+};
+
+// Get all pending payment transactions (Admin only)
+export const getPendingPayments = async () => {
+  const response = await axios.get("/orders/admin/payments/pending");
+  return response.data;
+};

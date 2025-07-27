@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AlertCircle,
   Anchor,
@@ -5,6 +7,7 @@ import {
   Check,
   CheckCircle,
   Copy,
+  CreditCard,
   DollarSign,
   Edit,
   Eye,
@@ -14,7 +17,6 @@ import {
   Search,
   ShoppingCart,
   Trash2,
-  Upload,
   User,
   XCircle,
 } from "lucide-react";
@@ -25,6 +27,7 @@ import {
   useOrderStats,
   useRemoveOrderItem,
   useUpdateOrderStatus,
+  useVerifyPayment,
 } from "../../../hooks/useOrders";
 
 const AdminOrderManagement = () => {
@@ -37,28 +40,17 @@ const AdminOrderManagement = () => {
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
-  // console.log(ordersData);
   const { data: statsData } = useOrderStats();
   const updateOrderMutation = useUpdateOrderStatus();
   const removeItemMutation = useRemoveOrderItem();
+  const verifyPaymentMutation = useVerifyPayment();
 
   const orders = ordersData?.orders || [];
 
   const statusConfig = {
     NEGOTIATING: { color: "yellow", icon: MessageSquare, label: "Negotiating" },
     CONFIRMED: { color: "blue", icon: AlertCircle, label: "Confirmed" },
-    PENDING_PAYMENT: {
-      color: "orange",
-      icon: DollarSign,
-      label: "Payment Pending",
-    },
-    PAYMENT_UPLOADED: {
-      color: "amber",
-      icon: Upload,
-      label: "Payment Uploaded",
-    },
-    PAID: { color: "green", icon: CheckCircle, label: "Paid" },
-    SHIPPING: { color: "purple", icon: Package, label: "Shipped" },
+    SHIPPING: { color: "purple", icon: Package, label: "Shipping" },
     DELIVERED: { color: "emerald", icon: CheckCircle, label: "Delivered" },
     CANCELLED: { color: "red", icon: XCircle, label: "Cancelled" },
   };
@@ -85,6 +77,7 @@ const AdminOrderManagement = () => {
       statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
   const copyToClipboard = async (orderId) => {
     try {
       await navigator.clipboard.writeText(orderId);
@@ -92,7 +85,6 @@ const AdminOrderManagement = () => {
       setTimeout(() => setCopiedOrderId(null), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
-      // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = orderId;
       document.body.appendChild(textArea);
@@ -103,6 +95,32 @@ const AdminOrderManagement = () => {
       setTimeout(() => setCopiedOrderId(null), 2000);
     }
   };
+
+  const handleSetFinalPrice = async (orderId, finalPrice) => {
+    try {
+      await updateOrderMutation.mutateAsync({
+        orderId,
+        statusData: { finalPrice: Number.parseFloat(finalPrice) }, // Only send finalPrice
+      });
+
+      Swal.fire({
+        title: "Success!",
+        text: "Final price has been set successfully",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Failed to set final price:", error);
+      Swal.fire({
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to set final price",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await updateOrderMutation.mutateAsync({
@@ -129,7 +147,7 @@ const AdminOrderManagement = () => {
     try {
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { negotiatedPrice: parseFloat(newPrice) },
+        statusData: { negotiatedPrice: Number.parseFloat(newPrice) },
       });
     } catch (error) {
       console.error("Failed to update price:", error);
@@ -162,28 +180,19 @@ const AdminOrderManagement = () => {
     setShowEditModal(true);
   };
 
-  // Replace your existing saveOrder function with this one
   const saveOrder = async () => {
     try {
-      // Convert estimatedDelivery to ISO 8601 format if it exists
       let estimatedDeliveryISO = null;
       if (editingOrder.estimatedDelivery) {
         try {
-          // Handle both date and datetime-local input formats
           let dateStr = editingOrder.estimatedDelivery;
-
-          // If it's just a date (YYYY-MM-DD), add time
           if (dateStr.length === 10) {
             dateStr += "T12:00:00";
           }
-
           const deliveryDate = new Date(dateStr);
-
-          // Check if date is valid
           if (isNaN(deliveryDate.getTime())) {
             throw new Error("Invalid date format");
           }
-
           estimatedDeliveryISO = deliveryDate.toISOString();
         } catch (dateError) {
           throw new Error("Invalid estimated delivery date");
@@ -201,11 +210,8 @@ const AdminOrderManagement = () => {
           port: editingOrder.port,
         },
       });
-
       setShowEditModal(false);
       setEditingOrder(null);
-
-      // Success notification
       Swal.fire({
         title: "Success!",
         text: "Order updated successfully",
@@ -215,8 +221,6 @@ const AdminOrderManagement = () => {
       });
     } catch (error) {
       console.error("Failed to save order:", error);
-
-      // Error notification
       Swal.fire({
         title: "Error!",
         text:
@@ -228,12 +232,142 @@ const AdminOrderManagement = () => {
       });
     }
   };
+
+  // Handle payment approval with SweetAlert using React Query
+  const handlePaymentApproval = (payment) => {
+    Swal.fire({
+      title: "Verify Payment",
+      html: `
+        <div class="text-left">
+          <p><strong>Amount:</strong> $${payment.amount}</p>
+          <p><strong>Method:</strong> ${payment.paymentMethod}</p>
+          <p><strong>Transaction Ref:</strong> ${payment.transactionRef}</p>
+          <p><strong>Date:</strong> ${new Date(
+            payment.createdAt
+          ).toLocaleDateString()}</p>
+        </div>
+        <div class="mt-4">
+          <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Notes (optional):</label>
+          <textarea id="notes" class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3" placeholder="Add verification notes..."></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Approve",
+      denyButtonText: "Reject",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#10b981",
+      denyButtonColor: "#ef4444",
+      preConfirm: () => {
+        const notes = document.getElementById("notes").value;
+        return { action: "approve", notes };
+      },
+      preDeny: () => {
+        return Swal.fire({
+          title: "Reject Payment",
+          html: `
+            <div class="text-left">
+              <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">Rejection Reason:</label>
+              <textarea id="rejection-reason" class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3" placeholder="Please provide a reason for rejection..." required></textarea>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: "Reject Payment",
+          confirmButtonColor: "#ef4444",
+          preConfirm: () => {
+            const rejectionReason =
+              document.getElementById("rejection-reason").value;
+            if (!rejectionReason.trim()) {
+              Swal.showValidationMessage("Please provide a rejection reason");
+              return false;
+            }
+            return { action: "reject", rejectionReason };
+          },
+        });
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await verifyPaymentMutation.mutateAsync({
+            paymentId: payment.id,
+            verificationData: {
+              isApproved: true,
+              notes: result.value.notes,
+              rejectionReason: "",
+            },
+          });
+
+          Swal.fire({
+            icon: "success",
+            title: "Payment Approved!",
+            text: "Payment has been successfully verified and approved.",
+            timer: 2500,
+            showConfirmButton: false,
+            timerProgressBar: true,
+          });
+        } catch (error) {
+          console.error("Payment verification error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Verification Failed",
+            text:
+              error.response?.data?.message ||
+              "Failed to verify payment. Please try again.",
+            confirmButtonColor: "#3085d6",
+          });
+        }
+      } else if (result.isDenied) {
+        result.value.then(async (rejectResult) => {
+          if (rejectResult.isConfirmed) {
+            try {
+              await verifyPaymentMutation.mutateAsync({
+                paymentId: payment.id,
+                verificationData: {
+                  isApproved: false,
+                  notes: "",
+                  rejectionReason: rejectResult.value.rejectionReason,
+                },
+              });
+
+              Swal.fire({
+                icon: "success",
+                title: "Payment Rejected",
+                text: "Payment has been rejected with the provided reason.",
+                timer: 2500,
+                showConfirmButton: false,
+                timerProgressBar: true,
+              });
+            } catch (error) {
+              console.error("Payment verification error:", error);
+              Swal.fire({
+                icon: "error",
+                title: "Verification Failed",
+                text:
+                  error.response?.data?.message ||
+                  "Failed to verify payment. Please try again.",
+                confirmButtonColor: "#3085d6",
+              });
+            }
+          }
+        });
+      }
+    });
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "N/A";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(price);
   };
 
   const getStatusCounts = () => {
@@ -363,6 +497,9 @@ const AdminOrderManagement = () => {
                   Port
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payments
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -375,7 +512,6 @@ const AdminOrderManagement = () => {
                 const StatusIcon =
                   statusConfig[order.status]?.icon || AlertCircle;
                 const statusColor = statusConfig[order.status]?.color || "gray";
-
                 return (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -430,8 +566,8 @@ const AdminOrderManagement = () => {
                           <span className="font-medium">
                             $
                             {(
-                              order.negotiatedPrice ||
                               order.finalPrice ||
+                              order.negotiatedPrice ||
                               order.totalOriginalPrice
                             ).toLocaleString()}
                           </span>
@@ -444,6 +580,55 @@ const AdminOrderManagement = () => {
                               {order.totalOriginalPrice.toLocaleString()}
                             </div>
                           )}
+                        {!order.finalPrice && (
+                          <button
+                            onClick={() => {
+                              Swal.fire({
+                                title: "Set Final Price",
+                                html: `
+                                  <div class="text-left">
+                                    <p class="mb-4">Current negotiated price: $${(
+                                      order.negotiatedPrice ||
+                                      order.totalOriginalPrice
+                                    ).toLocaleString()}</p>
+                                    <label for="final-price" class="block text-sm font-medium text-gray-700 mb-2">Final Price:</label>
+                                    <input id="final-price" type="number" step="0.01" value="${
+                                      order.negotiatedPrice ||
+                                      order.totalOriginalPrice
+                                    }" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter final price">
+                                  </div>
+                                `,
+                                showCancelButton: true,
+                                confirmButtonText: "Set Final Price",
+                                confirmButtonColor: "#10b981",
+                                preConfirm: () => {
+                                  const finalPrice =
+                                    document.getElementById(
+                                      "final-price"
+                                    ).value;
+                                  if (
+                                    !finalPrice ||
+                                    Number.parseFloat(finalPrice) <= 0
+                                  ) {
+                                    Swal.showValidationMessage(
+                                      "Please enter a valid final price"
+                                    );
+                                    return false;
+                                  }
+                                  return finalPrice;
+                                },
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  handleSetFinalPrice(order.id, result.value);
+                                }
+                              });
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline mt-1"
+                            title="Set Final Price"
+                          >
+                            Set Final Price
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -484,6 +669,56 @@ const AdminOrderManagement = () => {
                         ))}
                       </select>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {order.payments && order.payments.length > 0 ? (
+                          <div className="space-y-1">
+                            {order.payments.map((payment) => (
+                              <div
+                                key={payment.id}
+                                className="flex items-center gap-2"
+                              >
+                                <span className="text-xs">
+                                  {formatPrice(payment.amount)}
+                                </span>
+                                <span
+                                  className={`px-2 py-1 rounded text-xs ${
+                                    payment.isVerified
+                                      ? "bg-green-100 text-green-800"
+                                      : payment.isApproved === false
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {payment.isVerified
+                                    ? "Verified"
+                                    : payment.isApproved === false
+                                    ? "Rejected"
+                                    : "Pending"}
+                                </span>
+                                {!payment.isVerified &&
+                                  payment.isApproved !== false && (
+                                    <button
+                                      onClick={() =>
+                                        handlePaymentApproval(payment)
+                                      }
+                                      className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                                      title="Verify Payment"
+                                      disabled={verifyPaymentMutation.isPending}
+                                    >
+                                      <CreditCard className="h-3 w-3" />
+                                    </button>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">
+                            No payments
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>
@@ -508,7 +743,6 @@ const AdminOrderManagement = () => {
               })}
             </tbody>
           </table>
-
           {filteredOrders.length === 0 && (
             <div className="text-center py-12">
               <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -585,7 +819,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900">
                     Customer Information
@@ -668,6 +901,78 @@ const AdminOrderManagement = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Payment History */}
+              {selectedOrder.payments && selectedOrder.payments.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">
+                    Payment History
+                  </h4>
+                  <div className="space-y-3">
+                    {selectedOrder.payments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="border rounded-lg p-4 flex items-center justify-between"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {formatPrice(payment.amount)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {payment.paymentMethod} •{" "}
+                                {payment.transactionRef}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {formatDate(payment.createdAt)}
+                              </p>
+                            </div>
+                            <div
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                payment.isVerified
+                                  ? "bg-green-100 text-green-800"
+                                  : payment.isApproved === false
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {payment.isVerified
+                                ? "Verified"
+                                : payment.isApproved === false
+                                ? "Rejected"
+                                : "Pending"}
+                            </div>
+                          </div>
+                          {payment.notes && (
+                            <p className="text-sm text-gray-600 mt-2">
+                              <strong>Notes:</strong> {payment.notes}
+                            </p>
+                          )}
+                          {payment.rejectionReason && (
+                            <p className="text-sm text-red-600 mt-2">
+                              <strong>Rejection Reason:</strong>{" "}
+                              {payment.rejectionReason}
+                            </p>
+                          )}
+                        </div>
+                        {!payment.isVerified &&
+                          payment.isApproved !== false && (
+                            <button
+                              onClick={() => handlePaymentApproval(payment)}
+                              className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                              disabled={verifyPaymentMutation.isPending}
+                            >
+                              {verifyPaymentMutation.isPending
+                                ? "Verifying..."
+                                : "Verify"}
+                            </button>
+                          )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Pricing Summary */}
               <div className="border-t pt-4">
@@ -759,7 +1064,6 @@ const AdminOrderManagement = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Port
@@ -781,7 +1085,6 @@ const AdminOrderManagement = () => {
                   </select>
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Negotiated Price
@@ -794,7 +1097,7 @@ const AdminOrderManagement = () => {
                     onChange={(e) =>
                       setEditingOrder({
                         ...editingOrder,
-                        negotiatedPrice: parseFloat(e.target.value) || 0,
+                        negotiatedPrice: Number.parseFloat(e.target.value) || 0,
                       })
                     }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -802,7 +1105,6 @@ const AdminOrderManagement = () => {
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tracking Information
@@ -820,7 +1122,6 @@ const AdminOrderManagement = () => {
                   placeholder="Enter tracking number or info"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Estimated Delivery
@@ -838,7 +1139,6 @@ const AdminOrderManagement = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Notes
@@ -853,7 +1153,6 @@ const AdminOrderManagement = () => {
                   placeholder="Add notes about this order..."
                 />
               </div>
-
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   onClick={() => setShowEditModal(false)}

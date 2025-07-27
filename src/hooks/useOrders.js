@@ -2,14 +2,19 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addPaymentToOrder,
   createOrder,
   getAllOrdersAdmin,
   getMyOrders,
   getOrderById,
   getOrderStats,
+  getPaymentDetails,
+  getPaymentsForOrder,
+  getPendingPayments,
   removeOrderItem,
   updateOrderStatus,
   uploadPaymentSlip,
+  verifyPayment,
 } from "../api/order";
 
 // Create new order
@@ -90,5 +95,57 @@ export const useOrderStats = () => {
   return useQuery({
     queryKey: ["order-stats"],
     queryFn: getOrderStats,
+  });
+};
+
+
+
+// Add a payment to an order
+export const useAddPaymentToOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, paymentData }) =>
+      addPaymentToOrder(orderId, paymentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+    },
+  });
+};
+
+// Get all payments for an order
+export const useOrderPayments = (orderId) => {
+  return useQuery({
+    queryKey: ["order-payments", orderId],
+    queryFn: () => getPaymentsForOrder(orderId),
+    enabled: !!orderId,
+  });
+};
+
+// Verify a payment (admin only)
+export const useVerifyPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: verifyPayment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-payments"] });
+    },
+  });
+};
+
+// Get payment transaction details
+export const usePaymentDetails = (paymentId) => {
+  return useQuery({
+    queryKey: ["payment-details", paymentId],
+    queryFn: () => getPaymentDetails(paymentId),
+    enabled: !!paymentId,
+  });
+};
+
+// Get all pending payments (admin only)
+export const usePendingPayments = () => {
+  return useQuery({
+    queryKey: ["pending-payments"],
+    queryFn: getPendingPayments,
   });
 };
