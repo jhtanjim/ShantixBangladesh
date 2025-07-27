@@ -8,31 +8,36 @@ import {
   DollarSign,
   Eye,
   FileText,
+  Loader2,
   MapPin,
   Package,
   Plus,
   Upload,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import { useAddPaymentToOrder } from "../../hooks/useOrders";
+import { useAddPaymentToOrder, useUploadPayment } from "../../hooks/useOrders";
 
-const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
+const OrderCard = ({ order }) => {
   const [uploadingPayment, setUploadingPayment] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [paymentData, setPaymentData] = useState({
     amount: "",
     paymentMethod: "",
     transactionRef: "",
   });
+  const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
 
-  // Use the existing React Query hook
+  // Use React Query hooks
   const addPaymentMutation = useAddPaymentToOrder();
+  const uploadPaymentMutation = useUploadPayment();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -81,19 +86,23 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
     );
   };
 
-  const copyOrderId = (id) => {
-    navigator.clipboard.writeText(id);
-    Swal.fire({
-      icon: "success",
-      title: "Copied!",
-      text: `Order ID ${id} copied to clipboard.`,
-      timer: 1500,
-      showConfirmButton: false,
-    });
+  const copyOrderId = async (id) => {
+    try {
+      await navigator.clipboard.writeText(id);
+      Swal.fire({
+        icon: "success",
+        title: "Copied!",
+        text: `Order ID ${id} copied to clipboard.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   };
 
   // Validate file before setting
-  const validateFile = (file) => {
+  const validateFile = useCallback((file) => {
     const allowedTypes = [
       "image/jpeg",
       "image/jpg",
@@ -102,6 +111,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
       "image/webp",
       "application/pdf",
     ];
+
     if (!allowedTypes.includes(file.type)) {
       Swal.fire({
         icon: "error",
@@ -111,6 +121,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
       });
       return false;
     }
+
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       Swal.fire({
@@ -123,6 +134,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
       });
       return false;
     }
+
     if (file.size === 0) {
       Swal.fire({
         icon: "error",
@@ -132,64 +144,74 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
       });
       return false;
     }
+
     return true;
-  };
+  }, []);
 
   // Handle file selection with comprehensive validation
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (!validateFile(file)) {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+  const handleFileSelect = useCallback(
+    (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!validateFile(file)) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
       }
-      return;
-    }
-    setSelectedFile(file);
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target.result);
-      };
-      reader.onerror = () => {
-        Swal.fire({
-          icon: "error",
-          title: "Preview Error",
-          text: "Could not generate preview for this image.",
-          confirmButtonColor: "#3085d6",
-        });
+      setSelectedFile(file);
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target.result);
+        };
+        reader.onerror = () => {
+          Swal.fire({
+            icon: "error",
+            title: "Preview Error",
+            text: "Could not generate preview for this image.",
+            confirmButtonColor: "#3085d6",
+          });
+          setPreviewUrl(null);
+        };
+        reader.readAsDataURL(file);
+      } else {
         setPreviewUrl(null);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
-  };
+      }
+    },
+    [validateFile]
+  );
 
   // Handle drag and drop
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (validateFile(file)) {
-        setSelectedFile(file);
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => setPreviewUrl(e.target.result);
-          reader.readAsDataURL(file);
-        } else {
-          setPreviewUrl(null);
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (validateFile(file)) {
+          setSelectedFile(file);
+          if (file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = (e) => setPreviewUrl(e.target.result);
+            reader.readAsDataURL(file);
+          } else {
+            setPreviewUrl(null);
+          }
         }
       }
-    }
-  };
+    },
+    [validateFile]
+  );
 
   // Upload payment screenshot with progress tracking
   const handlePaymentUpload = async () => {
@@ -211,10 +233,12 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
     try {
       setUploadingPayment(true);
       setUploadProgress(0);
+
       const formData = new FormData();
       formData.append("paymentScreenshot", selectedFile);
       formData.append("orderId", order.id);
 
+      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -225,17 +249,10 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
         });
       }, 200);
 
-      let uploadResult;
-      if (handleFileUpload) {
-        uploadResult = await handleFileUpload(order.id, selectedFile);
-      } else if (uploadPaymentMutation) {
-        uploadResult = await uploadPaymentMutation.mutateAsync({
-          id: order.id,
-          paymentData: formData,
-        });
-      } else {
-        throw new Error("No upload method provided. Please contact support.");
-      }
+      await uploadPaymentMutation.mutateAsync({
+        orderId: order.id,
+        paymentData: formData,
+      });
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -252,19 +269,20 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
       clearSelectedFile();
     } catch (error) {
       console.error("Payment upload error:", error);
+
       let errorMessage =
         "Failed to upload payment screenshot. Please try again.";
 
       if (
-        error.message.includes("network") ||
-        error.message.includes("fetch")
+        error.message?.includes("network") ||
+        error.message?.includes("fetch")
       ) {
         errorMessage =
           "Network error. Please check your internet connection and try again.";
-      } else if (error.message.includes("size")) {
+      } else if (error.message?.includes("size")) {
         errorMessage =
           "File size is too large. Please compress your image and try again.";
-      } else if (error.message.includes("type")) {
+      } else if (error.message?.includes("type")) {
         errorMessage = "Invalid file type. Please upload an image or PDF file.";
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -275,9 +293,6 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
         title: "Upload Failed",
         text: errorMessage,
         confirmButtonColor: "#3085d6",
-        footer: error.message.includes("No upload method")
-          ? '<a href="mailto:support@example.com">Contact Support</a>'
-          : null,
       });
     } finally {
       setUploadingPayment(false);
@@ -286,14 +301,14 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
   };
 
   // Clear selected file
-  const clearSelectedFile = () => {
+  const clearSelectedFile = useCallback(() => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setUploadProgress(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
+  }, []);
 
   // View uploaded payment screenshot
   const viewPaymentScreenshot = () => {
@@ -311,54 +326,56 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
     }
   };
 
-  // Handle payment form submission using React Query
-  const handlePaymentSubmit = async () => {
-    if (
-      !paymentData.amount ||
-      !paymentData.paymentMethod ||
-      !paymentData.transactionRef
-    ) {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Information",
-        text: "Please fill in all payment details.",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
+  // View payment details
+  const viewPaymentDetails = (payment) => {
+    setSelectedPayment(payment);
+  };
+
+  // Validate payment form
+  const validatePaymentForm = () => {
+    const newErrors = {};
+
+    if (!paymentData.amount || Number.parseFloat(paymentData.amount) <= 0) {
+      newErrors.amount = "Please enter a valid payment amount";
     }
 
-    if (Number.parseFloat(paymentData.amount) <= 0) {
-      Swal.fire({
-        icon: "error",
-        title: "Invalid Amount",
-        text: "Please enter a valid payment amount.",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
+    if (!paymentData.paymentMethod) {
+      newErrors.paymentMethod = "Please select a payment method";
+    }
+
+    if (!paymentData.transactionRef?.trim()) {
+      newErrors.transactionRef = "Please enter a transaction reference";
     }
 
     // Check if order has finalPrice set
     const orderFinalPrice =
       order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
     if (!orderFinalPrice) {
-      Swal.fire({
-        icon: "error",
-        title: "Order Not Ready",
-        text: "This order needs to have a final price set before payments can be added. Please contact support.",
-        confirmButtonColor: "#3085d6",
-      });
+      newErrors.general =
+        "This order needs to have a final price set before payments can be added. Please contact support.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle payment form submission using React Query
+  const handlePaymentSubmit = async () => {
+    if (!validatePaymentForm()) {
       return;
     }
 
+    const orderFinalPrice =
+      order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
+
     try {
-      // Use the React Query mutation with proper payload structure
       await addPaymentMutation.mutateAsync({
         orderId: order.id,
         paymentData: {
           amount: Number.parseFloat(paymentData.amount),
           paymentMethod: paymentData.paymentMethod,
-          transactionRef: paymentData.transactionRef,
-          orderFinalPrice: orderFinalPrice, // Include the final price in the payload
+          transactionRef: paymentData.transactionRef.trim(),
+          orderFinalPrice: orderFinalPrice,
         },
       });
 
@@ -377,12 +394,12 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
         paymentMethod: "",
         transactionRef: "",
       });
+      setErrors({});
       setShowPaymentForm(false);
     } catch (error) {
       console.error("Payment submission error:", error);
 
       let errorMessage = "Failed to submit payment. Please try again.";
-
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message?.includes("final price")) {
@@ -399,7 +416,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
     }
   };
 
-  // Check if payment upload should be shown - use NEGOTIATING and CONFIRMED instead
+  // Check if payment upload should be shown
   const showPaymentUpload = ["NEGOTIATING", "CONFIRMED"].includes(order.status);
   const hasPaymentScreenshot = order.paymentScreenshot || order.paymentReceipt;
 
@@ -425,23 +442,6 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
             </div>
           </div>
 
-          {order.user && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm font-semibold text-blue-800">
-                Customer Information:
-              </p>
-              <p className="text-sm text-blue-700">
-                {order.user.firstName} {order.user.lastName} ({order.user.email}
-                )
-              </p>
-              {order.user.phone && (
-                <p className="text-sm text-blue-700">
-                  Phone: {order.user.phone}
-                </p>
-              )}
-            </div>
-          )}
-
           {order.orderItems && order.orderItems.length > 0 && (
             <div className="space-y-3">
               {order.orderItems.map((item) => (
@@ -450,11 +450,14 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                   className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
                 >
                   <img
-                    src={item.car.mainImage || "/placeholder.svg"}
+                    src={
+                      item.car.mainImage ||
+                      "/placeholder.svg?height=48&width=64"
+                    }
                     alt={item.car.title}
                     className="w-16 h-12 object-cover rounded-md"
                     onError={(e) => {
-                      e.target.style.display = "none";
+                      e.target.src = "/placeholder.svg?height=48&width=64";
                     }}
                   />
                   <div className="flex-1">
@@ -527,14 +530,6 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
             </div>
           )}
 
-          {order.whatsappMessageSent && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm font-semibold text-green-800">
-                WhatsApp message sent to customer
-              </p>
-            </div>
-          )}
-
           {/* Payment Screenshot Status */}
           {hasPaymentScreenshot && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -561,42 +556,78 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
           {/* Display Payments */}
           {order.payments && order.payments.length > 0 && (
             <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm font-semibold text-purple-800 mb-2">
-                Payment History:
-              </p>
-              {order.payments.map((payment) => (
-                <div key={payment.id} className="text-sm text-purple-700 mb-1">
-                  <div className="flex justify-between items-center">
-                    <span>
-                      {formatPrice(payment.amount)} via {payment.paymentMethod}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        payment.isVerified
-                          ? "bg-green-100 text-green-800"
-                          : payment.isApproved === false
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-purple-800">
+                  Payment History:
+                </p>
+                <button
+                  onClick={() => setShowPaymentHistory(!showPaymentHistory)}
+                  className="text-sm text-purple-600 hover:text-purple-800 underline"
+                >
+                  {showPaymentHistory ? "Hide" : "View All"}
+                </button>
+              </div>
+              {showPaymentHistory ? (
+                <div className="space-y-2">
+                  {order.payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="bg-white p-3 rounded border"
                     >
-                      {payment.isVerified
-                        ? "Verified"
-                        : payment.isApproved === false
-                        ? "Rejected"
-                        : "Pending"}
-                    </span>
-                  </div>
-                  <div className="text-xs text-purple-600">
-                    Ref: {payment.transactionRef} |{" "}
-                    {formatDate(payment.createdAt)}
-                  </div>
-                  {payment.rejectionReason && (
-                    <div className="text-xs text-red-600 mt-1">
-                      Reason: {payment.rejectionReason}
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-purple-900">
+                              {formatPrice(payment.amount)} via{" "}
+                              {payment.paymentMethod}
+                            </span>
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${
+                                payment.isVerified
+                                  ? "bg-green-100 text-green-800"
+                                  : payment.isApproved === false
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {payment.isVerified
+                                ? "Verified"
+                                : payment.isApproved === false
+                                ? "Rejected"
+                                : "Pending"}
+                            </span>
+                          </div>
+                          <div className="text-xs text-purple-600">
+                            Ref: {payment.transactionRef} |{" "}
+                            {formatDate(payment.createdAt)}
+                          </div>
+                          {payment.rejectionReason && (
+                            <div className="text-xs text-red-600 mt-1">
+                              Reason: {payment.rejectionReason}
+                            </div>
+                          )}
+                          {payment.notes && (
+                            <div className="text-xs text-green-600 mt-1">
+                              Admin Notes: {payment.notes}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => viewPaymentDetails(payment)}
+                          className="text-purple-600 hover:text-purple-800 p-1"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-sm text-purple-700">
+                  {order.payments.length} payment(s) submitted
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -638,6 +669,13 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
               <h4 className="text-sm font-semibold text-purple-800 mb-3">
                 Add Payment Details
               </h4>
+
+              {errors.general && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                  {errors.general}
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
@@ -649,30 +687,46 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                       type="number"
                       step="0.01"
                       value={paymentData.amount}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setPaymentData({
                           ...paymentData,
                           amount: e.target.value,
-                        })
-                      }
-                      className="w-full pl-8 pr-3 py-2 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        });
+                        if (errors.amount) {
+                          setErrors({ ...errors, amount: null });
+                        }
+                      }}
+                      className={`w-full pl-8 pr-3 py-2 text-sm border rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                        errors.amount ? "border-red-300" : "border-purple-300"
+                      }`}
                       placeholder="0.00"
                     />
                   </div>
+                  {errors.amount && (
+                    <p className="text-xs text-red-600 mt-1">{errors.amount}</p>
+                  )}
                 </div>
+
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
                     Payment Method *
                   </label>
                   <select
                     value={paymentData.paymentMethod}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setPaymentData({
                         ...paymentData,
                         paymentMethod: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      });
+                      if (errors.paymentMethod) {
+                        setErrors({ ...errors, paymentMethod: null });
+                      }
+                    }}
+                    className={`w-full px-3 py-2 text-sm border rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      errors.paymentMethod
+                        ? "border-red-300"
+                        : "border-purple-300"
+                    }`}
                   >
                     <option value="">Select Method</option>
                     <option value="bank_transfer">Bank Transfer</option>
@@ -682,7 +736,13 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                     <option value="cash">Cash</option>
                     <option value="other">Other</option>
                   </select>
+                  {errors.paymentMethod && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.paymentMethod}
+                    </p>
+                  )}
                 </div>
+
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
                     Transaction Reference *
@@ -690,16 +750,29 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                   <input
                     type="text"
                     value={paymentData.transactionRef}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setPaymentData({
                         ...paymentData,
                         transactionRef: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      });
+                      if (errors.transactionRef) {
+                        setErrors({ ...errors, transactionRef: null });
+                      }
+                    }}
+                    className={`w-full px-3 py-2 text-sm border rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      errors.transactionRef
+                        ? "border-red-300"
+                        : "border-purple-300"
+                    }`}
                     placeholder="Transaction ID/Reference"
                   />
+                  {errors.transactionRef && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.transactionRef}
+                    </p>
+                  )}
                 </div>
+
                 <div className="flex gap-2">
                   <button
                     onClick={handlePaymentSubmit}
@@ -708,7 +781,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                   >
                     {addPaymentMutation.isPending ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Submitting...</span>
                       </>
                     ) : (
@@ -719,7 +792,15 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                     )}
                   </button>
                   <button
-                    onClick={() => setShowPaymentForm(false)}
+                    onClick={() => {
+                      setShowPaymentForm(false);
+                      setErrors({});
+                      setPaymentData({
+                        amount: "",
+                        paymentMethod: "",
+                        transactionRef: "",
+                      });
+                    }}
                     disabled={addPaymentMutation.isPending}
                     className="px-3 py-2 border border-purple-300 text-purple-700 rounded text-sm font-medium hover:bg-purple-50 disabled:opacity-50 transition"
                   >
@@ -740,6 +821,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                     Upload Payment Screenshot
                   </p>
                 </div>
+
                 <input
                   ref={fileInputRef}
                   id={`payment-upload-${order.id}`}
@@ -748,6 +830,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
+
                 {!selectedFile ? (
                   <div
                     onDragOver={handleDragOver}
@@ -786,6 +869,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                         <X className="w-4 h-4" />
                       </button>
                     </div>
+
                     {/* Image Preview */}
                     {previewUrl && (
                       <div className="relative">
@@ -796,6 +880,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                         />
                       </div>
                     )}
+
                     {/* Upload Progress */}
                     {uploadingPayment && uploadProgress > 0 && (
                       <div className="space-y-2">
@@ -811,6 +896,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                         </div>
                       </div>
                     )}
+
                     {/* Action Buttons */}
                     <div className="flex gap-2">
                       <button
@@ -820,7 +906,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                       >
                         {uploadingPayment ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             <span>Uploading...</span>
                           </>
                         ) : (
@@ -840,6 +926,7 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
                     </div>
                   </div>
                 )}
+
                 {/* Help Text */}
                 <div className="mt-3 p-2 bg-amber-100 border border-amber-200 rounded text-xs text-amber-700">
                   <div className="flex items-start gap-2">
@@ -859,6 +946,103 @@ const OrderCard = ({ order, handleFileUpload, uploadPaymentMutation }) => {
           )}
         </div>
       </div>
+
+      {/* Payment Details Modal */}
+      {selectedPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Payment Details
+              </h3>
+              <button
+                onClick={() => setSelectedPayment(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Amount
+                </label>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatPrice(selectedPayment.amount)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Payment Method
+                </label>
+                <p className="text-gray-900">{selectedPayment.paymentMethod}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Transaction Reference
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {selectedPayment.transactionRef}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Status
+                </label>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedPayment.isVerified
+                      ? "bg-green-100 text-green-800"
+                      : selectedPayment.isApproved === false
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {selectedPayment.isVerified
+                    ? "Verified"
+                    : selectedPayment.isApproved === false
+                    ? "Rejected"
+                    : "Pending"}
+                </span>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Date
+                </label>
+                <p className="text-gray-900">
+                  {formatDate(selectedPayment.createdAt)}
+                </p>
+              </div>
+              {selectedPayment.notes && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Admin Notes
+                  </label>
+                  <p className="text-gray-900">{selectedPayment.notes}</p>
+                </div>
+              )}
+              {selectedPayment.rejectionReason && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Rejection Reason
+                  </label>
+                  <p className="text-red-600">
+                    {selectedPayment.rejectionReason}
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setSelectedPayment(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

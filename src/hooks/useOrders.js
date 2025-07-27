@@ -1,5 +1,3 @@
-
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addPaymentToOrder,
@@ -25,6 +23,9 @@ export const useCreateOrder = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-orders"] });
     },
+    onError: (error) => {
+      console.error("Create order error:", error);
+    },
   });
 };
 
@@ -34,6 +35,8 @@ export const useOrder = (orderId) => {
     queryKey: ["order", orderId],
     queryFn: () => getOrderById(orderId),
     enabled: !!orderId,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -42,6 +45,8 @@ export const useMyOrders = () => {
   return useQuery({
     queryKey: ["my-orders"],
     queryFn: getMyOrders,
+    retry: 3,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -51,20 +56,32 @@ export const useUpdateOrderStatus = () => {
   return useMutation({
     mutationFn: ({ orderId, statusData }) =>
       updateOrderStatus(orderId, statusData),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ["orders-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order-stats"] });
+    },
+    onError: (error) => {
+      console.error("Update order status error:", error);
     },
   });
 };
 
-// Upload payment
+// Upload payment screenshot
 export const useUploadPayment = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, paymentData }) =>
       uploadPaymentSlip(orderId, paymentData),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order-payments", variables.orderId] });
+    },
+    onError: (error) => {
+      console.error("Upload payment error:", error);
     },
   });
 };
@@ -75,9 +92,13 @@ export const useRemoveOrderItem = () => {
   return useMutation({
     mutationFn: ({ orderId, itemId }) =>
       removeOrderItem(orderId, itemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["order"] });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
       queryClient.invalidateQueries({ queryKey: ["orders-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+    },
+    onError: (error) => {
+      console.error("Remove order item error:", error);
     },
   });
 };
@@ -87,6 +108,8 @@ export const useAllOrders = () => {
   return useQuery({
     queryKey: ["orders-admin"],
     queryFn: getAllOrdersAdmin,
+    retry: 3,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -95,10 +118,10 @@ export const useOrderStats = () => {
   return useQuery({
     queryKey: ["order-stats"],
     queryFn: getOrderStats,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
-
-
 
 // Add a payment to an order
 export const useAddPaymentToOrder = () => {
@@ -106,9 +129,16 @@ export const useAddPaymentToOrder = () => {
   return useMutation({
     mutationFn: ({ orderId, paymentData }) =>
       addPaymentToOrder(orderId, paymentData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+    onSuccess: (data, variables) => {
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
       queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order-payments", variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["orders-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-payments"] });
+    },
+    onError: (error) => {
+      console.error("Add payment error:", error);
     },
   });
 };
@@ -119,6 +149,8 @@ export const useOrderPayments = (orderId) => {
     queryKey: ["order-payments", orderId],
     queryFn: () => getPaymentsForOrder(orderId),
     enabled: !!orderId,
+    retry: 3,
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 };
 
@@ -126,9 +158,20 @@ export const useOrderPayments = (orderId) => {
 export const useVerifyPayment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: verifyPayment,
-    onSuccess: () => {
+    mutationFn: ({ paymentId, verificationData }) =>
+      verifyPayment(paymentId, verificationData),
+    onSuccess: (data, variables) => {
+      // Invalidate all payment-related queries
       queryClient.invalidateQueries({ queryKey: ["pending-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["orders-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["payment-details", variables.paymentId] });
+      
+      // Also invalidate order queries that might contain this payment
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+      queryClient.invalidateQueries({ queryKey: ["my-orders"] });
+    },
+    onError: (error) => {
+      console.error("Verify payment error:", error);
     },
   });
 };
@@ -139,6 +182,8 @@ export const usePaymentDetails = (paymentId) => {
     queryKey: ["payment-details", paymentId],
     queryFn: () => getPaymentDetails(paymentId),
     enabled: !!paymentId,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -147,5 +192,7 @@ export const usePendingPayments = () => {
   return useQuery({
     queryKey: ["pending-payments"],
     queryFn: getPendingPayments,
+    retry: 3,
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 };

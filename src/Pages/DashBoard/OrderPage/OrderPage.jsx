@@ -12,6 +12,7 @@ import {
   Edit,
   Eye,
   Filter,
+  Loader2,
   MessageSquare,
   Package,
   Search,
@@ -20,7 +21,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Swal from "sweetalert2";
 import {
   useAllOrders,
@@ -37,6 +38,7 @@ const AdminOrderManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copiedOrderId, setCopiedOrderId] = useState(null);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(null);
 
   // API hooks
   const { data: ordersData, isLoading, error } = useAllOrders();
@@ -73,12 +75,14 @@ const AdminOrderManagement = () => {
       order.orderItems?.some((item) =>
         item.car?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       );
+
     const matchesStatus =
       statusFilter === "all" || order.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
-  const copyToClipboard = async (orderId) => {
+  const copyToClipboard = useCallback(async (orderId) => {
     try {
       await navigator.clipboard.writeText(orderId);
       setCopiedOrderId(orderId);
@@ -94,13 +98,21 @@ const AdminOrderManagement = () => {
       setCopiedOrderId(orderId);
       setTimeout(() => setCopiedOrderId(null), 2000);
     }
-  };
+  }, []);
 
   const handleSetFinalPrice = async (orderId, finalPrice) => {
     try {
+      const currentOrder = orders.find((order) => order.id === orderId);
+      if (!currentOrder) {
+        throw new Error("Order not found");
+      }
+
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { finalPrice: Number.parseFloat(finalPrice) }, // Only send finalPrice
+        statusData: {
+          finalPrice: Number.parseFloat(finalPrice),
+          status: currentOrder.status,
+        },
       });
 
       Swal.fire({
@@ -129,6 +141,12 @@ const AdminOrderManagement = () => {
       });
     } catch (error) {
       console.error("Failed to update order status:", error);
+      Swal.fire({
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to update order status",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
@@ -140,30 +158,44 @@ const AdminOrderManagement = () => {
       });
     } catch (error) {
       console.error("Failed to update order port:", error);
-    }
-  };
-
-  const handlePriceUpdate = async (orderId, newPrice) => {
-    try {
-      await updateOrderMutation.mutateAsync({
-        orderId,
-        statusData: { negotiatedPrice: Number.parseFloat(newPrice) },
+      Swal.fire({
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to update port",
+        icon: "error",
+        confirmButtonText: "OK",
       });
-    } catch (error) {
-      console.error("Failed to update price:", error);
     }
   };
 
   const handleRemoveItem = async (orderId, itemId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this item from the order?"
-      )
-    ) {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to remove this item from the order?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, remove it!",
+    });
+
+    if (result.isConfirmed) {
       try {
         await removeItemMutation.mutateAsync({ orderId, itemId });
+        Swal.fire({
+          title: "Removed!",
+          text: "The item has been removed from the order.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } catch (error) {
         console.error("Failed to remove item:", error);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Failed to remove item",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
       }
     }
   };
@@ -174,7 +206,9 @@ const AdminOrderManagement = () => {
       negotiatedPrice: order.negotiatedPrice || order.totalOriginalPrice,
       notes: order.notes || "",
       trackingInfo: order.trackingInfo || "",
-      estimatedDelivery: order.estimatedDelivery || "",
+      estimatedDelivery: order.estimatedDelivery
+        ? new Date(order.estimatedDelivery).toISOString().split("T")[0]
+        : "",
       port: order.port || "mongla",
     });
     setShowEditModal(true);
@@ -183,13 +217,12 @@ const AdminOrderManagement = () => {
   const saveOrder = async () => {
     try {
       let estimatedDeliveryISO = null;
+
       if (editingOrder.estimatedDelivery) {
         try {
-          let dateStr = editingOrder.estimatedDelivery;
-          if (dateStr.length === 10) {
-            dateStr += "T12:00:00";
-          }
-          const deliveryDate = new Date(dateStr);
+          const deliveryDate = new Date(
+            editingOrder.estimatedDelivery + "T12:00:00"
+          );
           if (isNaN(deliveryDate.getTime())) {
             throw new Error("Invalid date format");
           }
@@ -203,15 +236,17 @@ const AdminOrderManagement = () => {
         orderId: editingOrder.id,
         statusData: {
           status: editingOrder.status,
-          negotiatedPrice: editingOrder.negotiatedPrice,
+          negotiatedPrice: Number.parseFloat(editingOrder.negotiatedPrice),
           notes: editingOrder.notes,
           trackingInfo: editingOrder.trackingInfo,
           estimatedDelivery: estimatedDeliveryISO,
           port: editingOrder.port,
         },
       });
+
       setShowEditModal(false);
       setEditingOrder(null);
+
       Swal.fire({
         title: "Success!",
         text: "Order updated successfully",
@@ -233,7 +268,6 @@ const AdminOrderManagement = () => {
     }
   };
 
-  // Handle payment approval with SweetAlert using React Query
   const handlePaymentApproval = (payment) => {
     Swal.fire({
       title: "Verify Payment",
@@ -292,7 +326,7 @@ const AdminOrderManagement = () => {
             paymentId: payment.id,
             verificationData: {
               isApproved: true,
-              notes: result.value.notes,
+              notes: result.value.notes || "",
               rejectionReason: "",
             },
           });
@@ -354,6 +388,10 @@ const AdminOrderManagement = () => {
     });
   };
 
+  const viewPaymentDetails = (payment) => {
+    setShowPaymentDetails(payment);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -389,7 +427,7 @@ const AdminOrderManagement = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading orders...</p>
         </div>
       </div>
@@ -402,6 +440,12 @@ const AdminOrderManagement = () => {
         <div className="text-center text-red-600">
           <XCircle className="h-12 w-12 mx-auto mb-4" />
           <p>Failed to load orders. Please try again.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -419,7 +463,7 @@ const AdminOrderManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7 mb-6">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5 mb-6">
         {Object.entries(statusConfig).map(([status, config]) => {
           const count = statusCounts[status] || 0;
           const Icon = config.icon;
@@ -541,9 +585,11 @@ const AdminOrderManagement = () => {
                           <div className="text-sm text-gray-500">
                             {order.user?.email}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {order.user?.phone}
-                          </div>
+                          {order.user?.phone && (
+                            <div className="text-sm text-gray-500">
+                              {order.user?.phone}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -564,20 +610,18 @@ const AdminOrderManagement = () => {
                         <div className="flex items-center">
                           <DollarSign className="h-4 w-4 text-green-600 mr-1" />
                           <span className="font-medium">
-                            $
-                            {(
+                            {formatPrice(
                               order.finalPrice ||
-                              order.negotiatedPrice ||
-                              order.totalOriginalPrice
-                            ).toLocaleString()}
+                                order.negotiatedPrice ||
+                                order.totalOriginalPrice
+                            )}
                           </span>
                         </div>
                         {order.negotiatedPrice &&
                           order.negotiatedPrice !==
                             order.totalOriginalPrice && (
                             <div className="text-xs text-gray-500 line-through">
-                              Original: $
-                              {order.totalOriginalPrice.toLocaleString()}
+                              Original: {formatPrice(order.totalOriginalPrice)}
                             </div>
                           )}
                         {!order.finalPrice && (
@@ -587,12 +631,12 @@ const AdminOrderManagement = () => {
                                 title: "Set Final Price",
                                 html: `
                                   <div class="text-left">
-                                    <p class="mb-4">Current negotiated price: $${(
+                                    <p class="mb-4">Current negotiated price: ${formatPrice(
                                       order.negotiatedPrice ||
-                                      order.totalOriginalPrice
-                                    ).toLocaleString()}</p>
+                                        order.totalOriginalPrice
+                                    )}</p>
                                     <label for="final-price" class="block text-sm font-medium text-gray-700 mb-2">Final Price:</label>
-                                    <input id="final-price" type="number" step="0.01" value="${
+                                    <input id="final-price" type="number" step="0.01" min="0" value="${
                                       order.negotiatedPrice ||
                                       order.totalOriginalPrice
                                     }" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter final price">
@@ -602,20 +646,30 @@ const AdminOrderManagement = () => {
                                 confirmButtonText: "Set Final Price",
                                 confirmButtonColor: "#10b981",
                                 preConfirm: () => {
-                                  const finalPrice =
-                                    document.getElementById(
-                                      "final-price"
-                                    ).value;
-                                  if (
-                                    !finalPrice ||
-                                    Number.parseFloat(finalPrice) <= 0
-                                  ) {
+                                  const finalPriceInput =
+                                    document.getElementById("final-price");
+                                  const finalPrice = finalPriceInput.value;
+
+                                  if (!finalPrice || finalPrice.trim() === "") {
                                     Swal.showValidationMessage(
-                                      "Please enter a valid final price"
+                                      "Please enter a final price"
                                     );
                                     return false;
                                   }
-                                  return finalPrice;
+
+                                  const numericPrice =
+                                    Number.parseFloat(finalPrice);
+                                  if (
+                                    isNaN(numericPrice) ||
+                                    numericPrice <= 0
+                                  ) {
+                                    Swal.showValidationMessage(
+                                      "Please enter a valid final price greater than 0"
+                                    );
+                                    return false;
+                                  }
+
+                                  return numericPrice;
                                 },
                               }).then((result) => {
                                 if (result.isConfirmed) {
@@ -696,17 +750,28 @@ const AdminOrderManagement = () => {
                                     ? "Rejected"
                                     : "Pending"}
                                 </span>
+                                <button
+                                  onClick={() => viewPaymentDetails(payment)}
+                                  className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                                  title="View Payment Details"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </button>
                                 {!payment.isVerified &&
                                   payment.isApproved !== false && (
                                     <button
                                       onClick={() =>
                                         handlePaymentApproval(payment)
                                       }
-                                      className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                                      className="text-green-600 hover:text-green-800 p-1 rounded"
                                       title="Verify Payment"
                                       disabled={verifyPaymentMutation.isPending}
                                     >
-                                      <CreditCard className="h-3 w-3" />
+                                      {verifyPaymentMutation.isPending ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <CreditCard className="h-3 w-3" />
+                                      )}
                                     </button>
                                   )}
                               </div>
@@ -734,8 +799,13 @@ const AdminOrderManagement = () => {
                         onClick={() => openEditModal(order)}
                         className="text-green-600 hover:text-green-900 p-1 rounded"
                         title="Edit Order"
+                        disabled={updateOrderMutation.isPending}
                       >
-                        <Edit className="h-4 w-4" />
+                        {updateOrderMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Edit className="h-4 w-4" />
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -753,6 +823,117 @@ const AdminOrderManagement = () => {
           )}
         </div>
       </div>
+
+      {/* Payment Details Modal */}
+      {showPaymentDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Payment Details
+              </h3>
+              <button
+                onClick={() => setShowPaymentDetails(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Amount
+                </label>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatPrice(showPaymentDetails.amount)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Payment Method
+                </label>
+                <p className="text-gray-900">
+                  {showPaymentDetails.paymentMethod}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Transaction Reference
+                </label>
+                <p className="text-gray-900 font-mono">
+                  {showPaymentDetails.transactionRef}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Status
+                </label>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    showPaymentDetails.isVerified
+                      ? "bg-green-100 text-green-800"
+                      : showPaymentDetails.isApproved === false
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {showPaymentDetails.isVerified
+                    ? "Verified"
+                    : showPaymentDetails.isApproved === false
+                    ? "Rejected"
+                    : "Pending"}
+                </span>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Date
+                </label>
+                <p className="text-gray-900">
+                  {formatDate(showPaymentDetails.createdAt)}
+                </p>
+              </div>
+              {showPaymentDetails.notes && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Admin Notes
+                  </label>
+                  <p className="text-gray-900">{showPaymentDetails.notes}</p>
+                </div>
+              )}
+              {showPaymentDetails.rejectionReason && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Rejection Reason
+                  </label>
+                  <p className="text-red-600">
+                    {showPaymentDetails.rejectionReason}
+                  </p>
+                </div>
+              )}
+              <div className="flex gap-2 pt-4">
+                {!showPaymentDetails.isVerified &&
+                  showPaymentDetails.isApproved !== false && (
+                    <button
+                      onClick={() => {
+                        setShowPaymentDetails(null);
+                        handlePaymentApproval(showPaymentDetails);
+                      }}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Verify Payment
+                    </button>
+                  )}
+                <button
+                  onClick={() => setShowPaymentDetails(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -846,7 +1027,7 @@ const AdminOrderManagement = () => {
                         Phone
                       </label>
                       <p className="text-gray-900">
-                        {selectedOrder.user?.phone}
+                        {selectedOrder.user?.phone || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -865,9 +1046,15 @@ const AdminOrderManagement = () => {
                       className="border rounded-lg p-4 flex items-center space-x-4"
                     >
                       <img
-                        src={item.car?.mainImage || "/placeholder.svg"}
+                        src={
+                          item.car?.mainImage ||
+                          "/placeholder.svg?height=64&width=64"
+                        }
                         alt={item.car?.title}
                         className="w-16 h-16 object-cover rounded"
+                        onError={(e) => {
+                          e.target.src = "/placeholder.svg?height=64&width=64";
+                        }}
                       />
                       <div className="flex-1">
                         <h5 className="font-medium text-gray-900">
@@ -878,12 +1065,11 @@ const AdminOrderManagement = () => {
                         </p>
                         <div className="flex items-center space-x-4 mt-2">
                           <span className="text-sm text-gray-500">
-                            Original: ${item.originalPrice?.toLocaleString()}
+                            Original: {formatPrice(item.originalPrice)}
                           </span>
                           {item.negotiatedPrice && (
                             <span className="text-sm font-medium text-green-600">
-                              Negotiated: $
-                              {item.negotiatedPrice.toLocaleString()}
+                              Negotiated: {formatPrice(item.negotiatedPrice)}
                             </span>
                           )}
                         </div>
@@ -894,8 +1080,13 @@ const AdminOrderManagement = () => {
                         }
                         className="text-red-600 hover:text-red-800 p-2"
                         title="Remove item"
+                        disabled={removeItemMutation.isPending}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {removeItemMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   ))}
@@ -956,18 +1147,26 @@ const AdminOrderManagement = () => {
                             </p>
                           )}
                         </div>
-                        {!payment.isVerified &&
-                          payment.isApproved !== false && (
-                            <button
-                              onClick={() => handlePaymentApproval(payment)}
-                              className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-                              disabled={verifyPaymentMutation.isPending}
-                            >
-                              {verifyPaymentMutation.isPending
-                                ? "Verifying..."
-                                : "Verify"}
-                            </button>
-                          )}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => viewPaymentDetails(payment)}
+                            className="px-3 py-1 text-blue-600 hover:text-blue-800 border border-blue-300 rounded text-sm"
+                          >
+                            View
+                          </button>
+                          {!payment.isVerified &&
+                            payment.isApproved !== false && (
+                              <button
+                                onClick={() => handlePaymentApproval(payment)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                                disabled={verifyPaymentMutation.isPending}
+                              >
+                                {verifyPaymentMutation.isPending
+                                  ? "Verifying..."
+                                  : "Verify"}
+                              </button>
+                            )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -979,12 +1178,11 @@ const AdminOrderManagement = () => {
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total Amount:</span>
                   <span>
-                    $
-                    {(
-                      selectedOrder.negotiatedPrice ||
+                    {formatPrice(
                       selectedOrder.finalPrice ||
-                      selectedOrder.totalOriginalPrice
-                    ).toLocaleString()}
+                        selectedOrder.negotiatedPrice ||
+                        selectedOrder.totalOriginalPrice
+                    )}
                   </span>
                 </div>
               </div>
@@ -1026,6 +1224,10 @@ const AdminOrderManagement = () => {
                         }
                         alt="Payment screenshot"
                         className="mt-2 max-w-sm rounded border"
+                        onError={(e) => {
+                          e.target.src =
+                            "/placeholder.svg?height=200&width=300";
+                        }}
                       />
                     </div>
                   )}
@@ -1064,6 +1266,7 @@ const AdminOrderManagement = () => {
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Port
@@ -1085,6 +1288,7 @@ const AdminOrderManagement = () => {
                   </select>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Negotiated Price
@@ -1093,6 +1297,7 @@ const AdminOrderManagement = () => {
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <input
                     type="number"
+                    step="0.01"
                     value={editingOrder.negotiatedPrice || ""}
                     onChange={(e) =>
                       setEditingOrder({
@@ -1105,6 +1310,7 @@ const AdminOrderManagement = () => {
                   />
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tracking Information
@@ -1122,13 +1328,13 @@ const AdminOrderManagement = () => {
                   placeholder="Enter tracking number or info"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Estimated Delivery
                 </label>
                 <input
                   type="date"
-                  required
                   value={editingOrder.estimatedDelivery || ""}
                   onChange={(e) =>
                     setEditingOrder({
@@ -1139,6 +1345,7 @@ const AdminOrderManagement = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Notes
@@ -1153,9 +1360,13 @@ const AdminOrderManagement = () => {
                   placeholder="Add notes about this order..."
                 />
               </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingOrder(null);
+                  }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                   disabled={updateOrderMutation.isPending}
                 >
@@ -1164,9 +1375,16 @@ const AdminOrderManagement = () => {
                 <button
                   onClick={saveOrder}
                   disabled={updateOrderMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {updateOrderMutation.isPending ? "Saving..." : "Save Changes"}
+                  {updateOrderMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </div>
