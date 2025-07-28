@@ -152,7 +152,6 @@ const AdminOrderManagement = () => {
     return port ? port.label : "Not Selected";
   };
 
-  // Add this function after the other utility functions (around line 100)
   const calculateTotalPaid = (paymentTransactions) => {
     if (!paymentTransactions || paymentTransactions.length === 0) return 0;
     return paymentTransactions
@@ -346,9 +345,9 @@ const AdminOrderManagement = () => {
             Admin Notes (optional):
           </label>
           <textarea 
-            id="notes" 
-            class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-            rows="3" 
+            id="notes"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            rows="3"
             placeholder="Add verification notes..."
           ></textarea>
         </div>
@@ -380,10 +379,10 @@ const AdminOrderManagement = () => {
               Rejection Reason (Required):
             </label>
             <textarea 
-              id="rejection-reason" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-              rows="3" 
-              placeholder="Please provide a detailed reason for rejection..." 
+              id="rejection-reason"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+              rows="3"
+              placeholder="Please provide a detailed reason for rejection..."
               required
             ></textarea>
           </div>
@@ -411,9 +410,10 @@ const AdminOrderManagement = () => {
             verificationData: {
               isApproved: true, // Explicitly set as boolean true
               notes: result.value?.notes || "",
-              rejectionReason: null, // Set as null instead of empty string
+              rejectionReason: null, // Set as null for approved payments
             },
           });
+
           Swal.fire({
             icon: "success",
             title: "✅ Payment Approved!",
@@ -445,6 +445,7 @@ const AdminOrderManagement = () => {
                   rejectionReason: rejectResult.value?.rejectionReason || "",
                 },
               });
+
               Swal.fire({
                 icon: "success",
                 title: "❌ Payment Rejected",
@@ -615,7 +616,6 @@ const AdminOrderManagement = () => {
                 const StatusIcon =
                   statusConfig[order.status]?.icon || AlertCircle;
                 const statusColor = statusConfig[order.status]?.color || "gray";
-
                 return (
                   <tr
                     key={order.id}
@@ -732,17 +732,17 @@ const AdminOrderManagement = () => {
                                     <label for="final-price" class="block text-sm font-medium text-gray-700 mb-2">
                                       Final Price:
                                     </label>
-                                    <input 
-                                      id="final-price" 
-                                      type="number" 
-                                      step="0.01" 
-                                      min="0" 
-                                      value="${
-                                        order.negotiatedPrice ||
-                                        order.totalOriginalPrice
-                                      }" 
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" 
-                                      placeholder="Enter final price"
+                                    <input
+                                       id="final-price"
+                                       type="number"
+                                       step="0.01"
+                                       min="0"
+                                       value="${
+                                         order.negotiatedPrice ||
+                                         order.totalOriginalPrice
+                                       }"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Enter final price"
                                     >
                                   </div>
                                 `,
@@ -954,7 +954,6 @@ const AdminOrderManagement = () => {
                 </button>
               </div>
             </div>
-
             <div className="p-6 space-y-8">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -978,7 +977,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1004,7 +1002,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1152,7 +1149,8 @@ const AdminOrderManagement = () => {
                           <img
                             src={
                               item.car?.mainImage ||
-                              "/placeholder.svg?height=100&width=100"
+                              "/placeholder.svg?height=100&width=100" ||
+                              "/placeholder.svg"
                             }
                             alt={item.car?.title}
                             className="w-24 h-24 object-cover rounded-lg border border-gray-200"
