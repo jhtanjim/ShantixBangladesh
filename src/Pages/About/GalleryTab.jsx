@@ -10,7 +10,6 @@ const GalleryTab = ({
   if (!galleryImages.length) {
     return <p className="text-center text-gray-500">No images available.</p>;
   }
-
   const currentImage = galleryImages[currentImageIndex] || {};
 
   return (

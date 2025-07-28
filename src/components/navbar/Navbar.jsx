@@ -111,11 +111,11 @@ const Navbar = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm order-3">
               <a
-                href="tel:+88-34-777-0000"
+                href="tel:+8801771123456"
                 className="hidden sm:flex items-center gap-1 hover:text-gray-200 transition-colors"
               >
                 <Phone size={12} className="sm:size-3.5" />
-                <span className="hidden md:inline">+88-34-777-0000</span>
+                <span className="hidden md:inline">+8801771123456</span>
                 <span className="md:hidden">Call</span>
               </a>
 
@@ -321,12 +321,12 @@ const Navbar = () => {
               ))}
 
               <a
-                href="tel:+88-34-777-0000"
+                href="tel:+8801771123456"
                 className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Phone size={16} />
-                +88-34-777-0000
+                +8801771123456
               </a>
 
               {authState.isAuthenticated && (

@@ -44,6 +44,7 @@ const AboutUs = () => {
     isLoading: galleryLoading,
     error: galleryError,
   } = useGetGallery();
+  console.log(galleryData);
 
   const galleryImages = galleryData?.data || [];
   console.log(galleryImages);

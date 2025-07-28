@@ -3,9 +3,12 @@
 import {
   AlertCircle,
   Anchor,
+  Building,
   Car,
   Check,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Copy,
   CreditCard,
   DollarSign,
@@ -13,8 +16,11 @@ import {
   Eye,
   Filter,
   Loader2,
+  MapPin,
   MessageSquare,
   Package,
+  Phone,
+  RefreshCw,
   Search,
   ShoppingCart,
   Trash2,
@@ -39,9 +45,11 @@ const AdminOrderManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copiedOrderId, setCopiedOrderId] = useState(null);
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   // API Hooks
-  const { data: ordersData, isLoading, error } = useAllOrders();
+  const { data: ordersData, isLoading, error, refetch } = useAllOrders();
+  console.log(ordersData);
   const { data: statsData } = useOrderStats();
   const updateOrderMutation = useUpdateOrderStatus();
   const removeItemMutation = useRemoveOrderItem();
@@ -54,26 +62,36 @@ const AdminOrderManagement = () => {
   const statusConfig = {
     NEGOTIATING: {
       color: "yellow",
+      bgColor: "bg-yellow-100",
+      textColor: "text-yellow-800",
       icon: MessageSquare,
       label: "Negotiating",
     },
     CONFIRMED: {
       color: "blue",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-800",
       icon: AlertCircle,
       label: "Confirmed",
     },
     SHIPPING: {
       color: "purple",
+      bgColor: "bg-purple-100",
+      textColor: "text-purple-800",
       icon: Package,
       label: "Shipping",
     },
     DELIVERED: {
       color: "emerald",
+      bgColor: "bg-emerald-100",
+      textColor: "text-emerald-800",
       icon: CheckCircle,
       label: "Delivered",
     },
     CANCELLED: {
       color: "red",
+      bgColor: "bg-red-100",
+      textColor: "text-red-800",
       icon: XCircle,
       label: "Cancelled",
     },
@@ -128,6 +146,8 @@ const AdminOrderManagement = () => {
       year: "numeric",
       month: "short",
       day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -152,11 +172,22 @@ const AdminOrderManagement = () => {
     return port ? port.label : "Not Selected";
   };
 
+  // FIXED: Updated to handle VERIFIED status instead of COMPLETED
   const calculateTotalPaid = (paymentTransactions) => {
     if (!paymentTransactions || paymentTransactions.length === 0) return 0;
     return paymentTransactions
-      .filter((payment) => payment.status === "COMPLETED")
+      .filter((payment) => payment.status === "VERIFIED") // Changed from "COMPLETED" to "VERIFIED"
       .reduce((total, payment) => total + (payment.amount || 0), 0);
+  };
+
+  const toggleCardExpansion = (orderId) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(orderId)) {
+      newExpanded.delete(orderId);
+    } else {
+      newExpanded.add(orderId);
+    }
+    setExpandedCards(newExpanded);
   };
 
   // Event Handlers
@@ -361,7 +392,8 @@ const AdminOrderManagement = () => {
       confirmButtonColor: "#10b981",
       denyButtonColor: "#ef4444",
       cancelButtonColor: "#6b7280",
-      width: "500px",
+      width: "90%",
+      maxWidth: "500px",
       preConfirm: () => {
         const notes = document.getElementById("notes").value;
         return { action: "approve", notes };
@@ -390,7 +422,8 @@ const AdminOrderManagement = () => {
           showCancelButton: true,
           confirmButtonText: "Reject Payment",
           confirmButtonColor: "#ef4444",
-          width: "500px",
+          width: "90%",
+          maxWidth: "500px",
           preConfirm: () => {
             const rejectionReason =
               document.getElementById("rejection-reason").value;
@@ -408,9 +441,9 @@ const AdminOrderManagement = () => {
           await verifyPaymentMutation.mutateAsync({
             paymentId: payment.id,
             verificationData: {
-              isApproved: true, // Explicitly set as boolean true
+              isApproved: true,
               notes: result.value?.notes || "",
-              rejectionReason: null, // Set as null for approved payments
+              rejectionReason: null,
             },
           });
 
@@ -440,7 +473,7 @@ const AdminOrderManagement = () => {
               await verifyPaymentMutation.mutateAsync({
                 paymentId: payment.id,
                 verificationData: {
-                  isApproved: false, // Explicitly set as boolean false
+                  isApproved: false,
                   notes: "",
                   rejectionReason: rejectResult.value?.rejectionReason || "",
                 },
@@ -477,7 +510,7 @@ const AdminOrderManagement = () => {
   // Loading and Error States
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
+      <div className="p-4 sm:p-6 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading orders...</p>
@@ -488,14 +521,15 @@ const AdminOrderManagement = () => {
 
   if (error) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
+      <div className="p-4 sm:p-6 flex items-center justify-center min-h-screen">
         <div className="text-center text-red-600">
           <XCircle className="h-12 w-12 mx-auto mb-4" />
-          <p>Failed to load orders. Please try again.</p>
+          <p className="mb-4">Failed to load orders. Please try again.</p>
           <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
+            <RefreshCw className="h-4 w-4" />
             Retry
           </button>
         </div>
@@ -505,39 +539,44 @@ const AdminOrderManagement = () => {
 
   // Main Render
   return (
-    <div className="lg:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header Section */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <ShoppingCart className="h-8 w-8 text-blue-600" />
-          Admin Order Management
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+          <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+          <span className="hidden sm:inline">Admin Order Management</span>
+          <span className="sm:hidden">Orders</span>
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-600 text-sm sm:text-base">
           Manage customer orders and negotiations efficiently
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         {Object.entries(statusConfig).map(([status, config]) => {
           const count = statusCounts[status] || 0;
           const Icon = config.icon;
           return (
             <div
               key={status}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide truncate">
                     {config.label}
                   </p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
                     {count}
                   </p>
                 </div>
-                <div className={`p-3 rounded-full bg-${config.color}-100`}>
-                  <Icon className={`h-5 w-5 text-${config.color}-600`} />
+                <div
+                  className={`p-2 sm:p-3 rounded-full ${config.bgColor} flex-shrink-0 ml-2`}
+                >
+                  <Icon
+                    className={`h-4 w-4 sm:h-5 sm:w-5 ${config.textColor}`}
+                  />
                 </div>
               </div>
             </div>
@@ -547,7 +586,7 @@ const AdminOrderManagement = () => {
 
       {/* Search and Filter Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-4">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input
@@ -558,10 +597,10 @@ const AdminOrderManagement = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="relative">
+          <div className="relative sm:w-48">
             <Filter className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <select
-              className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -576,8 +615,8 @@ const AdminOrderManagement = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -613,8 +652,6 @@ const AdminOrderManagement = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => {
-                const StatusIcon =
-                  statusConfig[order.status]?.icon || AlertCircle;
                 const statusColor = statusConfig[order.status]?.color || "gray";
                 return (
                   <tr
@@ -749,6 +786,8 @@ const AdminOrderManagement = () => {
                                 showCancelButton: true,
                                 confirmButtonText: "Set Final Price",
                                 confirmButtonColor: "#10b981",
+                                width: "90%",
+                                maxWidth: "400px",
                                 preConfirm: () => {
                                   const finalPriceInput =
                                     document.getElementById("final-price");
@@ -794,7 +833,11 @@ const AdminOrderManagement = () => {
                         onChange={(e) =>
                           handleStatusUpdate(order.id, e.target.value)
                         }
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border-0 bg-${statusColor}-100 text-${statusColor}-800 focus:ring-2 focus:ring-${statusColor}-500 transition-colors`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border-0 ${
+                          statusConfig[order.status]?.bgColor
+                        } ${
+                          statusConfig[order.status]?.textColor
+                        } focus:ring-2 focus:ring-${statusColor}-500 transition-colors`}
                         disabled={updateOrderMutation.isPending}
                       >
                         {Object.entries(statusConfig).map(
@@ -829,7 +872,7 @@ const AdminOrderManagement = () => {
                       </select>
                     </td>
 
-                    {/* Payments Column */}
+                    {/* Payments Column - UPDATED to show VERIFIED status */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
                         {order.paymentTransactions &&
@@ -845,7 +888,7 @@ const AdminOrderManagement = () => {
                                 </span>
                                 <span
                                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    payment.status === "COMPLETED"
+                                    payment.status === "VERIFIED"
                                       ? "bg-green-100 text-green-800"
                                       : payment.status === "FAILED"
                                       ? "bg-red-100 text-red-800"
@@ -931,15 +974,310 @@ const AdminOrderManagement = () => {
         </div>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg">
+            <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No orders found
+            </h3>
+            <p className="text-gray-500">
+              No orders match your current search criteria.
+            </p>
+          </div>
+        ) : (
+          filteredOrders.map((order) => {
+            const isExpanded = expandedCards.has(order.id);
+            const statusConfig_ =
+              statusConfig[order.status] || statusConfig.NEGOTIATING;
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+              >
+                {/* Card Header */}
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div
+                      className="text-sm font-medium text-gray-900 font-mono cursor-pointer hover:text-blue-600 flex items-center gap-2 transition-colors"
+                      onClick={() => copyToClipboard(order.id)}
+                      title="Click to copy Order ID"
+                    >
+                      <span>{order.id.substring(0, 12)}...</span>
+                      {copiedOrderId === order.id ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                    <button
+                      onClick={() => toggleCardExpansion(order.id)}
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.user?.fullName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.user?.email}
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig_.bgColor} ${statusConfig_.textColor}`}
+                    >
+                      {statusConfig_.label}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatPrice(
+                          order.finalPrice ||
+                            order.negotiatedPrice ||
+                            order.totalOriginalPrice
+                        )}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(order.createdAt)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Content */}
+                {isExpanded && (
+                  <div className="p-4 space-y-4">
+                    {/* Customer Details */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Customer Details
+                      </h4>
+                      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                        {order.user?.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3 w-3 text-gray-400" />
+                            <span>{order.user.phone}</span>
+                          </div>
+                        )}
+                        {order.user?.country && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-3 w-3 text-gray-400" />
+                            <span>{order.user.country}</span>
+                          </div>
+                        )}
+                        {order.user?.companyName && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Building className="h-3 w-3 text-gray-400" />
+                            <span>{order.user.companyName}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Order Items */}
+                    {order.orderItems && order.orderItems.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <Car className="h-4 w-4" />
+                          Items ({order.orderItems.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {order.orderItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-gray-50 rounded-lg p-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={
+                                    item.car?.mainImage ||
+                                    "/placeholder.svg?height=40&width=40" ||
+                                    "/placeholder.svg"
+                                  }
+                                  alt={item.car?.title}
+                                  className="w-10 h-10 object-cover rounded border"
+                                  onError={(e) => {
+                                    e.target.src =
+                                      "/placeholder.svg?height=40&width=40";
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-gray-900 truncate">
+                                    {item.car?.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Year: {item.car?.year}
+                                  </div>
+                                  <div className="text-xs text-gray-600 font-medium">
+                                    {formatPrice(
+                                      item.negotiatedPrice || item.originalPrice
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Information - UPDATED to show VERIFIED status */}
+                    {order.paymentTransactions &&
+                      order.paymentTransactions.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Payments ({order.paymentTransactions.length})
+                          </h4>
+                          <div className="space-y-2">
+                            {order.paymentTransactions.map((payment) => (
+                              <div
+                                key={payment.id}
+                                className="bg-gray-50 rounded-lg p-3"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium">
+                                    {formatPrice(payment.amount)}
+                                  </span>
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      payment.status === "VERIFIED"
+                                        ? "bg-green-100 text-green-800"
+                                        : payment.status === "FAILED"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                  >
+                                    {payment.status}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-500">
+                                    {formatDate(payment.createdAt)}
+                                  </span>
+                                  {payment.status === "PENDING" && (
+                                    <button
+                                      onClick={() =>
+                                        handlePaymentApproval(payment)
+                                      }
+                                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                                      disabled={verifyPaymentMutation.isPending}
+                                    >
+                                      {verifyPaymentMutation.isPending
+                                        ? "Verifying..."
+                                        : "Verify"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Order Controls */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Status
+                        </label>
+                        <select
+                          value={order.status}
+                          onChange={(e) =>
+                            handleStatusUpdate(order.id, e.target.value)
+                          }
+                          className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          disabled={updateOrderMutation.isPending}
+                        >
+                          {Object.entries(statusConfig).map(
+                            ([status, config]) => (
+                              <option key={status} value={status}>
+                                {config.label}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Port
+                        </label>
+                        <select
+                          value={order.port || "mongla"}
+                          onChange={(e) =>
+                            handlePortUpdate(
+                              order.id,
+                              e.target.value,
+                              order.status
+                            )
+                          }
+                          className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          disabled={updateOrderMutation.isPending}
+                        >
+                          {portOptions.map((port) => (
+                            <option key={port.value} value={port.value}>
+                              {port.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => openEditModal(order)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                        disabled={updateOrderMutation.isPending}
+                      >
+                        {updateOrderMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Edit className="h-4 w-4" />
+                        )}
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
       {/* Order Details Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                     Order Details
                   </h3>
                   <p className="text-sm text-gray-600 font-mono mt-1">
@@ -954,16 +1292,17 @@ const AdminOrderManagement = () => {
                 </button>
               </div>
             </div>
-            <div className="p-6 space-y-8">
+
+            <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-blue-700">
                         Order Status
                       </p>
-                      <p className="text-xl font-bold text-blue-900 mt-1">
+                      <p className="text-lg sm:text-xl font-bold text-blue-900 mt-1">
                         {statusConfig[selectedOrder.status]?.label}
                       </p>
                     </div>
@@ -977,13 +1316,14 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border border-green-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-green-700">
                         Order Total
                       </p>
-                      <p className="text-xl font-bold text-green-900 mt-1">
+                      <p className="text-lg sm:text-xl font-bold text-green-900 mt-1">
                         {formatPrice(
                           selectedOrder.finalPrice ||
                             selectedOrder.negotiatedPrice ||
@@ -1002,13 +1342,14 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border border-purple-200 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-purple-700">
                         Payment Status
                       </p>
-                      <p className="text-xl font-bold text-purple-900 mt-1">
+                      <p className="text-lg sm:text-xl font-bold text-purple-900 mt-1">
                         {selectedOrder.paymentStatus}
                       </p>
                     </div>
@@ -1020,7 +1361,7 @@ const AdminOrderManagement = () => {
               </div>
 
               {/* Order Information Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 {/* Order Details */}
                 <div className="space-y-6">
                   <div>
@@ -1028,7 +1369,7 @@ const AdminOrderManagement = () => {
                       <Package className="h-5 w-5 mr-2 text-gray-600" />
                       Order Information
                     </h4>
-                    <div className="bg-gray-50 p-6 rounded-xl space-y-4">
+                    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl space-y-4">
                       {[
                         {
                           label: "Order ID",
@@ -1068,7 +1409,7 @@ const AdminOrderManagement = () => {
                       ].map((item, index) => (
                         <div
                           key={index}
-                          className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
+                          className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 last:border-b-0 gap-1 sm:gap-0"
                         >
                           <span className="text-sm font-medium text-gray-600">
                             {item.label}:
@@ -1078,7 +1419,12 @@ const AdminOrderManagement = () => {
                               item.mono ? "font-mono" : "font-medium"
                             } ${
                               item.badge
-                                ? `px-3 py-1 rounded-full bg-${item.color}-100 text-${item.color}-800`
+                                ? `px-3 py-1 rounded-full ${
+                                    statusConfig[selectedOrder.status]?.bgColor
+                                  } ${
+                                    statusConfig[selectedOrder.status]
+                                      ?.textColor
+                                  }`
                                 : "text-gray-900"
                             }`}
                           >
@@ -1097,7 +1443,7 @@ const AdminOrderManagement = () => {
                       <User className="h-5 w-5 mr-2 text-gray-600" />
                       Customer Information
                     </h4>
-                    <div className="bg-gray-50 p-6 rounded-xl space-y-4">
+                    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl space-y-4">
                       {[
                         { label: "Name", value: selectedOrder.user?.fullName },
                         { label: "Email", value: selectedOrder.user?.email },
@@ -1116,12 +1462,12 @@ const AdminOrderManagement = () => {
                       ].map((item, index) => (
                         <div
                           key={index}
-                          className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
+                          className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-200 last:border-b-0 gap-1 sm:gap-0"
                         >
                           <span className="text-sm font-medium text-gray-600">
                             {item.label}:
                           </span>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 break-all">
                             {item.value}
                           </span>
                         </div>
@@ -1143,9 +1489,9 @@ const AdminOrderManagement = () => {
                     selectedOrder.orderItems.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                        className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow"
                       >
-                        <div className="flex items-center space-x-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                           <img
                             src={
                               item.car?.mainImage ||
@@ -1153,20 +1499,20 @@ const AdminOrderManagement = () => {
                               "/placeholder.svg"
                             }
                             alt={item.car?.title}
-                            className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-gray-200 mx-auto sm:mx-0"
                             onError={(e) => {
                               e.target.src =
                                 "/placeholder.svg?height=100&width=100";
                             }}
                           />
-                          <div className="flex-1">
-                            <h5 className="text-xl font-semibold text-gray-900 mb-2">
+                          <div className="flex-1 text-center sm:text-left">
+                            <h5 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                               {item.car?.title}
                             </h5>
                             <p className="text-sm text-gray-600 mb-4">
                               Year: {item.car?.year}
                             </p>
-                            <div className="flex items-center space-x-8">
+                            <div className="flex flex-col sm:flex-row items-center sm:space-x-8 space-y-2 sm:space-y-0">
                               <div className="text-center">
                                 <p className="text-xs text-gray-500 uppercase tracking-wide">
                                   Original Price
@@ -1231,13 +1577,13 @@ const AdminOrderManagement = () => {
                       {selectedOrder.paymentTransactions.map((payment) => (
                         <div
                           key={payment.id}
-                          className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-lg transition-shadow"
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
                             <div className="flex-1">
-                              <div className="flex items-center gap-6 mb-3">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-3">
                                 <div>
-                                  <p className="text-2xl font-bold text-gray-900">
+                                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                     {formatPrice(payment.amount)}
                                   </p>
                                   <p className="text-sm text-gray-600 font-mono">
@@ -1249,7 +1595,7 @@ const AdminOrderManagement = () => {
                                 </div>
                                 <div
                                   className={`px-4 py-2 rounded-full text-sm font-medium ${
-                                    payment.status === "COMPLETED"
+                                    payment.status === "VERIFIED"
                                       ? "bg-green-100 text-green-800"
                                       : payment.status === "FAILED"
                                       ? "bg-red-100 text-red-800"
@@ -1263,7 +1609,7 @@ const AdminOrderManagement = () => {
                             {payment.status === "PENDING" && (
                               <button
                                 onClick={() => handlePaymentApproval(payment)}
-                                className="ml-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                                className="w-full sm:w-auto ml-0 sm:ml-6 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                                 disabled={verifyPaymentMutation.isPending}
                               >
                                 {verifyPaymentMutation.isPending ? (
@@ -1292,13 +1638,13 @@ const AdminOrderManagement = () => {
                   <h4 className="text-lg font-semibold text-gray-900 mb-6">
                     Additional Information
                   </h4>
-                  <div className="bg-gray-50 p-6 rounded-xl space-y-6">
+                  <div className="bg-gray-50 p-4 sm:p-6 rounded-xl space-y-6">
                     {selectedOrder.notes && (
                       <div>
                         <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                           Notes:
                         </label>
-                        <p className="text-gray-900 mt-2 leading-relaxed">
+                        <p className="text-gray-900 mt-2 leading-relaxed break-words">
                           {selectedOrder.notes}
                         </p>
                       </div>
@@ -1308,7 +1654,7 @@ const AdminOrderManagement = () => {
                         <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                           Tracking Info:
                         </label>
-                        <p className="text-gray-900 mt-2 font-mono bg-white p-3 rounded-lg border">
+                        <p className="text-gray-900 mt-2 font-mono bg-white p-3 rounded-lg border break-all">
                           {selectedOrder.trackingInfo}
                         </p>
                       </div>
@@ -1324,14 +1670,16 @@ const AdminOrderManagement = () => {
       {/* Edit Order Modal */}
       {showEditModal && editingOrder && (
         <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-              <h3 className="text-xl font-bold text-gray-900">Edit Order</h3>
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                Edit Order
+              </h3>
               <p className="text-sm text-gray-600 mt-1">
                 Update order information and settings
               </p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Status
@@ -1445,13 +1793,13 @@ const AdminOrderManagement = () => {
                 />
               </div>
 
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingOrder(null);
                   }}
-                  className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="w-full sm:w-auto px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   disabled={updateOrderMutation.isPending}
                 >
                   Cancel
@@ -1459,7 +1807,7 @@ const AdminOrderManagement = () => {
                 <button
                   onClick={saveOrder}
                   disabled={updateOrderMutation.isPending}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   {updateOrderMutation.isPending ? (
                     <>
