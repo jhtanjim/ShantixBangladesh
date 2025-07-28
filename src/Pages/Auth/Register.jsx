@@ -144,7 +144,7 @@ const Register = () => {
     onSuccess: () => {
       Swal.fire({
         title: "Success!",
-        text: "Registration successful! Welcome to CarHub!",
+        text: "Registration successful! Welcome to Shantix!",
         icon: "success",
         confirmButtonText: "Continue",
         confirmButtonColor: "#0072BC",
@@ -275,7 +275,7 @@ const Register = () => {
           <div className="inline-flex items-center justify-center w-20 h-20">
             <img
               src={logoImg}
-              alt="CarHub Logo"
+              alt="Shantix Logo"
               className="w-full h-full object-contain"
             />
           </div>
