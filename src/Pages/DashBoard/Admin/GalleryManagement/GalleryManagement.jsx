@@ -6,10 +6,8 @@ import {
   EyeOff,
   Grid,
   List,
-  Plus,
   Search,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -585,7 +583,7 @@ const GalleryManagement = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className=" container mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -678,52 +676,30 @@ const GalleryManagement = () => {
             </select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {/* View Mode Toggle */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden w-max">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 ${
+                className={`p-2 flex items-center justify-center ${
                   viewMode === "grid"
                     ? "bg-blue-500 text-white"
                     : "bg-white text-gray-700"
                 }`}
               >
-                <Grid className="w-4 h-4" />
+                <Grid className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 ${
+                className={`p-2 flex items-center justify-center ${
                   viewMode === "list"
                     ? "bg-blue-500 text-white"
                     : "bg-white text-gray-700"
                 }`}
               >
-                <List className="w-4 h-4" />
+                <List className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Bulk Upload */}
-            <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 transition-colors">
-              <Upload className="w-4 h-4" />
-              Bulk Upload
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleBulkUpload}
-                className="hidden"
-              />
-            </label>
-
-            {/* Add New */}
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add New
-            </button>
           </div>
         </div>
       </div>

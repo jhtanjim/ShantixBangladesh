@@ -575,7 +575,10 @@ const Enquiry = () => {
                   />
                 </div>
               </div>
+            </div>
 
+            {/* Middle Column */}
+            <div className="space-y-4">
               {/* Exterior Color */}
               {/* Exterior Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
@@ -637,10 +640,6 @@ const Enquiry = () => {
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
               </div>
-            </div>
-
-            {/* Middle Column */}
-            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">
                   Country <span className="text-red-500">*</span>
@@ -667,7 +666,6 @@ const Enquiry = () => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Port</label>
                 <div className="md:col-span-2">
