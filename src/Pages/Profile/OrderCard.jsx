@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle,
+  Clock,
   CreditCard,
   DollarSign,
   Eye,
@@ -14,12 +15,14 @@ import {
   Plus,
   Upload,
   X,
+  XCircle,
 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { useAddPaymentToOrder, useUploadPayment } from "../../hooks/useOrders";
 
 const OrderCard = ({ order }) => {
+  console.log(order);
   const [uploadingPayment, setUploadingPayment] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -55,6 +58,32 @@ const OrderCard = ({ order }) => {
     }
   };
 
+  const getPaymentStatusColor = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return "bg-green-100 text-green-800";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      case "FAILED":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPaymentStatusIcon = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return <CheckCircle className="w-4 h-4" />;
+      case "PENDING":
+        return <Clock className="w-4 h-4" />;
+      case "FAILED":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
   const formatStatus = (status) => {
     return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
@@ -73,6 +102,8 @@ const OrderCard = ({ order }) => {
       year: "numeric",
       month: "long",
       day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -84,6 +115,42 @@ const OrderCard = ({ order }) => {
     return (
       Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     );
+  };
+
+  // Calculate total submitted amount from all transactions
+  const calculateTotalSubmitted = () => {
+    if (!order.paymentTransactions || order.paymentTransactions.length === 0)
+      return 0;
+    return order.paymentTransactions.reduce(
+      (total, payment) => total + (payment.amount || 0),
+      0
+    );
+  };
+
+  // Calculate total confirmed amount from completed transactions only
+  const calculateTotalConfirmed = () => {
+    if (!order.paymentTransactions || order.paymentTransactions.length === 0)
+      return 0;
+    return order.paymentTransactions
+      .filter((payment) => payment.status === "COMPLETED")
+      .reduce((total, payment) => total + (payment.amount || 0), 0);
+  };
+
+  // Calculate pending amount
+  const calculatePendingAmount = () => {
+    if (!order.paymentTransactions || order.paymentTransactions.length === 0)
+      return 0;
+    return order.paymentTransactions
+      .filter((payment) => payment.status === "PENDING")
+      .reduce((total, payment) => total + (payment.amount || 0), 0);
+  };
+
+  // Calculate remaining balance based on submitted payments
+  const calculateRemainingBalance = () => {
+    const orderTotal =
+      order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
+    const totalSubmitted = calculateTotalSubmitted();
+    return Math.max(0, orderTotal - totalSubmitted);
   };
 
   const copyOrderId = async (id) => {
@@ -111,7 +178,6 @@ const OrderCard = ({ order }) => {
       "image/webp",
       "application/pdf",
     ];
-
     if (!allowedTypes.includes(file.type)) {
       Swal.fire({
         icon: "error",
@@ -121,7 +187,6 @@ const OrderCard = ({ order }) => {
       });
       return false;
     }
-
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       Swal.fire({
@@ -134,7 +199,6 @@ const OrderCard = ({ order }) => {
       });
       return false;
     }
-
     if (file.size === 0) {
       Swal.fire({
         icon: "error",
@@ -144,7 +208,6 @@ const OrderCard = ({ order }) => {
       });
       return false;
     }
-
     return true;
   }, []);
 
@@ -153,15 +216,14 @@ const OrderCard = ({ order }) => {
     (event) => {
       const file = event.target.files[0];
       if (!file) return;
-
       if (!validateFile(file)) {
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
         return;
       }
-      setSelectedFile(file);
 
+      setSelectedFile(file);
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -194,7 +256,6 @@ const OrderCard = ({ order }) => {
     (e) => {
       e.preventDefault();
       e.stopPropagation();
-
       const files = e.dataTransfer.files;
       if (files.length > 0) {
         const file = files[0];
@@ -224,7 +285,6 @@ const OrderCard = ({ order }) => {
       });
       return;
     }
-
     if (!validateFile(selectedFile)) {
       clearSelectedFile();
       return;
@@ -233,7 +293,6 @@ const OrderCard = ({ order }) => {
     try {
       setUploadingPayment(true);
       setUploadProgress(0);
-
       const formData = new FormData();
       formData.append("paymentScreenshot", selectedFile);
       formData.append("orderId", order.id);
@@ -269,10 +328,8 @@ const OrderCard = ({ order }) => {
       clearSelectedFile();
     } catch (error) {
       console.error("Payment upload error:", error);
-
       let errorMessage =
         "Failed to upload payment screenshot. Please try again.";
-
       if (
         error.message?.includes("network") ||
         error.message?.includes("fetch")
@@ -334,19 +391,15 @@ const OrderCard = ({ order }) => {
   // Validate payment form
   const validatePaymentForm = () => {
     const newErrors = {};
-
     if (!paymentData.amount || Number.parseFloat(paymentData.amount) <= 0) {
       newErrors.amount = "Please enter a valid payment amount";
     }
-
     if (!paymentData.paymentMethod) {
       newErrors.paymentMethod = "Please select a payment method";
     }
-
     if (!paymentData.transactionRef?.trim()) {
       newErrors.transactionRef = "Please enter a transaction reference";
     }
-
     // Check if order has finalPrice set
     const orderFinalPrice =
       order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
@@ -398,7 +451,6 @@ const OrderCard = ({ order }) => {
       setShowPaymentForm(false);
     } catch (error) {
       console.error("Payment submission error:", error);
-
       let errorMessage = "Failed to submit payment. Please try again.";
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -419,6 +471,12 @@ const OrderCard = ({ order }) => {
   // Check if payment upload should be shown
   const showPaymentUpload = ["NEGOTIATING", "CONFIRMED"].includes(order.status);
   const hasPaymentScreenshot = order.paymentScreenshot || order.paymentReceipt;
+  const totalSubmitted = calculateTotalSubmitted();
+  const totalConfirmed = calculateTotalConfirmed();
+  const pendingAmount = calculatePendingAmount();
+  const remainingBalance = calculateRemainingBalance();
+  const orderTotal =
+    order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
 
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border-0 hover:shadow-xl transition-shadow p-6">
@@ -442,6 +500,7 @@ const OrderCard = ({ order }) => {
             </div>
           </div>
 
+          {/* Order Items */}
           {order.orderItems && order.orderItems.length > 0 && (
             <div className="space-y-3">
               {order.orderItems.map((item) => (
@@ -452,7 +511,8 @@ const OrderCard = ({ order }) => {
                   <img
                     src={
                       item.car.mainImage ||
-                      "/placeholder.svg?height=48&width=64"
+                      "/placeholder.svg?height=48&width=64" ||
+                      "/placeholder.svg"
                     }
                     alt={item.car.title}
                     className="w-16 h-12 object-cover rounded-md"
@@ -484,7 +544,8 @@ const OrderCard = ({ order }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+          {/* Order Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-gray-600">Order Date:</span>
@@ -496,11 +557,7 @@ const OrderCard = ({ order }) => {
               <CreditCard className="w-4 h-4 text-gray-500" />
               <span className="text-gray-600">Total:</span>
               <span className="font-semibold text-green-600">
-                {formatPrice(
-                  order.finalPrice ||
-                    order.negotiatedPrice ||
-                    order.totalOriginalPrice
-                )}
+                {formatPrice(orderTotal)}
               </span>
             </div>
             {order.estimatedDelivery && (
@@ -512,7 +569,207 @@ const OrderCard = ({ order }) => {
                 </span>
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-gray-500" />
+              <span className="text-gray-600">Payment Status:</span>
+              <span
+                className={`font-semibold ${
+                  order.paymentStatus === "COMPLETED"
+                    ? "text-green-600"
+                    : order.paymentStatus === "PENDING"
+                    ? "text-yellow-600"
+                    : "text-red-600"
+                }`}
+              >
+                {formatStatus(order.paymentStatus)}
+              </span>
+            </div>
           </div>
+
+          {/* Enhanced Payment Summary */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              Payment Summary
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-blue-600">Order Total:</span>
+                <p className="font-bold text-blue-900">
+                  {formatPrice(orderTotal)}
+                </p>
+              </div>
+              <div>
+                <span className="text-purple-600">Total Submitted:</span>
+                <p className="font-bold text-purple-700">
+                  {formatPrice(totalSubmitted)}
+                </p>
+                <p className="text-xs text-purple-600">All payments</p>
+              </div>
+              <div>
+                <span className="text-green-600">Confirmed:</span>
+                <p className="font-bold text-green-700">
+                  {formatPrice(totalConfirmed)}
+                </p>
+                <p className="text-xs text-green-600">Approved only</p>
+              </div>
+              <div>
+                <span className="text-orange-600">Remaining:</span>
+                <p className="font-bold text-orange-700">
+                  {formatPrice(remainingBalance)}
+                </p>
+                <p className="text-xs text-orange-600">Still needed</p>
+              </div>
+            </div>
+
+            {/* Status Messages */}
+            {pendingAmount > 0 && (
+              <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+                ⏳ You have {formatPrice(pendingAmount)} in pending payments
+                being reviewed.
+              </div>
+            )}
+
+            {totalSubmitted >= orderTotal && totalConfirmed < orderTotal && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                🎉 You've submitted full payment! Waiting for admin approval.
+              </div>
+            )}
+
+            {totalConfirmed >= orderTotal && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                ✅ Payment complete! Your order is fully paid.
+              </div>
+            )}
+
+            {remainingBalance > 0 && (
+              <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700">
+                💡 You still need to submit {formatPrice(remainingBalance)} to
+                complete this order.
+              </div>
+            )}
+          </div>
+
+          {/* Payment Transactions */}
+          {order.paymentTransactions &&
+            order.paymentTransactions.length > 0 && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-purple-800 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Payment Transactions ({order.paymentTransactions.length})
+                  </h4>
+                  <button
+                    onClick={() => setShowPaymentHistory(!showPaymentHistory)}
+                    className="text-sm text-purple-600 hover:text-purple-800 underline"
+                  >
+                    {showPaymentHistory ? "Hide" : "View All"}
+                  </button>
+                </div>
+
+                {showPaymentHistory ? (
+                  <div className="space-y-3">
+                    {order.paymentTransactions.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="bg-white p-4 rounded-lg border border-purple-100 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-lg font-bold text-purple-900">
+                                {formatPrice(payment.amount)}
+                              </span>
+                              <div
+                                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(
+                                  payment.status
+                                )}`}
+                              >
+                                {getPaymentStatusIcon(payment.status)}
+                                {formatStatus(payment.status)}
+                              </div>
+                            </div>
+                            <div className="text-xs text-purple-600 space-y-1">
+                              <p>
+                                <strong>Transaction ID:</strong> {payment.id}
+                              </p>
+                              <p>
+                                <strong>Date:</strong>{" "}
+                                {formatDate(payment.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => viewPaymentDetails(payment)}
+                            className="text-purple-600 hover:text-purple-800 p-1 hover:bg-purple-100 rounded transition"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {payment.status === "PENDING" && (
+                          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+                            ⏳ This payment is being reviewed by our team.
+                            You'll be notified once it's processed.
+                          </div>
+                        )}
+
+                        {payment.status === "COMPLETED" && (
+                          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                            ✅ Payment confirmed and processed successfully.
+                          </div>
+                        )}
+
+                        {payment.status === "FAILED" && (
+                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                            ❌ Payment failed. Please contact support or try
+                            again.
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-purple-700">
+                    <div className="flex items-center justify-between">
+                      <span>
+                        {order.paymentTransactions.length} payment(s) submitted
+                      </span>
+                      <span className="font-semibold">
+                        Total:{" "}
+                        {formatPrice(
+                          order.paymentTransactions.reduce(
+                            (sum, p) => sum + p.amount,
+                            0
+                          )
+                        )}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs">
+                      Completed:{" "}
+                      {
+                        order.paymentTransactions.filter(
+                          (p) => p.status === "COMPLETED"
+                        ).length
+                      }{" "}
+                      • Pending:{" "}
+                      {
+                        order.paymentTransactions.filter(
+                          (p) => p.status === "PENDING"
+                        ).length
+                      }{" "}
+                      • Failed:{" "}
+                      {
+                        order.paymentTransactions.filter(
+                          (p) => p.status === "FAILED"
+                        ).length
+                      }
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
           {order.trackingInfo && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -552,84 +809,6 @@ const OrderCard = ({ order }) => {
               </div>
             </div>
           )}
-
-          {/* Display Payments */}
-          {order.payments && order.payments.length > 0 && (
-            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-purple-800">
-                  Payment History:
-                </p>
-                <button
-                  onClick={() => setShowPaymentHistory(!showPaymentHistory)}
-                  className="text-sm text-purple-600 hover:text-purple-800 underline"
-                >
-                  {showPaymentHistory ? "Hide" : "View All"}
-                </button>
-              </div>
-              {showPaymentHistory ? (
-                <div className="space-y-2">
-                  {order.payments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="bg-white p-3 rounded border"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-purple-900">
-                              {formatPrice(payment.amount)} via{" "}
-                              {payment.paymentMethod}
-                            </span>
-                            <span
-                              className={`px-2 py-1 rounded text-xs ${
-                                payment.isVerified
-                                  ? "bg-green-100 text-green-800"
-                                  : payment.isApproved === false
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {payment.isVerified
-                                ? "Verified"
-                                : payment.isApproved === false
-                                ? "Rejected"
-                                : "Pending"}
-                            </span>
-                          </div>
-                          <div className="text-xs text-purple-600">
-                            Ref: {payment.transactionRef} |{" "}
-                            {formatDate(payment.createdAt)}
-                          </div>
-                          {payment.rejectionReason && (
-                            <div className="text-xs text-red-600 mt-1">
-                              Reason: {payment.rejectionReason}
-                            </div>
-                          )}
-                          {payment.notes && (
-                            <div className="text-xs text-green-600 mt-1">
-                              Admin Notes: {payment.notes}
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => viewPaymentDetails(payment)}
-                          className="text-purple-600 hover:text-purple-800 p-1"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-purple-700">
-                  {order.payments.length} payment(s) submitted
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="flex flex-col items-end gap-3 min-w-[250px]">
@@ -640,7 +819,6 @@ const OrderCard = ({ order }) => {
           >
             {formatStatus(order.status)}
           </div>
-
           <a
             href={`https://wa.me/8801711123456?text=${encodeURIComponent(
               `Hello, I have a question about Order ID: ${order.id}`
@@ -669,13 +847,11 @@ const OrderCard = ({ order }) => {
               <h4 className="text-sm font-semibold text-purple-800 mb-3">
                 Add Payment Details
               </h4>
-
               {errors.general && (
                 <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
                   {errors.general}
                 </div>
               )}
-
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
@@ -706,7 +882,6 @@ const OrderCard = ({ order }) => {
                     <p className="text-xs text-red-600 mt-1">{errors.amount}</p>
                   )}
                 </div>
-
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
                     Payment Method *
@@ -742,7 +917,6 @@ const OrderCard = ({ order }) => {
                     </p>
                   )}
                 </div>
-
                 <div>
                   <label className="block text-xs font-medium text-purple-700 mb-1">
                     Transaction Reference *
@@ -772,7 +946,6 @@ const OrderCard = ({ order }) => {
                     </p>
                   )}
                 </div>
-
                 <div className="flex gap-2">
                   <button
                     onClick={handlePaymentSubmit}
@@ -821,7 +994,6 @@ const OrderCard = ({ order }) => {
                     Upload Payment Screenshot
                   </p>
                 </div>
-
                 <input
                   ref={fileInputRef}
                   id={`payment-upload-${order.id}`}
@@ -830,7 +1002,6 @@ const OrderCard = ({ order }) => {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-
                 {!selectedFile ? (
                   <div
                     onDragOver={handleDragOver}
@@ -869,7 +1040,6 @@ const OrderCard = ({ order }) => {
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-
                     {/* Image Preview */}
                     {previewUrl && (
                       <div className="relative">
@@ -880,7 +1050,6 @@ const OrderCard = ({ order }) => {
                         />
                       </div>
                     )}
-
                     {/* Upload Progress */}
                     {uploadingPayment && uploadProgress > 0 && (
                       <div className="space-y-2">
@@ -896,7 +1065,6 @@ const OrderCard = ({ order }) => {
                         </div>
                       </div>
                     )}
-
                     {/* Action Buttons */}
                     <div className="flex gap-2">
                       <button
@@ -926,7 +1094,6 @@ const OrderCard = ({ order }) => {
                     </div>
                   </div>
                 )}
-
                 {/* Help Text */}
                 <div className="mt-3 p-2 bg-amber-100 border border-amber-200 rounded text-xs text-amber-700">
                   <div className="flex items-start gap-2">
@@ -949,11 +1116,11 @@ const OrderCard = ({ order }) => {
 
       {/* Payment Details Modal */}
       {selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
-                Payment Details
+                Payment Transaction Details
               </h3>
               <button
                 onClick={() => setSelectedPayment(null)}
@@ -965,6 +1132,14 @@ const OrderCard = ({ order }) => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-500">
+                  Transaction ID
+                </label>
+                <p className="text-sm font-mono text-gray-900 bg-gray-50 p-2 rounded">
+                  {selectedPayment.id}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
                   Amount
                 </label>
                 <p className="text-lg font-semibold text-gray-900">
@@ -973,64 +1148,25 @@ const OrderCard = ({ order }) => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">
-                  Payment Method
-                </label>
-                <p className="text-gray-900">{selectedPayment.paymentMethod}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
-                  Transaction Reference
-                </label>
-                <p className="text-gray-900 font-mono">
-                  {selectedPayment.transactionRef}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">
                   Status
                 </label>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedPayment.isVerified
-                      ? "bg-green-100 text-green-800"
-                      : selectedPayment.isApproved === false
-                      ? "bg-red-100 text-red-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(
+                    selectedPayment.status
+                  )}`}
                 >
-                  {selectedPayment.isVerified
-                    ? "Verified"
-                    : selectedPayment.isApproved === false
-                    ? "Rejected"
-                    : "Pending"}
-                </span>
+                  {getPaymentStatusIcon(selectedPayment.status)}
+                  {formatStatus(selectedPayment.status)}
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">
-                  Date
+                  Date Created
                 </label>
                 <p className="text-gray-900">
                   {formatDate(selectedPayment.createdAt)}
                 </p>
               </div>
-              {selectedPayment.notes && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Admin Notes
-                  </label>
-                  <p className="text-gray-900">{selectedPayment.notes}</p>
-                </div>
-              )}
-              {selectedPayment.rejectionReason && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Rejection Reason
-                  </label>
-                  <p className="text-red-600">
-                    {selectedPayment.rejectionReason}
-                  </p>
-                </div>
-              )}
               <div className="flex justify-end pt-4">
                 <button
                   onClick={() => setSelectedPayment(null)}
