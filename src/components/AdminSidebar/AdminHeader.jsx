@@ -46,12 +46,12 @@ const AdminHeader = ({ setSidebarOpen }) => {
             <button className="flex items-center p-2 text-white hover:text-white hover:bg-blue bg-red-600 rounded-full">
               <User className="w-6 h-6" />
 
-              <button
+              {/* <button
                 onClick={handleLogout}
                 className=" transition-colors px-2 py-1 rounded"
               >
                 Logout
-              </button>
+              </button> */}
             </button>
           </div>
         </div>

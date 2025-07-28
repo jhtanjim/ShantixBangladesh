@@ -245,10 +245,6 @@ export const portData = {
   BD: [
     { value: "Chittagong", label: "Chittagong Port" },
     { value: "Mongla", label: "Mongla Port" },
-    { value: "Dhaka", label: "Dhaka Port" },
-    { value: "Payra", label: "Payra Port" },
-    { value: "Matarbari", label: "Matarbari Port" },
-    { value: "Narayanganj", label: "Narayanganj Port" },
   ],
   LK: [
     { value: "Colombo", label: "Colombo Port" },

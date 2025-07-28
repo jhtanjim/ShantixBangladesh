@@ -609,7 +609,7 @@ const OrderCard = ({ order }) => {
               <div>
                 <span className="text-green-600">Confirmed:</span>
                 <p className="font-bold text-green-700">
-                  {formatPrice(totalConfirmed)}
+                  {formatStatus(order.paymentStatus)}
                 </p>
                 <p className="text-xs text-green-600">Approved only</p>
               </div>

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
   colorOptions,
+  driveTypeOptions,
+  exteriorColors,
   seatsOptions,
   transmissionOptions,
 } from "../../api/cardata";
@@ -11,38 +13,6 @@ import { useAuth } from "../../Context/AuthContext";
 import { useCreateInquiry } from "../../hooks/useInquiry";
 
 // Define drive type options to match API enum requirements
-const driveTypeOptions = [
-  { value: "", label: "Select Drive Type" },
-  { value: "FWD", label: "Front-Wheel Drive (FWD)" },
-  { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
-  { value: "AWD", label: "All-Wheel Drive (AWD)" },
-  { value: "FOUR_WD", label: "Four-Wheel Drive (4WD)" },
-  { value: "OTHER", label: "Other" },
-];
-
-// Country data with country codes for phone numbers
-const countryData = {
-  "": { label: "Select Country", code: "", dialCode: "" },
-  US: { label: "United States", code: "US", dialCode: "+1" },
-  JP: { label: "Japan", code: "JP", dialCode: "+81" },
-  UK: { label: "United Kingdom", code: "UK", dialCode: "+44" },
-  AU: { label: "Australia", code: "AU", dialCode: "+61" },
-  BD: { label: "Bangladesh", code: "BD", dialCode: "+880" },
-  IN: { label: "India", code: "IN", dialCode: "+91" },
-  MY: { label: "Malaysia", code: "MY", dialCode: "+60" },
-  TH: { label: "Thailand", code: "TH", dialCode: "+66" },
-  SG: { label: "Singapore", code: "SG", dialCode: "+65" },
-  KE: { label: "Kenya", code: "KE", dialCode: "+254" },
-  TZ: { label: "Tanzania", code: "TZ", dialCode: "+255" },
-  UG: { label: "Uganda", code: "UG", dialCode: "+256" },
-  ZA: { label: "South Africa", code: "ZA", dialCode: "+27" },
-  NG: { label: "Nigeria", code: "NG", dialCode: "+234" },
-  GH: { label: "Ghana", code: "GH", dialCode: "+233" },
-  CI: { label: "Ivory Coast", code: "CI", dialCode: "+225" },
-  SN: { label: "Senegal", code: "SN", dialCode: "+221" },
-  CM: { label: "Cameroon", code: "CM", dialCode: "+237" },
-  ZW: { label: "Zimbabwe", code: "ZW", dialCode: "+263" },
-};
 
 const Enquiry = () => {
   const [formData, setFormData] = useState({
@@ -67,11 +37,109 @@ const Enquiry = () => {
     customerType: "INDIVIDUAL",
   });
 
+  // New states for countries and ports
+  const [countries, setCountries] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
   const [availablePorts, setAvailablePorts] = useState([]);
-  const [selectedCountryCode, setSelectedCountryCode] = useState("");
+  const [selectedCountryDialCode, setSelectedCountryDialCode] = useState("");
 
   const createInquiryMutation = useCreateInquiry();
   const { user, isAuthenticated } = useAuth();
+
+  // Fetch countries from REST Countries API
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoadingCountries(true);
+      try {
+        const response = await fetch(
+          "https://restcountries.com/v3.1/all?fields=name,cca2,idd"
+        );
+        const data = await response.json();
+
+        // Format countries for dropdown
+        const formattedCountries = [
+          { value: "", label: "Select Country", dialCode: "" },
+          ...data
+            .map((country) => ({
+              value: country.cca2,
+              label: country.name.common,
+              dialCode: country.idd?.root
+                ? `${country.idd.root}${country.idd.suffixes?.[0] || ""}`
+                : "",
+              hasPorts: !!portData[country.cca2], // Check if country has ports
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
+        ];
+
+        setCountries(formattedCountries);
+      } catch (error) {
+        console.error("Failed to fetch countries:", error);
+        // Fallback to basic country list if API fails
+        const fallbackCountries = [
+          { value: "", label: "Select Country", dialCode: "" },
+          {
+            value: "US",
+            label: "United States",
+            dialCode: "+1",
+            hasPorts: !!portData.US,
+          },
+          {
+            value: "BD",
+            label: "Bangladesh",
+            dialCode: "+880",
+            hasPorts: !!portData.BD,
+          },
+          {
+            value: "GB",
+            label: "United Kingdom",
+            dialCode: "+44",
+            hasPorts: !!portData.GB,
+          },
+          {
+            value: "JP",
+            label: "Japan",
+            dialCode: "+81",
+            hasPorts: !!portData.JP,
+          },
+          {
+            value: "AU",
+            label: "Australia",
+            dialCode: "+61",
+            hasPorts: !!portData.AU,
+          },
+          {
+            value: "CA",
+            label: "Canada",
+            dialCode: "+1",
+            hasPorts: !!portData.CA,
+          },
+          {
+            value: "IN",
+            label: "India",
+            dialCode: "+91",
+            hasPorts: !!portData.IN,
+          },
+          {
+            value: "CN",
+            label: "China",
+            dialCode: "+86",
+            hasPorts: !!portData.CN,
+          },
+          {
+            value: "DE",
+            label: "Germany",
+            dialCode: "+49",
+            hasPorts: !!portData.DE,
+          },
+        ];
+        setCountries(fallbackCountries);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
 
   // Auto-populate email if user is logged in
   useEffect(() => {
@@ -86,64 +154,69 @@ const Enquiry = () => {
 
   // Update available ports when country changes
   useEffect(() => {
-    if (formData.country && portData[formData.country]) {
-      const ports = [
-        { value: "", label: "Select Port" },
-        ...portData[formData.country],
-      ];
-      setAvailablePorts(ports);
+    if (formData.country) {
+      // Get country info including dial code
+      const selectedCountry = countries.find(
+        (c) => c.value === formData.country
+      );
+      const dialCode = selectedCountry?.dialCode || "";
+      setSelectedCountryDialCode(dialCode);
 
-      // Update country code for phone number
-      const countryInfo = countryData[formData.country];
-      if (countryInfo) {
-        setSelectedCountryCode(countryInfo.dialCode);
+      // Set available ports
+      if (portData[formData.country]) {
+        const ports = [
+          { value: "", label: "Select Port" },
+          ...portData[formData.country],
+        ];
+        setAvailablePorts(ports);
+      } else {
+        setAvailablePorts([{ value: "", label: "No ports available" }]);
+      }
 
-        // Auto-add country code to mobile if it doesn't already have it
-        if (
-          formData.mobile &&
-          !formData.mobile.startsWith(countryInfo.dialCode)
-        ) {
-          // Remove any existing country code first
-          const cleanMobile = formData.mobile.replace(/^\+\d{1,3}\s?/, "");
+      // Auto-add country code to mobile if it doesn't already have it
+      if (
+        dialCode &&
+        formData.mobile &&
+        !formData.mobile.startsWith(dialCode)
+      ) {
+        // Remove any existing country code first
+        const cleanMobile = formData.mobile.replace(/^\+\d{1,4}\s?/, "");
+        if (cleanMobile) {
           setFormData((prev) => ({
             ...prev,
-            mobile: countryInfo.dialCode + " " + cleanMobile,
+            mobile: dialCode + " " + cleanMobile,
             port: "", // Reset port when country changes
           }));
         }
+      } else if (dialCode && !formData.mobile) {
+        setFormData((prev) => ({
+          ...prev,
+          port: "", // Reset port when country changes
+        }));
       }
     } else {
       setAvailablePorts([{ value: "", label: "Select Port" }]);
-      setSelectedCountryCode("");
+      setSelectedCountryDialCode("");
       setFormData((prev) => ({
         ...prev,
         port: "",
       }));
     }
-  }, [formData.country]);
+  }, [formData.country, countries]);
 
   // Generate year options (from 1990 to current year + 2)
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
     const startYear = 1990;
     const endYear = currentYear + 2;
-
     const options = [{ value: "", label: "Select Year" }];
-
     for (let year = endYear; year >= startYear; year--) {
       options.push({ value: year.toString(), label: year.toString() });
     }
-
     return options;
   };
 
   const yearOptions = generateYearOptions();
-
-  // Create country options from countryData
-  const countryOptions = Object.entries(countryData).map(([code, info]) => ({
-    value: code,
-    label: info.label,
-  }));
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -162,17 +235,15 @@ const Enquiry = () => {
 
   const handleMobileChange = (e) => {
     let value = e.target.value;
-
     // If user manually types and removes country code, add it back
-    if (selectedCountryCode && !value.startsWith(selectedCountryCode)) {
+    if (selectedCountryDialCode && !value.startsWith(selectedCountryDialCode)) {
       // Check if user is typing a new number or just editing
-      if (value.length < selectedCountryCode.length) {
-        value = selectedCountryCode + " ";
+      if (value.length < selectedCountryDialCode.length) {
+        value = selectedCountryDialCode + " ";
       } else if (!value.startsWith("+")) {
-        value = selectedCountryCode + " " + value;
+        value = selectedCountryDialCode + " " + value;
       }
     }
-
     setFormData((prevState) => ({
       ...prevState,
       mobile: value,
@@ -188,7 +259,6 @@ const Enquiry = () => {
       "customerType",
     ];
     const missingFields = requiredFields.filter((field) => !formData[field]);
-
     if (missingFields.length > 0) {
       Swal.fire({
         icon: "error",
@@ -212,7 +282,7 @@ const Enquiry = () => {
     }
 
     // Mobile validation (basic check for international format)
-    const mobileRegex = /^\+?[\d\s\-\(\)]{7,15}$/;
+    const mobileRegex = /^\+?[\d\s\-$$$$]{7,15}$/;
     if (!mobileRegex.test(formData.mobile)) {
       Swal.fire({
         icon: "error",
@@ -227,7 +297,6 @@ const Enquiry = () => {
     if (formData.yearFrom && formData.yearTo) {
       const yearFrom = parseInt(formData.yearFrom);
       const yearTo = parseInt(formData.yearTo);
-
       if (yearFrom > yearTo) {
         Swal.fire({
           icon: "error",
@@ -244,7 +313,6 @@ const Enquiry = () => {
 
   const submitInquiry = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
@@ -322,16 +390,14 @@ const Enquiry = () => {
         customerType: "INDIVIDUAL",
         inquiryType: "CAR",
       });
-      setSelectedCountryCode("");
+      setSelectedCountryDialCode("");
       setAvailablePorts([{ value: "", label: "Select Port" }]);
     } catch (error) {
       console.error("Inquiry submission error:", error);
-
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Something went wrong. Please try again.";
-
       Swal.fire({
         icon: "error",
         title: "Submission Failed",
@@ -511,16 +577,22 @@ const Enquiry = () => {
               </div>
 
               {/* Exterior Color */}
+              {/* Exterior Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Exterior Color</label>
-                <input
-                  type="text"
+                <select
                   name="exteriorColor"
                   value={formData.exteriorColor}
                   onChange={handleChange}
-                  placeholder="Enter Exterior Color"
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                />
+                >
+                  <option value="">Select Exterior Color</option>
+                  {exteriorColors.map((color) => (
+                    <option key={color} value={color}>
+                      {color}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Color */}
@@ -578,9 +650,19 @@ const Enquiry = () => {
                     name="country"
                     value={formData.country}
                     onChange={handleChange}
-                    options={countryOptions}
-                    placeholder="Select Country"
+                    options={countries.map((country) => ({
+                      value: country.value,
+                      label: `${country.label}${
+                        country.hasPorts ? "" : " (No ports available)"
+                      }`,
+                    }))}
+                    placeholder={
+                      loadingCountries
+                        ? "Loading countries..."
+                        : "Select Country"
+                    }
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loadingCountries}
                     required
                   />
                 </div>
@@ -626,9 +708,9 @@ const Enquiry = () => {
                   </span>
                 </label>
                 <div className="md:col-span-2 relative">
-                  {selectedCountryCode && (
+                  {selectedCountryDialCode && (
                     <div className="absolute left-2 top-2 text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm z-10">
-                      {selectedCountryCode}
+                      {selectedCountryDialCode}
                     </div>
                   )}
                   <input
@@ -637,14 +719,14 @@ const Enquiry = () => {
                     value={formData.mobile}
                     onChange={handleMobileChange}
                     placeholder={
-                      selectedCountryCode
-                        ? `${selectedCountryCode} 1234567890`
+                      selectedCountryDialCode
+                        ? `${selectedCountryDialCode} 1234567890`
                         : "e.g., +8801234567890"
                     }
                     className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                     style={{
-                      paddingLeft: selectedCountryCode
-                        ? `${selectedCountryCode.length * 8 + 20}px`
+                      paddingLeft: selectedCountryDialCode
+                        ? `${selectedCountryDialCode.length * 8 + 20}px`
                         : "8px",
                     }}
                     required
@@ -758,8 +840,6 @@ const Enquiry = () => {
           </div>
         </form>
       </div>
-
-      {/* Process Section */}
     </div>
   );
 };

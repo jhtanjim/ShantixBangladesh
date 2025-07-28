@@ -16,7 +16,7 @@ const HowToBuy = () => {
   const [paymentSubTab, setPaymentSubTab] = useState("service");
 
   const contactInfo = {
-    phone: "+8170 8393 1325",
+    phone: "+8801771123456",
     japanOffice:
       "Shin-Okubo Building 2, 3rd floor, 1-11-1, Hyakunincho, Shinjuku-ku, Tokyo 169-0073, Japan",
     bdOffice:

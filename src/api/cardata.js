@@ -118,7 +118,14 @@ export const featureOptions = {
     "Wireless Audio Streaming",
   ],
 };
-
+export const driveTypeOptions = [
+  { value: "", label: "Select Drive Type" },
+  { value: "FWD", label: "Front-Wheel Drive (FWD)" },
+  { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
+  { value: "AWD", label: "All-Wheel Drive (AWD)" },
+  { value: "FOUR_WD", label: "Four-Wheel Drive (4WD)" },
+  { value: "OTHER", label: "Other" },
+];
 
    export const transmissionOptions = [
     { value: "", label: "Select Transmission" },

@@ -1,5 +1,4 @@
 "use client";
-
 import {
   AlertCircle,
   Anchor,
@@ -15,6 +14,7 @@ import {
   Edit,
   Eye,
   Filter,
+  Globe,
   Loader2,
   MapPin,
   MessageSquare,
@@ -27,7 +27,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
   useAllOrders,
@@ -36,6 +36,9 @@ import {
   useUpdateOrderStatus,
   useVerifyPayment,
 } from "../../../hooks/useOrders";
+
+// Import your portData
+import { portData } from "../../../api/portData";
 
 const AdminOrderManagement = () => {
   // State Management
@@ -47,6 +50,12 @@ const AdminOrderManagement = () => {
   const [copiedOrderId, setCopiedOrderId] = useState(null);
   const [expandedCards, setExpandedCards] = useState(new Set());
 
+  // New states for country and port selection
+  const [countries, setCountries] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [availablePorts, setAvailablePorts] = useState([]);
+
   // API Hooks
   const { data: ordersData, isLoading, error, refetch } = useAllOrders();
   console.log(ordersData);
@@ -57,6 +66,51 @@ const AdminOrderManagement = () => {
 
   // Data Processing
   const orders = ordersData?.orders || [];
+
+  // Fetch countries from REST Countries API
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoadingCountries(true);
+      try {
+        const response = await fetch(
+          "https://restcountries.com/v3.1/all?fields=name,cca2"
+        );
+        const data = await response.json();
+
+        // Filter countries that have ports in our portData
+        const availableCountries = data
+          .filter((country) => portData[country.cca2])
+          .map((country) => ({
+            code: country.cca2,
+            name: country.name.common,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        setCountries(availableCountries);
+      } catch (error) {
+        console.error("Failed to fetch countries:", error);
+        // Fallback to countries we have in portData
+        const fallbackCountries = Object.keys(portData).map((code) => ({
+          code,
+          name: code, // Use country code as name if API fails
+        }));
+        setCountries(fallbackCountries);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  // Update available ports when country changes
+  useEffect(() => {
+    if (selectedCountry && portData[selectedCountry]) {
+      setAvailablePorts(portData[selectedCountry]);
+    } else {
+      setAvailablePorts([]);
+    }
+  }, [selectedCountry]);
 
   // Configuration Objects
   const statusConfig = {
@@ -96,15 +150,6 @@ const AdminOrderManagement = () => {
       label: "Cancelled",
     },
   };
-
-  const portOptions = [
-    { value: "mongla", label: "Mongla Port" },
-    { value: "chittagong", label: "Chittagong Port" },
-    { value: "payra", label: "Payra Port" },
-    { value: "bondor", label: "Bondor Port" },
-    { value: "dhaka", label: "Dhaka Port" },
-    { value: "sylhet", label: "Sylhet Port" },
-  ];
 
   // Filtering Logic
   const filteredOrders = orders.filter((order) => {
@@ -167,16 +212,29 @@ const AdminOrderManagement = () => {
     return counts;
   };
 
-  const getPortLabel = (portValue) => {
-    const port = portOptions.find((p) => p.value === portValue);
-    return port ? port.label : "Not Selected";
+  const getPortLabel = (portValue, countryCode) => {
+    if (!portValue) return "Not Selected";
+
+    // If we have country code, look in that country's ports
+    if (countryCode && portData[countryCode]) {
+      const port = portData[countryCode].find((p) => p.value === portValue);
+      if (port) return port.label;
+    }
+
+    // Fallback: search in all countries
+    for (const country of Object.keys(portData)) {
+      const port = portData[country].find((p) => p.value === portValue);
+      if (port) return port.label;
+    }
+
+    return portValue; // Return the value itself if not found
   };
 
   // FIXED: Updated to handle VERIFIED status instead of COMPLETED
   const calculateTotalPaid = (paymentTransactions) => {
     if (!paymentTransactions || paymentTransactions.length === 0) return 0;
     return paymentTransactions
-      .filter((payment) => payment.status === "VERIFIED") // Changed from "COMPLETED" to "VERIFIED"
+      .filter((payment) => payment.status === "VERIFIED")
       .reduce((total, payment) => total + (payment.amount || 0), 0);
   };
 
@@ -197,7 +255,6 @@ const AdminOrderManagement = () => {
       if (!currentOrder) {
         throw new Error("Order not found");
       }
-
       await updateOrderMutation.mutateAsync({
         orderId,
         statusData: {
@@ -205,7 +262,6 @@ const AdminOrderManagement = () => {
           status: currentOrder.status,
         },
       });
-
       Swal.fire({
         title: "Success!",
         text: "Final price has been set successfully",
@@ -241,11 +297,15 @@ const AdminOrderManagement = () => {
     }
   };
 
-  const handlePortUpdate = async (orderId, newPort, newStatus) => {
+  const handlePortUpdate = async (orderId, newPort, newStatus, countryCode) => {
     try {
       await updateOrderMutation.mutateAsync({
         orderId,
-        statusData: { status: newStatus, port: newPort },
+        statusData: {
+          status: newStatus,
+          port: newPort,
+          portCountry: countryCode, // Store country code with port
+        },
       });
     } catch (error) {
       console.error("Failed to update order port:", error);
@@ -300,8 +360,19 @@ const AdminOrderManagement = () => {
       estimatedDelivery: order.estimatedDelivery
         ? new Date(order.estimatedDelivery).toISOString().split("T")[0]
         : "",
-      port: order.port || "mongla",
+      port: order.port || "",
+      portCountry: order.portCountry || "",
     });
+
+    // Set selected country and available ports for editing
+    if (order.portCountry) {
+      setSelectedCountry(order.portCountry);
+      setAvailablePorts(portData[order.portCountry] || []);
+    } else {
+      setSelectedCountry("");
+      setAvailablePorts([]);
+    }
+
     setShowEditModal(true);
   };
 
@@ -331,11 +402,14 @@ const AdminOrderManagement = () => {
           trackingInfo: editingOrder.trackingInfo,
           estimatedDelivery: estimatedDeliveryISO,
           port: editingOrder.port,
+          portCountry: selectedCountry,
         },
       });
 
       setShowEditModal(false);
       setEditingOrder(null);
+      setSelectedCountry("");
+      setAvailablePorts([]);
 
       Swal.fire({
         title: "Success!",
@@ -446,7 +520,6 @@ const AdminOrderManagement = () => {
               rejectionReason: null,
             },
           });
-
           Swal.fire({
             icon: "success",
             title: "✅ Payment Approved!",
@@ -478,7 +551,6 @@ const AdminOrderManagement = () => {
                   rejectionReason: rejectResult.value?.rejectionReason || "",
                 },
               });
-
               Swal.fire({
                 icon: "success",
                 title: "❌ Payment Rejected",
@@ -850,29 +922,22 @@ const AdminOrderManagement = () => {
                       </select>
                     </td>
 
-                    {/* Port Column */}
+                    {/* Port Column - Updated with country selection */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={order.port || "mongla"}
-                        onChange={(e) =>
-                          handlePortUpdate(
-                            order.id,
-                            e.target.value,
-                            order.status
-                          )
-                        }
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border-0 bg-blue-100 text-blue-800 focus:ring-2 focus:ring-blue-500 transition-colors"
-                        disabled={updateOrderMutation.isPending}
-                      >
-                        {portOptions.map((port) => (
-                          <option key={port.value} value={port.value}>
-                            {port.label}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="text-xs">
+                        <div className="font-medium text-gray-900">
+                          {getPortLabel(order.port, order.portCountry)}
+                        </div>
+                        {order.portCountry && (
+                          <div className="text-gray-500 mt-1">
+                            {countries.find((c) => c.code === order.portCountry)
+                              ?.name || order.portCountry}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Payments Column - UPDATED to show VERIFIED status */}
+                    {/* Payments Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
                         {order.paymentTransactions &&
@@ -1022,7 +1087,6 @@ const AdminOrderManagement = () => {
                       )}
                     </button>
                   </div>
-
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-400" />
@@ -1041,7 +1105,6 @@ const AdminOrderManagement = () => {
                       {statusConfig_.label}
                     </div>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <DollarSign className="h-4 w-4 text-green-600" />
@@ -1137,7 +1200,7 @@ const AdminOrderManagement = () => {
                       </div>
                     )}
 
-                    {/* Payment Information - UPDATED to show VERIFIED status */}
+                    {/* Payment Information */}
                     {order.paymentTransactions &&
                       order.paymentTransactions.length > 0 && (
                         <div>
@@ -1218,24 +1281,10 @@ const AdminOrderManagement = () => {
                         <label className="block text-xs font-medium text-gray-700 mb-1">
                           Port
                         </label>
-                        <select
-                          value={order.port || "mongla"}
-                          onChange={(e) =>
-                            handlePortUpdate(
-                              order.id,
-                              e.target.value,
-                              order.status
-                            )
-                          }
-                          className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          disabled={updateOrderMutation.isPending}
-                        >
-                          {portOptions.map((port) => (
-                            <option key={port.value} value={port.value}>
-                              {port.label}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="text-xs text-gray-900 px-2 py-1 bg-gray-50 rounded border">
+                          {getPortLabel(order.port, order.portCountry) ||
+                            "Not Selected"}
+                        </div>
                       </div>
                     </div>
 
@@ -1292,7 +1341,6 @@ const AdminOrderManagement = () => {
                 </button>
               </div>
             </div>
-
             <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -1316,7 +1364,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border border-green-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1342,7 +1389,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border border-purple-200 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1384,7 +1430,19 @@ const AdminOrderManagement = () => {
                         },
                         {
                           label: "Port",
-                          value: getPortLabel(selectedOrder.port),
+                          value: getPortLabel(
+                            selectedOrder.port,
+                            selectedOrder.portCountry
+                          ),
+                        },
+                        {
+                          label: "Port Country",
+                          value:
+                            countries.find(
+                              (c) => c.code === selectedOrder.portCountry
+                            )?.name ||
+                            selectedOrder.portCountry ||
+                            "Not Selected",
                         },
                         {
                           label: "Payment Status",
@@ -1699,6 +1757,33 @@ const AdminOrderManagement = () => {
                 </select>
               </div>
 
+              {/* Country Selection */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Country
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => {
+                      setSelectedCountry(e.target.value);
+                      setEditingOrder({ ...editingOrder, port: "" }); // Reset port when country changes
+                    }}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    disabled={loadingCountries}
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Port Selection */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Port
@@ -1706,13 +1791,21 @@ const AdminOrderManagement = () => {
                 <div className="relative">
                   <Anchor className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <select
-                    value={editingOrder.port || "mongla"}
+                    value={editingOrder.port || ""}
                     onChange={(e) =>
                       setEditingOrder({ ...editingOrder, port: e.target.value })
                     }
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    disabled={!selectedCountry || availablePorts.length === 0}
                   >
-                    {portOptions.map((port) => (
+                    <option value="">
+                      {!selectedCountry
+                        ? "Select country first"
+                        : availablePorts.length === 0
+                        ? "No ports available"
+                        : "Select Port"}
+                    </option>
+                    {availablePorts.map((port) => (
                       <option key={port.value} value={port.value}>
                         {port.label}
                       </option>
@@ -1798,6 +1891,8 @@ const AdminOrderManagement = () => {
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingOrder(null);
+                    setSelectedCountry("");
+                    setAvailablePorts([]);
                   }}
                   className="w-full sm:w-auto px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   disabled={updateOrderMutation.isPending}

@@ -1,4 +1,6 @@
-// Main AboutUs component - refactored
+"use client";
+
+// Main AboutUs component - fixed
 import {
   Award,
   Banknote,
@@ -12,8 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-
-import { useGallery } from "../../hooks/useGallery"; // ✅ correct
+import { useGallery } from "../../hooks/useGallery";
 import { useGetActiveTeam } from "../../hooks/useTeam";
 import BackgroundTab from "./BackgroundTab";
 import BankDetailsTab from "./BankDetailsTab";
@@ -37,17 +38,23 @@ const AboutUs = () => {
   } = useGetActiveTeam();
   const teamMembers = teamData?.data || [];
 
-  // Gallery API
-  const { useGetGallery } = useGallery(); // ✅ this gives you the hook
+  // Gallery API - Use the same hook as admin component
+  const { useGetAllGallery } = useGallery();
   const {
     data: galleryData,
     isLoading: galleryLoading,
     error: galleryError,
-  } = useGetGallery();
-  console.log(galleryData);
+  } = useGetAllGallery();
 
-  const galleryImages = galleryData?.data || [];
-  console.log(galleryImages);
+  console.log("Gallery Data:", galleryData);
+
+  // Filter only active gallery items for public display
+  const galleryImages = (galleryData || [])
+    .filter((item) => item.isActive) // Only show active items
+    .sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
+
+  console.log("Filtered Gallery Images:", galleryImages);
+
   // Image carousel functions
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -197,6 +204,8 @@ const AboutUs = () => {
             setCurrentImageIndex={setCurrentImageIndex}
             nextImage={nextImage}
             prevImage={prevImage}
+            galleryLoading={galleryLoading}
+            galleryError={galleryError}
           />
         );
       case "why-choose":

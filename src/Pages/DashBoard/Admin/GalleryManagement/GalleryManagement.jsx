@@ -27,6 +27,7 @@ const GalleryManagement = () => {
   } = useGallery();
 
   const { data: galleryItems = [], isLoading, error } = useGetAllGallery();
+  console.log(galleryItems);
   const createMutation = useCreateGalleryItem();
   const updateMutation = useUpdateGalleryItem();
   const deleteMutation = useDeleteGalleryItem();
