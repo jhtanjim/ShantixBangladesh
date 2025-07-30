@@ -130,6 +130,7 @@ export const useAddPaymentToOrder = () => {
     mutationFn: ({ orderId, paymentData }) =>
       addPaymentToOrder(orderId, paymentData),
     onSuccess: (data, variables) => {
+      console.log("paymentData",data)
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["order", variables.orderId] });
       queryClient.invalidateQueries({ queryKey: ["my-orders"] });

@@ -1645,8 +1645,16 @@ const AdminOrderManagement = () => {
                                     {formatPrice(payment.amount)}
                                   </p>
                                   <p className="text-sm text-gray-600 font-mono">
-                                    Transaction ID: {payment.id}
+                                    Payment Method: {payment.paymentMethod}
                                   </p>
+                                  <p className="text-sm text-gray-600 font-mono">
+                                    Transaction ID: {payment.transactionRef}
+                                  </p>
+                                  <img
+                                    className="h-40"
+                                    src={payment.screenshot}
+                                    alt=""
+                                  />
                                   <p className="text-xs text-gray-500 mt-1">
                                     {formatDate(payment.createdAt)}
                                   </p>

@@ -22,7 +22,7 @@ import Swal from "sweetalert2";
 import { useAddPaymentToOrder, useUploadPayment } from "../../hooks/useOrders";
 
 const OrderCard = ({ order }) => {
-  console.log(order);
+  console.log("order", order);
   const [uploadingPayment, setUploadingPayment] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -274,89 +274,6 @@ const OrderCard = ({ order }) => {
     [validateFile]
   );
 
-  // Upload payment screenshot with progress tracking
-  const handlePaymentUpload = async () => {
-    if (!selectedFile) {
-      Swal.fire({
-        icon: "warning",
-        title: "No File Selected",
-        text: "Please select a payment screenshot to upload.",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
-    }
-    if (!validateFile(selectedFile)) {
-      clearSelectedFile();
-      return;
-    }
-
-    try {
-      setUploadingPayment(true);
-      setUploadProgress(0);
-      const formData = new FormData();
-      formData.append("paymentScreenshot", selectedFile);
-      formData.append("orderId", order.id);
-
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-      await uploadPaymentMutation.mutateAsync({
-        orderId: order.id,
-        paymentData: formData,
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      await Swal.fire({
-        icon: "success",
-        title: "Payment Uploaded Successfully!",
-        text: "Your payment screenshot has been uploaded and is being reviewed.",
-        timer: 2500,
-        showConfirmButton: false,
-        timerProgressBar: true,
-      });
-
-      clearSelectedFile();
-    } catch (error) {
-      console.error("Payment upload error:", error);
-      let errorMessage =
-        "Failed to upload payment screenshot. Please try again.";
-      if (
-        error.message?.includes("network") ||
-        error.message?.includes("fetch")
-      ) {
-        errorMessage =
-          "Network error. Please check your internet connection and try again.";
-      } else if (error.message?.includes("size")) {
-        errorMessage =
-          "File size is too large. Please compress your image and try again.";
-      } else if (error.message?.includes("type")) {
-        errorMessage = "Invalid file type. Please upload an image or PDF file.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-
-      Swal.fire({
-        icon: "error",
-        title: "Upload Failed",
-        text: errorMessage,
-        confirmButtonColor: "#3085d6",
-      });
-    } finally {
-      setUploadingPayment(false);
-      setUploadProgress(0);
-    }
-  };
-
   // Clear selected file
   const clearSelectedFile = useCallback(() => {
     setSelectedFile(null);
@@ -400,6 +317,10 @@ const OrderCard = ({ order }) => {
     if (!paymentData.transactionRef?.trim()) {
       newErrors.transactionRef = "Please enter a transaction reference";
     }
+    if (!selectedFile) {
+      newErrors.screenshot = "Please upload a payment screenshot";
+    }
+
     // Check if order has finalPrice set
     const orderFinalPrice =
       order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
@@ -422,21 +343,44 @@ const OrderCard = ({ order }) => {
       order.finalPrice || order.negotiatedPrice || order.totalOriginalPrice;
 
     try {
+      setUploadingPayment(true);
+      setUploadProgress(0);
+
+      // First upload the payment screenshot
+      const formData = new FormData();
+      formData.append("screenshot", selectedFile);
+      formData.append("orderId", order.id);
+      formData.append("amount", Number.parseFloat(paymentData.amount));
+      formData.append("paymentMethod", paymentData.paymentMethod);
+      formData.append("transactionRef", paymentData.transactionRef.trim());
+      formData.append("orderFinalPrice", orderFinalPrice);
+      // Simulate progress for upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 50) {
+            clearInterval(progressInterval);
+            return 50;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      clearInterval(progressInterval);
+      setUploadProgress(75);
+
+      // Then submit payment details
       await addPaymentMutation.mutateAsync({
         orderId: order.id,
-        paymentData: {
-          amount: Number.parseFloat(paymentData.amount),
-          paymentMethod: paymentData.paymentMethod,
-          transactionRef: paymentData.transactionRef.trim(),
-          orderFinalPrice: orderFinalPrice,
-        },
+        paymentData: formData,
       });
+
+      setUploadProgress(100);
 
       await Swal.fire({
         icon: "success",
-        title: "Payment Submitted!",
-        text: "Your payment has been submitted successfully and is being reviewed.",
-        timer: 2500,
+        title: "Payment Submitted Successfully!",
+        text: "Your payment details and screenshot have been submitted and are being reviewed.",
+        timer: 3000,
         showConfirmButton: false,
         timerProgressBar: true,
       });
@@ -449,22 +393,38 @@ const OrderCard = ({ order }) => {
       });
       setErrors({});
       setShowPaymentForm(false);
+      clearSelectedFile();
     } catch (error) {
       console.error("Payment submission error:", error);
       let errorMessage = "Failed to submit payment. Please try again.";
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message?.includes("final price")) {
         errorMessage =
           "Order final price must be set before adding payments. Please contact support.";
+      } else if (
+        error.message?.includes("network") ||
+        error.message?.includes("fetch")
+      ) {
+        errorMessage =
+          "Network error. Please check your internet connection and try again.";
+      } else if (error.message?.includes("size")) {
+        errorMessage =
+          "File size is too large. Please compress your image and try again.";
+      } else if (error.message?.includes("type")) {
+        errorMessage = "Invalid file type. Please upload an image or PDF file.";
       }
 
       Swal.fire({
         icon: "error",
-        title: "Payment Failed",
+        title: "Payment Submission Failed",
         text: errorMessage,
         confirmButtonColor: "#3085d6",
       });
+    } finally {
+      setUploadingPayment(false);
+      setUploadProgress(0);
     }
   };
 
@@ -609,7 +569,7 @@ const OrderCard = ({ order }) => {
               <div>
                 <span className="text-green-600">Confirmed:</span>
                 <p className="font-bold text-green-700">
-                  {formatStatus(order.paymentStatus)}
+                  {formatPrice(totalConfirmed)}
                 </p>
                 <p className="text-xs text-green-600">Approved only</p>
               </div>
@@ -690,6 +650,12 @@ const OrderCard = ({ order }) => {
                               </div>
                             </div>
                             <div className="text-xs text-purple-600 space-y-1">
+                              <img src={payment.screenshot} alt="" />
+                              <p>
+                                <strong>Payment Method:</strong>{" "}
+                                {payment.paymentMethod}
+                              </p>
+
                               <p>
                                 <strong>Transaction ID:</strong> {payment.id}
                               </p>
@@ -946,21 +912,137 @@ const OrderCard = ({ order }) => {
                     </p>
                   )}
                 </div>
+
+                {/* Payment Screenshot Upload - Now Required for Every Payment */}
+                <div>
+                  <label className="block text-xs font-medium text-purple-700 mb-1">
+                    Payment Screenshot *
+                  </label>
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <input
+                      ref={fileInputRef}
+                      id={`payment-upload-${order.id}`}
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    {!selectedFile ? (
+                      <div
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-lg p-4 text-center hover:border-amber-400 hover:bg-amber-100 transition cursor-pointer ${
+                          errors.screenshot
+                            ? "border-red-300 bg-red-50"
+                            : "border-amber-300"
+                        }`}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                        <p className="text-sm text-amber-700 mb-1">
+                          Click to select or drag & drop
+                        </p>
+                        <p className="text-xs text-amber-600">
+                          Images (JPG, PNG, GIF, WebP) or PDF • Max 10MB
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* File Info */}
+                        <div className="flex items-center justify-between p-3 bg-white border border-amber-200 rounded-lg">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <FileText className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-amber-700 truncate font-medium">
+                                {selectedFile.name}
+                              </p>
+                              <p className="text-xs text-amber-600">
+                                {formatFileSize(selectedFile.size)}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={clearSelectedFile}
+                            className="text-amber-600 hover:text-amber-800 p-1 hover:bg-amber-100 rounded transition"
+                            title="Remove file"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {/* Image Preview */}
+                        {previewUrl && (
+                          <div className="relative">
+                            <img
+                              src={previewUrl || "/placeholder.svg"}
+                              alt="Payment preview"
+                              className="w-full h-40 object-contain bg-gray-50 rounded-lg border"
+                            />
+                          </div>
+                        )}
+                        {/* Upload Progress */}
+                        {uploadingPayment && uploadProgress > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs text-amber-700">
+                              <span>Processing Payment...</span>
+                              <span>{uploadProgress}%</span>
+                            </div>
+                            <div className="w-full bg-amber-200 rounded-full h-2">
+                              <div
+                                className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${uploadProgress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+                        {/* Change File Button */}
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingPayment}
+                          className="w-full px-4 py-2 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition text-sm font-medium"
+                        >
+                          Change File
+                        </button>
+                      </div>
+                    )}
+                    {errors.screenshot && (
+                      <p className="text-xs text-red-600 mt-2">
+                        {errors.screenshot}
+                      </p>
+                    )}
+                    {/* Help Text */}
+                    <div className="mt-3 p-2 bg-amber-100 border border-amber-200 rounded text-xs text-amber-700">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold mb-1">Upload Tips:</p>
+                          <ul className="list-disc list-inside space-y-0.5">
+                            <li>
+                              Ensure the payment details are clearly visible
+                            </li>
+                            <li>Include transaction ID, amount, and date</li>
+                            <li>Use good lighting for clear images</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <button
                     onClick={handlePaymentSubmit}
-                    disabled={addPaymentMutation.isPending}
+                    disabled={uploadingPayment || addPaymentMutation.isPending}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    {addPaymentMutation.isPending ? (
+                    {uploadingPayment || addPaymentMutation.isPending ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Submitting...</span>
+                        <span>Processing...</span>
                       </>
                     ) : (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        <span>Submit</span>
+                        <span>Submit Payment</span>
                       </>
                     )}
                   </button>
@@ -973,140 +1055,13 @@ const OrderCard = ({ order }) => {
                         paymentMethod: "",
                         transactionRef: "",
                       });
+                      clearSelectedFile();
                     }}
-                    disabled={addPaymentMutation.isPending}
+                    disabled={uploadingPayment || addPaymentMutation.isPending}
                     className="px-3 py-2 border border-purple-300 text-purple-700 rounded text-sm font-medium hover:bg-purple-50 disabled:opacity-50 transition"
                   >
                     Cancel
                   </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Enhanced Payment Screenshot Upload Section */}
-          {showPaymentUpload && !hasPaymentScreenshot && (
-            <div className="flex flex-col gap-2 w-full">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-amber-600" />
-                  <p className="text-sm font-semibold text-amber-800">
-                    Upload Payment Screenshot
-                  </p>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  id={`payment-upload-${order.id}`}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                {!selectedFile ? (
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    className="border-2 border-dashed border-amber-300 rounded-lg p-4 text-center hover:border-amber-400 hover:bg-amber-100 transition cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                    <p className="text-sm text-amber-700 mb-1">
-                      Click to select or drag & drop
-                    </p>
-                    <p className="text-xs text-amber-600">
-                      Images (JPG, PNG, GIF, WebP) or PDF • Max 10MB
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* File Info */}
-                    <div className="flex items-center justify-between p-3 bg-white border border-amber-200 rounded-lg">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-amber-700 truncate font-medium">
-                            {selectedFile.name}
-                          </p>
-                          <p className="text-xs text-amber-600">
-                            {formatFileSize(selectedFile.size)}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={clearSelectedFile}
-                        className="text-amber-600 hover:text-amber-800 p-1 hover:bg-amber-100 rounded transition"
-                        title="Remove file"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {/* Image Preview */}
-                    {previewUrl && (
-                      <div className="relative">
-                        <img
-                          src={previewUrl || "/placeholder.svg"}
-                          alt="Payment preview"
-                          className="w-full h-40 object-contain bg-gray-50 rounded-lg border"
-                        />
-                      </div>
-                    )}
-                    {/* Upload Progress */}
-                    {uploadingPayment && uploadProgress > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs text-amber-700">
-                          <span>Uploading...</span>
-                          <span>{uploadProgress}%</span>
-                        </div>
-                        <div className="w-full bg-amber-200 rounded-full h-2">
-                          <div
-                            className="bg-amber-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handlePaymentUpload}
-                        disabled={uploadingPayment}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
-                      >
-                        {uploadingPayment ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Uploading...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4" />
-                            <span>Upload Payment</span>
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingPayment}
-                        className="px-4 py-2 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 disabled:opacity-50 transition text-sm font-medium"
-                      >
-                        Change
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/* Help Text */}
-                <div className="mt-3 p-2 bg-amber-100 border border-amber-200 rounded text-xs text-amber-700">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold mb-1">Upload Tips:</p>
-                      <ul className="list-disc list-inside space-y-0.5">
-                        <li>Ensure the payment details are clearly visible</li>
-                        <li>Include transaction ID, amount, and date</li>
-                        <li>Use good lighting for clear images</li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1135,7 +1090,15 @@ const OrderCard = ({ order }) => {
                   Transaction ID
                 </label>
                 <p className="text-sm font-mono text-gray-900 bg-gray-50 p-2 rounded">
-                  {selectedPayment.id}
+                  {selectedPayment.transactionRef}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Payment Method
+                </label>
+                <p className="text-sm font-mono text-gray-900 bg-gray-50 p-2 rounded">
+                  {selectedPayment.paymentMethod}
                 </p>
               </div>
               <div>
@@ -1159,14 +1122,15 @@ const OrderCard = ({ order }) => {
                   {formatStatus(selectedPayment.status)}
                 </div>
               </div>
-              <div>
+              <img src={selectedPayment.screenshot} alt="" />
+              {/* <div>
                 <label className="text-sm font-medium text-gray-500">
                   Date Created
                 </label>
                 <p className="text-gray-900">
                   {formatDate(selectedPayment.createdAt)}
                 </p>
-              </div>
+              </div> */}
               <div className="flex justify-end pt-4">
                 <button
                   onClick={() => setSelectedPayment(null)}
