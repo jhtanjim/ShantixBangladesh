@@ -12,6 +12,7 @@ import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
 import GalleryManagement from "../Pages/DashBoard/Admin/GalleryManagement/GalleryManagement";
 import ShipScheduleList from "../Pages/DashBoard/Admin/ShipScheduleList/ShipScheduleList";
 import TeamManagement from "../Pages/DashBoard/Admin/Team/TeamManageMent";
+import Testimonial from "../Pages/DashBoard/Admin/Testimonial/Testimonial";
 import { CarDetailsPage } from "../Pages/DashBoard/Admin/cars/CarDetailsPage";
 import { CarForm } from "../Pages/DashBoard/Admin/cars/CarForm";
 import { CarsPage } from "../Pages/DashBoard/Admin/cars/CarsPage";
@@ -157,6 +158,7 @@ export const router = createBrowserRouter([
       { path: "shipScheduleList", element: <ShipScheduleList /> },
       { path: "team", element: <TeamManagement /> },
       { path: "galleryManagement", element: <GalleryManagement /> },
+      { path: "testimonial", element: <Testimonial /> },
     ],
   },
 ]);

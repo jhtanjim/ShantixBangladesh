@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { FcRating } from "react-icons/fc";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 
@@ -83,6 +84,12 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: Users,
       key: "gallery",
       path: "/admin/galleryManagement",
+    },
+    {
+      title: "Testimonial",
+      icon: FcRating,
+      key: "testimonial",
+      path: "/admin/testimonial",
     },
     {
       title: "Back TO Home",
