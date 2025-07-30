@@ -279,7 +279,7 @@ const Register = () => {
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-white text-2xl font-bold mt-4">Join CarHub</h1>
+          <h1 className="text-white text-2xl font-bold mt-4">Join Shantix</h1>
           <p className="text-blue-200">Create your account to get started</p>
         </div>
 
