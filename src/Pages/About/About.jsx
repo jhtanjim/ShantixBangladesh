@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useGallery } from "../../hooks/useGallery";
 import { useGetActiveTeam } from "../../hooks/useTeam";
+import { useTestimonials } from "../../hooks/useTestimonial";
 import BackgroundTab from "./BackgroundTab";
 import BankDetailsTab from "./BankDetailsTab";
 import ContactTab from "./ContactTab";
@@ -37,7 +38,15 @@ const AboutUs = () => {
     error: teamError,
   } = useGetActiveTeam();
   const teamMembers = teamData?.data || [];
+  // testimonial
 
+  const {
+    data: testimonialData,
+    isLoading: testimonialLoading,
+    error: testimonialError,
+  } = useTestimonials();
+  const testimonials = testimonialData;
+  console.log(testimonialData);
   // Gallery API - Use the same hook as admin component
   const { useGetAllGallery } = useGallery();
   const {
@@ -46,14 +55,14 @@ const AboutUs = () => {
     error: galleryError,
   } = useGetAllGallery();
 
-  console.log("Gallery Data:", galleryData);
+  // console.log("Gallery Data:", galleryData);
 
   // Filter only active gallery items for public display
   const galleryImages = (galleryData || [])
     .filter((item) => item.isActive) // Only show active items
     .sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
 
-  console.log("Filtered Gallery Images:", galleryImages);
+  // console.log("Filtered Gallery Images:", galleryImages);
 
   // Image carousel functions
   const nextImage = () => {
@@ -147,40 +156,40 @@ const AboutUs = () => {
     },
   ];
 
-  const testimonials = [
-    {
-      name: "Ahmed Hassan",
-      country: "UAE",
-      vehicle: "Toyota Prius 2019",
-      rating: 5,
-      text: "Excellent service from start to finish. The team was professional, and the vehicle arrived exactly as described. Highly recommended!",
-      image: "/api/placeholder/50/50",
-    },
-    {
-      name: "Maria Rodriguez",
-      country: "Chile",
-      vehicle: "Honda CR-V 2020",
-      rating: 5,
-      text: "Shantix Corporation made the entire process seamless. Great communication and the vehicle quality exceeded my expectations.",
-      image: "/api/placeholder/50/50",
-    },
-    {
-      name: "David Thompson",
-      country: "New Zealand",
-      vehicle: "Nissan X-Trail 2021",
-      rating: 5,
-      text: "Professional service and competitive pricing. The documentation was handled perfectly, and shipping was faster than expected.",
-      image: "/api/placeholder/50/50",
-    },
-    {
-      name: "Priya Sharma",
-      country: "India",
-      vehicle: "Mazda CX-5 2020",
-      rating: 5,
-      text: "Outstanding experience! The team guided me through every step and delivered exactly what was promised. Will definitely use again.",
-      image: "/api/placeholder/50/50",
-    },
-  ];
+  // const testimonials = [
+  //   {
+  //     name: "Ahmed Hassan",
+  //     country: "UAE",
+  //     vehicle: "Toyota Prius 2019",
+  //     rating: 5,
+  //     text: "Excellent service from start to finish. The team was professional, and the vehicle arrived exactly as described. Highly recommended!",
+  //     image: "/api/placeholder/50/50",
+  //   },
+  //   {
+  //     name: "Maria Rodriguez",
+  //     country: "Chile",
+  //     vehicle: "Honda CR-V 2020",
+  //     rating: 5,
+  //     text: "Shantix Corporation made the entire process seamless. Great communication and the vehicle quality exceeded my expectations.",
+  //     image: "/api/placeholder/50/50",
+  //   },
+  //   {
+  //     name: "David Thompson",
+  //     country: "New Zealand",
+  //     vehicle: "Nissan X-Trail 2021",
+  //     rating: 5,
+  //     text: "Professional service and competitive pricing. The documentation was handled perfectly, and shipping was faster than expected.",
+  //     image: "/api/placeholder/50/50",
+  //   },
+  //   {
+  //     name: "Priya Sharma",
+  //     country: "India",
+  //     vehicle: "Mazda CX-5 2020",
+  //     rating: 5,
+  //     text: "Outstanding experience! The team guided me through every step and delivered exactly what was promised. Will definitely use again.",
+  //     image: "/api/placeholder/50/50",
+  //   },
+  // ];
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -211,7 +220,14 @@ const AboutUs = () => {
       case "why-choose":
         return <WhyChooseTab whyChooseFeatures={whyChooseFeatures} />;
       case "testimonials":
-        return <TestimonialsTab testimonials={testimonials} />;
+        return (
+          <TestimonialsTab
+            testimonials={testimonials}
+            testimonialLoading={testimonialLoading}
+            testimonialError={testimonialError}
+          />
+        );
+
       case "bank-details":
         return <BankDetailsTab />;
       default:

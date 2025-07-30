@@ -1,7 +1,16 @@
-// components/AboutUs/TestimonialsTab.jsx
 import TestimonialCard from "./TestimonialCard";
 
-const TestimonialsTab = ({ testimonials }) => {
+const TestimonialsTab = ({
+  testimonials,
+  testimonialLoading,
+  testimonialError,
+}) => {
+  if (testimonialLoading)
+    return <p className="text-center">Loading testimonials...</p>;
+  if (testimonialError)
+    return (
+      <p className="text-center text-red-500">Failed to load testimonials.</p>
+    );
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
@@ -15,17 +24,21 @@ const TestimonialsTab = ({ testimonials }) => {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {testimonials.map((testimonial, index) => (
-          <TestimonialCard
-            key={index}
-            testimonial={testimonial}
-            index={index}
-          />
-        ))}
-      </div>
+      {testimonials.length === 0 ? (
+        <p className="text-center text-gray-500">No testimonials available.</p>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <TestimonialCard
+              key={index}
+              testimonial={testimonial}
+              index={index}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Customer Satisfaction Stats */}
+      {/* Satisfaction stats */}
       <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg shadow-lg p-8 text-white">
         <h3 className="text-2xl font-bold mb-6 text-center">
           Customer Satisfaction
