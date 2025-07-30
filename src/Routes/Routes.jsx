@@ -5,6 +5,7 @@ import AllCar from "../Pages/AllCar/AllCar";
 import CarDetails from "../Pages/AllCar/CarDetails";
 import Register from "../Pages/Auth/Register";
 import SignInwithForgetPass from "../Pages/Auth/SignInwithForgetPass";
+import VerifyEmail from "../Pages/Auth/verifyEmail";
 import ContactUs from "../Pages/ContactUs/ContactUs";
 import { Dashboard } from "../Pages/DashBoard/Admin/Dashboard";
 import EnquiryList from "../Pages/DashBoard/Admin/EnquiryList/EnquiryList";
@@ -100,6 +101,10 @@ export const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/verify-email",
+        element: <VerifyEmail />,
       },
       {
         path: "/profile",

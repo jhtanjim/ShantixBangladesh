@@ -144,7 +144,7 @@ const Register = () => {
     onSuccess: () => {
       Swal.fire({
         title: "Success!",
-        text: "Registration successful! Welcome to Shantix!",
+        text: "Registration successful! Please Check your email for login!",
         icon: "success",
         confirmButtonText: "Continue",
         confirmButtonColor: "#0072BC",

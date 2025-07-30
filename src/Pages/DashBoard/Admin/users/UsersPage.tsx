@@ -1,29 +1,32 @@
 import { useState } from "react";
 import { useAllUsers, useDeleteUser } from "../../../../hooks/useUsers";
 
-import { Link } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, Mail, Phone } from "lucide-react"
+import { Mail, Phone, Search, Trash2 } from "lucide-react";
+import { GiOfficeChair } from "react-icons/gi";
 
 interface User {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  phone: string
-  createdAt: string
-  isActive: boolean
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  createdAt: string;
+  isActive: boolean;
 }
 
 export function UsersPage() {
   const { data: users = [], isLoading } = useAllUsers();
-  console.log(users)
+  console.log(users);
+  console.log(users);
   const deleteUser = useDeleteUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
 
   const filteredUsers = users.filter(
-    (user:User) =>
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user: User) =>
+      `${user.firstName} ${user.lastName}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -68,7 +71,7 @@ export function UsersPage() {
 
       {/* Users Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredUsers.map((user:User) => (
+        {filteredUsers.map((user: User) => (
           <div key={user.id} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -76,10 +79,12 @@ export function UsersPage() {
               </h3>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  user.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                  user.isActive
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {user.isActive ? "Active" : "Inactive"}
+                {/* {user.isActive ? "Active" : "Inactive"} */}
               </span>
             </div>
             <div className="space-y-3 mb-4">
@@ -91,16 +96,22 @@ export function UsersPage() {
                 <Phone className="h-4 w-4 text-gray-400" />
                 <span className="text-gray-600">{user.phone}</span>
               </div>
-              <div className="text-sm text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</div>
+              <div className="flex items-center gap-2 text-sm">
+                <GiOfficeChair className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-600">{user?.companyName}</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                Joined: {new Date(user.createdAt).toLocaleDateString()}
+              </div>
             </div>
             <div className="flex gap-2">
-              <Link
+              {/* <Link
                 to={`/admin/users/${user.id}/edit`}
                 className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
-              </Link>
+              </Link> */}
               <button
                 onClick={() => setShowDeleteModal(user.id)}
                 className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
@@ -122,9 +133,12 @@ export function UsersPage() {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete User</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Delete User
+            </h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to delete this user account? This action cannot be undone.
+              Are you sure you want to delete this user account? This action
+              cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -144,5 +158,5 @@ export function UsersPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
