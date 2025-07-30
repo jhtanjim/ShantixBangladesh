@@ -54,7 +54,7 @@ const VerifyEmail = () => {
 
       // Redirect after successful verification
       setTimeout(() => {
-        navigate("/dashboard"); // or wherever you want to redirect
+        navigate("/login"); // or wherever you want to redirect
       }, 2000);
     }
   }, [verificationData, verificationError, navigate]);
