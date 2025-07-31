@@ -430,13 +430,13 @@ const Enquiry = () => {
             {/* Left Column */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                <label className="font-medium">Brand</label>
+                <label className="font-medium">Make</label>
                 <input
                   type="text"
                   name="make"
                   value={formData.make}
                   onChange={handleChange}
-                  placeholder="Enter Brand (Ex: Toyota)"
+                  placeholder="Enter Make (Ex: Toyota)"
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
               </div>
@@ -701,34 +701,52 @@ const Enquiry = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">
                   Mobile <span className="text-red-500">*</span>
-                  <span className="text-gray-500 text-xs block">
-                    (With Country Code)
-                  </span>
                 </label>
-                <div className="md:col-span-2 relative">
-                  {selectedCountryDialCode && (
-                    <div className="absolute left-2 top-2 text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm z-10">
-                      {selectedCountryDialCode}
-                    </div>
-                  )}
-                  <input
-                    type="tel"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleMobileChange}
-                    placeholder={
-                      selectedCountryDialCode
-                        ? `${selectedCountryDialCode} 1234567890`
-                        : "e.g., +8801234567890"
-                    }
-                    className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                    style={{
-                      paddingLeft: selectedCountryDialCode
-                        ? `${selectedCountryDialCode.length * 8 + 20}px`
-                        : "8px",
-                    }}
-                    required
-                  />
+                <div className="md:col-span-2">
+                  <div className="flex border border-gray-300 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors">
+                    {/* Country Code Display */}
+                    {selectedCountryDialCode && (
+                      <div className="bg-gray-50 px-3 py-2 border-r border-gray-300 text-gray-600 text-sm font-medium flex items-center min-w-0">
+                        <span className="whitespace-nowrap">
+                          {selectedCountryDialCode}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Mobile Number Input */}
+                    <input
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile.replace(
+                        selectedCountryDialCode + " ",
+                        ""
+                      )}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(
+                          /[^\d\s\-()]/g,
+                          ""
+                        ); // Only allow numbers, spaces, hyphens, and parentheses
+                        const fullValue = selectedCountryDialCode
+                          ? selectedCountryDialCode + " " + value
+                          : value;
+                        setFormData((prev) => ({ ...prev, mobile: fullValue }));
+                      }}
+                      placeholder={
+                        selectedCountryDialCode
+                          ? "1234567890"
+                          : "Enter mobile number"
+                      }
+                      className="flex-1 px-3 py-2 outline-none bg-white min-w-0"
+                      required
+                    />
+                  </div>
+
+                  {/* Helper Text */}
+                  <div className="text-xs text-gray-500 mt-1">
+                    {selectedCountryDialCode
+                      ? "Enter your mobile number without country code"
+                      : "Select a country first to add country code"}
+                  </div>
                 </div>
               </div>
 
