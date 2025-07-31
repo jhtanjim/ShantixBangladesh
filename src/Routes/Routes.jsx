@@ -30,7 +30,7 @@ import UserProfile from "../Pages/Profile/UserProfile";
 import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
 import ShipScheduleDetails from "../Pages/ShipSchedule/ShipScheduleDetails";
 import UnderConstruction from "../components/UnderConstruction/UnderConstruction";
-import Cart from "../components/ui/Cart";
+// import Cart from "../components/ui/Cart";
 import Wishlist from "../components/ui/wishlist";
 import AdminLayout from "../layout/AdminLayout";
 import Main from "../layout/Main";
@@ -74,14 +74,11 @@ export const router = createBrowserRouter([
         path: "/cars/:id",
         element: <CarDetails />,
       },
-      {
-        path: "/cart",
-        element: <Cart />,
-      },
-      {
-        path: "/cart",
-        element: <Cart />,
-      },
+
+      // {
+      //   path: "/cart",
+      //   element: <Cart />,
+      // },
       {
         path: "/wishlist",
         element: <Wishlist />,
