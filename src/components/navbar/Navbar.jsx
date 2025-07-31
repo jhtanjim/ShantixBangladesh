@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import { useShop } from "../../Context/ShopContext";
 import logoImg from "../../assets/images/logo.png";
@@ -90,6 +90,19 @@ const Navbar = () => {
     ? [...baseNavLinks, { href: "/admin", label: "Admin" }]
     : baseNavLinks;
 
+  // Active link styling function
+  const getNavLinkClass = ({ isActive }) => {
+    return `text-gray-700 hover:text-blue-600 font-medium transition-colors relative group text-sm xl:text-base ${
+      isActive ? "text-blue-600" : ""
+    }`;
+  };
+
+  const getMobileNavLinkClass = ({ isActive }) => {
+    return `block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors ${
+      isActive ? "text-blue-600 bg-blue-50 px-3 rounded-md" : ""
+    }`;
+  };
+
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
       {/* Top Bar */}
@@ -123,7 +136,11 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <NavLink
                     to="/profile"
-                    className="flex items-center gap-1 hover:text-gray-200 transition-colors"
+                    className={({ isActive }) =>
+                      `flex items-center gap-1 hover:text-gray-200 transition-colors ${
+                        isActive ? "text-gray-200" : ""
+                      }`
+                    }
                   >
                     <User size={12} className="sm:size-3.5" />
                     <span className="truncate max-w-20 sm:max-w-none">
@@ -143,13 +160,21 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <NavLink
                     to="/login"
-                    className="hover:text-gray-200 transition-colors px-2 py-1 rounded"
+                    className={({ isActive }) =>
+                      `hover:text-gray-200 transition-colors px-2 py-1 rounded ${
+                        isActive ? "text-gray-200 bg-red-700" : ""
+                      }`
+                    }
                   >
                     Login
                   </NavLink>
                   <NavLink
                     to="/register"
-                    className="hover:text-gray-200 transition-colors px-2 py-1 rounded"
+                    className={({ isActive }) =>
+                      `hover:text-gray-200 transition-colors px-2 py-1 rounded ${
+                        isActive ? "text-gray-200 bg-red-700" : ""
+                      }`
+                    }
                   >
                     Register
                   </NavLink>
@@ -183,10 +208,18 @@ const Navbar = () => {
               <NavLink
                 key={link.href}
                 to={link.href}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group text-sm xl:text-base"
+                className={getNavLinkClass}
               >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                {({ isActive }) => (
+                  <>
+                    {link.label}
+                    <span
+                      className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 transition-all duration-300 ${
+                        isActive ? "w-full" : "w-0 group-hover:w-full"
+                      }`}
+                    ></span>
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -227,9 +260,13 @@ const Navbar = () => {
               <Search size={20} className="sm:size-6" />
             </button>
 
-            <Link
+            <NavLink
               to="/wishlist"
-              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-red-600 transition-colors"
+              className={({ isActive }) =>
+                `relative p-1.5 sm:p-2 text-gray-700 hover:text-red-600 transition-colors ${
+                  isActive ? "text-red-600" : ""
+                }`
+              }
             >
               <Heart size={20} className="sm:size-6" />
               {wishlistCount > 0 && (
@@ -237,11 +274,15 @@ const Navbar = () => {
                   {wishlistCount > 99 ? "99+" : wishlistCount}
                 </span>
               )}
-            </Link>
+            </NavLink>
 
-            <Link
+            <NavLink
               to="/cart"
-              className="relative p-1.5 sm:p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              className={({ isActive }) =>
+                `relative p-1.5 sm:p-2 text-gray-700 hover:text-blue-600 transition-colors ${
+                  isActive ? "text-blue-600" : ""
+                }`
+              }
             >
               <ShoppingCart size={20} className="sm:size-6" />
               {cartCount > 0 && (
@@ -249,14 +290,20 @@ const Navbar = () => {
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
-            </Link>
+            </NavLink>
 
             {authState.isAuthenticated && (
-              <Link to="/profile" className="hidden lg:block">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 xl:px-6 py-2 rounded-lg font-medium transition-colors text-sm xl:text-base">
-                  My Page
-                </button>
-              </Link>
+              <NavLink to="/profile" className="hidden lg:block">
+                {({ isActive }) => (
+                  <button
+                    className={`text-white px-4 xl:px-6 py-2 rounded-lg font-medium transition-colors text-sm xl:text-base ${
+                      isActive ? "bg-blue-700" : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    My Page
+                  </button>
+                )}
+              </NavLink>
             )}
 
             <button
@@ -310,14 +357,14 @@ const Navbar = () => {
           <div className="container mx-auto px-4 py-4">
             <nav className="space-y-3">
               {navLinks.map((link) => (
-                <Link
+                <NavLink
                   key={link.href}
                   to={link.href}
-                  className="block text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
+                  className={getMobileNavLinkClass}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
-                </Link>
+                </NavLink>
               ))}
 
               <a
@@ -331,14 +378,20 @@ const Navbar = () => {
 
               {authState.isAuthenticated && (
                 <div className="pt-3 border-t border-gray-200">
-                  <Link to="/profile">
-                    <button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      My Page
-                    </button>
-                  </Link>
+                  <NavLink to="/profile">
+                    {({ isActive }) => (
+                      <button
+                        className={`w-full text-white px-6 py-3 rounded-lg font-medium transition-colors ${
+                          isActive
+                            ? "bg-blue-700"
+                            : "bg-blue-600 hover:bg-blue-700"
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        My Page
+                      </button>
+                    )}
+                  </NavLink>
                 </div>
               )}
             </nav>

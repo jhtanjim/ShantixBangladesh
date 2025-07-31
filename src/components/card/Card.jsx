@@ -259,10 +259,15 @@ const Card = ({
 
           {/* Price Display */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-            <div className="text-white">
+            <div className="text-white ">
               <div className="text-2xl font-bold">
-                ${typeof price === "number" ? price.toLocaleString() : price}
+                {price === 0
+                  ? "TBA"
+                  : `$${
+                      typeof price === "number" ? price.toLocaleString() : price
+                    }`}
               </div>
+
               <div className="text-xs opacity-90">{priceLabel}</div>
             </div>
           </div>
@@ -321,11 +326,13 @@ const Card = ({
                 status === "on_hold" ||
                 status === "onhold"
               }
-              className={`cursor-pointer flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                status === "ON_HOLD" ||
-                status === "on_hold" ||
-                status === "onhold"
-                  ? "bg-yellow-100 text-yellow-700 cursor-not-allowed"
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                price === 0
+                  ? "bg-[#FEF9C2] text-[#844800] cursor-not-allowed"
+                  : status === "ON_HOLD" ||
+                    status === "on_hold" ||
+                    status === "onhold"
+                  ? "bg-green-600/50  text-white cursor-not-allowed"
                   : status === "sold"
                   ? "bg-red-100 text-red-700 cursor-not-allowed"
                   : orderLoading
@@ -335,9 +342,11 @@ const Card = ({
                   : "bg-green-600 hover:bg-green-700 text-white"
               }`}
             >
-              {status === "ON_HOLD" ||
-              status === "on_hold" ||
-              status === "onhold" ? (
+              {price === 0 ? (
+                <>To Be Announced</>
+              ) : status === "ON_HOLD" ||
+                status === "on_hold" ||
+                status === "onhold" ? (
                 <>Currently on hold</>
               ) : status === "sold" ? (
                 <>Sold Out</>

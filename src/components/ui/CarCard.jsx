@@ -232,8 +232,11 @@ const CarCard = ({ car }) => {
                 </h3>
                 <div className="text-right ml-4 mt-8">
                   <div className="text-2xl font-bold text-red-600">
-                    ${car.price?.toLocaleString() || "N/A"}
+                    {!car.price || car.price === 0
+                      ? "TBA"
+                      : `$${car.price.toLocaleString()}`}
                   </div>
+
                   {car.price && exchangeRate && (
                     <div className="text-sm text-gray-500">
                       {formatYenPrice(car.price)}
@@ -320,32 +323,38 @@ const CarCard = ({ car }) => {
                 </button>
               </Link>
 
-              <Button
-                onClick={handleNegotiateOrder}
-                disabled={
-                  orderLoading || !car.isActive || car.status === "ON_HOLD"
-                }
-                className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-              >
-                {car.status === "ON_HOLD" ? (
-                  <>Currently on hold — negotiation in progress</>
-                ) : orderLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Creating Order...
-                  </>
-                ) : !isAuthenticated() ? (
-                  <>
-                    <LogIn size={16} />
-                    Login to Negotiate
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle size={16} />
-                    Order to Negotiate
-                  </>
-                )}
-              </Button>
+              {!car.price || car.price === 0 ? (
+                <div className="flex-1 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-center font-semibold">
+                  To be announced
+                </div>
+              ) : (
+                <Button
+                  onClick={handleNegotiateOrder}
+                  disabled={
+                    orderLoading || !car.isActive || car.status === "ON_HOLD"
+                  }
+                  className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {car.status === "ON_HOLD" ? (
+                    <>Currently on hold — negotiation in progress</>
+                  ) : orderLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Creating Order...
+                    </>
+                  ) : !isAuthenticated() ? (
+                    <>
+                      <LogIn size={16} />
+                      Login to Negotiate
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle size={16} />
+                      Order to Negotiate
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
