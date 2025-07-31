@@ -1,13 +1,4 @@
-import {
-  Clock,
-  Heart,
-  Menu,
-  Phone,
-  Search,
-  ShoppingCart,
-  User,
-  X,
-} from "lucide-react";
+import { Clock, Heart, Menu, Phone, Search, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -276,7 +267,7 @@ const Navbar = () => {
               )}
             </NavLink>
 
-            <NavLink
+            {/* <NavLink
               to="/cart"
               className={({ isActive }) =>
                 `relative p-1.5 sm:p-2 text-gray-700 hover:text-blue-600 transition-colors ${
@@ -290,7 +281,7 @@ const Navbar = () => {
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
-            </NavLink>
+            </NavLink> */}
 
             {authState.isAuthenticated && (
               <NavLink to="/profile" className="hidden lg:block">
