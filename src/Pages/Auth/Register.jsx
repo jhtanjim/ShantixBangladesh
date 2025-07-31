@@ -271,20 +271,20 @@ const Register = () => {
     >
       <div className="w-full max-w-lg">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20">
-            <img
-              src={logoImg}
-              alt="Shantix Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="text-white text-2xl font-bold mt-4">Join Shantix</h1>
-          <p className="text-blue-200">Create your account to get started</p>
-        </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 backdrop-blur-sm">
+          <div className="text-center mb-2">
+            <div className="inline-flex items-center justify-center w-40 ">
+              <img
+                src={logoImg}
+                alt="Shantix Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            <p className="text-black">Create your account to get started</p>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Full Name Field */}
             <div className="relative">
@@ -597,7 +597,7 @@ const Register = () => {
 
         {/* Footer */}
         <div className="text-center mt-8 text-blue-200 text-sm">
-          <p>© 2025 CarHub. All rights reserved.</p>
+          {/* <p>© 2025 shantix. All rights reserved.</p> */}
         </div>
       </div>
     </div>

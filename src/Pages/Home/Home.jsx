@@ -6,7 +6,6 @@ import Banner from "./Banner";
 import FixedPriceStock from "./FixedPriceStock/FixedPriceStock";
 import LowCostStock from "./LowCostStock/LowCostStock";
 import NewArrival from "./NewArrival/NewArrival";
-import Partner from "./Partner";
 import Services from "./Services";
 
 import { useAllCars } from "../../hooks/useCars";
@@ -272,7 +271,7 @@ const Home = () => {
           </div>
 
           <Services />
-          <Partner />
+          {/* <Partner /> */}
         </>
       )}
     </div>

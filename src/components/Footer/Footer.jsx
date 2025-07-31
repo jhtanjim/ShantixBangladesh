@@ -8,7 +8,7 @@ const Footer = () => {
         {/* Logo and Links */}
         <div className="lg:flex gap-8 justify-between">
           <div className="my-auto">
-            <img src={logoImg} alt="Shantix Logo" className="h-40 mb-4" />
+            <img src={logoImg} alt="Shantix Logo" className="h-12 mb-4" />
           </div>
           <ul className="space-y-3 text-xl">
             <li>

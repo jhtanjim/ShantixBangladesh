@@ -171,7 +171,7 @@ const Navbar = () => {
                 <img
                   src={logoImg}
                   alt="Shantix Logo"
-                  className="h-8 sm:h-10 lg:h-12 w-auto ml-2"
+                  className="h-8 sm:h-10 lg:h-8 w-auto ml-2"
                 />
               </div>
             </div>
