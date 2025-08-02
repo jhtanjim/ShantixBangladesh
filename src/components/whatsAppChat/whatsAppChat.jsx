@@ -3,7 +3,7 @@ import { useState } from "react";
 const WhatsAppChat = () => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const whatsappNumber = "8801711123456"; // Your WhatsApp number in international format
+  const whatsappNumber = "+817083931325"; // Your WhatsApp number in international format
 
   const handleClick = () => {
     const message = "Hello! I'm interested in your services."; // Default message

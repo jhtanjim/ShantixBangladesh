@@ -98,7 +98,7 @@ const LoginRequiredModal = ({ isOpen, onClose, onLogin }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/80  bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md mx-4">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -209,7 +209,7 @@ export default function Cart() {
           confirmButtonText: "Go to WhatsApp",
         }).then(() => {
           const orderId = data.order.id;
-          const whatsappNumber = "8801711123456";
+          const whatsappNumber = "+817083931325";
           const message = `Hello, I just placed an order (ID: ${orderId}). I'd like to negotiate the price.`;
           window.open(
             `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(

@@ -68,7 +68,7 @@ export default function Wishlist() {
           confirmButtonText: "Go to WhatsApp",
         }).then(() => {
           const orderId = data.order.id;
-          const whatsappNumber = "8801711123456";
+          const whatsappNumber = "+817083931325";
           const message = `Hello, I just placed an order (ID: ${orderId}) for ${
             car.title || `${car.make} ${car.model}`
           }. I'd like to negotiate the price.`;

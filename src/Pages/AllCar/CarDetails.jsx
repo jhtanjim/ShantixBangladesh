@@ -47,7 +47,7 @@ const CarDetailsPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const { data: car, isLoading, isError } = useCar(id);
-
+  console.log(car);
   const handleLoginRequired = () => {
     setShowLoginRequired(false);
     // Set redirect URL to current car page or wherever appropriate
@@ -55,6 +55,17 @@ const CarDetailsPage = () => {
     // Redirect to login page
     window.location.href = "/login";
   };
+  const CompactSpecCard = ({ icon, label, value }) => (
+    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+      <div className="text-[#0072BC] flex-shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-gray-600 truncate">{label}</div>
+        <div className="font-semibold text-[#003366] truncate">
+          {value || "N/A"}
+        </div>
+      </div>
+    </div>
+  );
 
   const handleNegotiateOrder = async (e) => {
     e.preventDefault();
@@ -107,7 +118,7 @@ const CarDetailsPage = () => {
           confirmButtonText: "Go to WhatsApp",
         }).then(() => {
           const orderId = data.order.id;
-          const whatsappNumber = "8801711123456";
+          const whatsappNumber = "+817083931325";
           const message = `Hello, I just placed an order (ID: ${orderId}) for ${
             car.title || `${car.make} ${car.model}`
           }. I'd like to negotiate the price.`;
@@ -300,35 +311,94 @@ const CarDetailsPage = () => {
                 )}
               </div>
             </div>
-
             {/* Specifications */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 className="text-lg font-bold text-[#003366] mb-4">
+            <div className="bg-white rounded-lg shadow-sm px-4 py-3 mb-4">
+              <h2 className="text-base font-semibold text-[#003366] mb-3">
                 Specifications
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded">
-                  <Calendar className="mx-auto mb-2 text-[#0072BC]" size={20} />
-                  <div className="text-sm text-gray-600 mb-1">Year</div>
-                  <div className="font-bold text-[#003366]">{car.year}</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded">
-                  <Fuel className="mx-auto mb-2 text-[#0072BC]" size={20} />
-                  <div className="text-sm text-gray-600 mb-1">Fuel</div>
-                  <div className="font-bold text-[#003366]">{car.fuel}</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded">
-                  <Palette className="mx-auto mb-2 text-[#0072BC]" size={20} />
-                  <div className="text-sm text-gray-600 mb-1">Color</div>
-                  <div className="font-bold text-[#003366] capitalize">
-                    {car.exteriorColor}
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded">
-                  <Users className="mx-auto mb-2 text-[#0072BC]" size={20} />
-                  <div className="text-sm text-gray-600 mb-1">Seats</div>
-                  <div className="font-bold text-[#003366]">{car.seats}</div>
-                </div>
+
+              {/* Compact Grid Layout */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-sm">
+                <CompactSpecCard
+                  icon={<Calendar size={14} />}
+                  label="Year"
+                  value={car.year}
+                />
+                <CompactSpecCard
+                  icon={<Fuel size={14} />}
+                  label="Fuel"
+                  value={car.fuel}
+                />
+                <CompactSpecCard
+                  icon={<Palette size={14} />}
+                  label="Exterior"
+                  value={car.exteriorColor}
+                />
+                <CompactSpecCard
+                  icon={<Users size={14} />}
+                  label="Seats"
+                  value={car.seats}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Make"
+                  value={car.make}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Model"
+                  value={car.model}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Model Code"
+                  value={car.modelCode}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Type"
+                  value={car.type}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Engine (cc)"
+                  value={car.engineCC}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Mileage"
+                  value={`${car.mileage} km`}
+                />
+                <CompactSpecCard
+                  icon={<MapPin size={14} />}
+                  label="Country"
+                  value={car.country}
+                />
+                <CompactSpecCard
+                  icon={<MapPin size={14} />}
+                  label="Region"
+                  value={car.region}
+                />
+                <CompactSpecCard
+                  icon={<Palette size={14} />}
+                  label="Interior"
+                  value={car.color}
+                />
+                <CompactSpecCard
+                  icon={<Car size={14} />}
+                  label="Drive"
+                  value={car.drive}
+                />
+                <CompactSpecCard
+                  icon={<Settings size={14} />}
+                  label="Transmission"
+                  value={car.transmission}
+                />
+                <CompactSpecCard
+                  icon={<Shield size={14} />}
+                  label="Stock"
+                  value={car.stock}
+                />
               </div>
             </div>
 

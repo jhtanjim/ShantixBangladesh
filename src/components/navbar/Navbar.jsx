@@ -18,8 +18,30 @@ const Navbar = () => {
   const { isAdmin } = useUsersRole();
   const navigate = useNavigate();
   const location = useLocation();
+  const [japanTime, setJapanTime] = useState("");
+
   const { exchangeRate, convertToJPY, formatCurrency, loading } =
     useExchangeRate();
+
+  // japan time
+  useEffect(() => {
+    const updateJapanTime = () => {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Tokyo",
+        weekday: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      setJapanTime(formatter.format(now));
+    };
+
+    updateJapanTime(); // initial call
+    const interval = setInterval(updateJapanTime, 60 * 1000); // update every minute
+
+    return () => clearInterval(interval); // cleanup
+  }, []);
 
   // Force re-render when auth state changes
   const [authState, setAuthState] = useState({
@@ -109,7 +131,7 @@ const Navbar = () => {
             <div className="flex items-center justify-center gap-1 sm:gap-2 order-1 sm:order-2">
               <Clock size={14} className="sm:size-4" />
               <span className="text-xs sm:text-sm">
-                Japan Time: 05:39 AM, Thursday
+                Japan Time: {japanTime}
               </span>
             </div>
 
