@@ -513,13 +513,13 @@ export function CarForm() {
               {/* Make */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Make <span className="text-red-500">*</span>
+                  Brand <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.make}
                   onChange={(e) => handleInputChange("make", e.target.value)}
-                  placeholder="Enter make (e.g., Toyota)"
+                  placeholder="Enter brand (e.g., Toyota)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
                   required
                 />
