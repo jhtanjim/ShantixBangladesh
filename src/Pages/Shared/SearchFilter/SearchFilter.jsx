@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 
 const SearchFilter = ({ cars = [], onFilteredCars }) => {
   const [filters, setFilters] = useState({
@@ -23,41 +23,43 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
     transmission: "",
     stock: "",
     keywords: "",
-  })
+  });
 
   // Extract unique values for dropdowns
   const getUniqueValues = (field) => {
     const values = cars
       .map((car) => car[field])
       .filter((value) => value && value !== null && value !== "")
-      .filter((value, index, self) => self.indexOf(value) === index)
-    return values.sort()
-  }
+      .filter((value, index, self) => self.indexOf(value) === index);
+    return values.sort();
+  };
 
-  const uniqueMakes = getUniqueValues("make")
-  const uniqueModels = getUniqueValues("model")
-  const uniqueModelCodes = getUniqueValues("modelCode")
-  const uniqueTypes = getUniqueValues("type")
-  const uniqueFuels = getUniqueValues("fuel")
-  const uniqueTransmissions = getUniqueValues("transmission")
-  const uniqueColors = getUniqueValues("exteriorColor")
-  const uniqueCountries = getUniqueValues("country")
-  const uniqueRegions = getUniqueValues("region")
-  const uniqueDrives = getUniqueValues("drive")
-  const uniqueStocks = getUniqueValues("stock")
+  const uniqueMakes = getUniqueValues("make");
+  const uniqueModels = getUniqueValues("model");
+  const uniqueModelCodes = getUniqueValues("modelCode");
+  const uniqueTypes = getUniqueValues("type");
+  const uniqueFuels = getUniqueValues("fuel");
+  const uniqueTransmissions = getUniqueValues("transmission");
+  const uniqueColors = getUniqueValues("exteriorColor");
+  const uniqueCountries = getUniqueValues("country");
+  const uniqueRegions = getUniqueValues("region");
+  const uniqueDrives = getUniqueValues("drive");
+  const uniqueStocks = getUniqueValues("stock");
 
   // Get year range
-  const years = cars.map((car) => car.year).filter((year) => year)
-  const minYear = Math.min(...years)
-  const maxYear = Math.max(...years)
-  const yearOptions = []
+  const years = cars.map((car) => car.year).filter((year) => year);
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
+  const yearOptions = [];
   for (let year = maxYear; year >= minYear; year--) {
-    yearOptions.push(year)
+    yearOptions.push(year);
   }
 
   // Get engine CC range
-  const engineCCs = cars.map((car) => car.engineCC).filter((cc) => cc && cc > 0)
-  const uniqueEngineCCs = [...new Set(engineCCs)].sort((a, b) => a - b)
+  const engineCCs = cars
+    .map((car) => car.engineCC)
+    .filter((cc) => cc && cc > 0);
+  const uniqueEngineCCs = [...new Set(engineCCs)].sort((a, b) => a - b);
 
   // Price range options
   const priceRanges = [
@@ -68,7 +70,7 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
     { label: "$20,000 - $30,000", value: { from: "20000", to: "30000" } },
     { label: "$30,000 - $50,000", value: { from: "30000", to: "50000" } },
     { label: "Above $50,000", value: { from: "50000", to: "" } },
-  ]
+  ];
 
   // Mileage range options
   const mileageRanges = [
@@ -78,123 +80,167 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
     { label: "80,000 - 120,000 km", value: { from: "80000", to: "120000" } },
     { label: "120,000 - 200,000 km", value: { from: "120000", to: "200000" } },
     { label: "Above 200,000 km", value: { from: "200000", to: "" } },
-  ]
+  ];
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handlePriceRangeChange = (value) => {
     if (!value) {
-      setFilters(prev => ({ ...prev, priceFrom: "", priceTo: "" }))
+      setFilters((prev) => ({ ...prev, priceFrom: "", priceTo: "" }));
     } else {
-      const range = priceRanges.find(r => JSON.stringify(r.value) === value)
+      const range = priceRanges.find((r) => JSON.stringify(r.value) === value);
       if (range) {
-        setFilters(prev => ({
+        setFilters((prev) => ({
           ...prev,
           priceFrom: range.value.from,
-          priceTo: range.value.to
-        }))
+          priceTo: range.value.to,
+        }));
       }
     }
-  }
+  };
 
   const handleMileageRangeChange = (value) => {
     if (!value) {
-      setFilters(prev => ({ ...prev, mileageFrom: "", mileageTo: "" }))
+      setFilters((prev) => ({ ...prev, mileageFrom: "", mileageTo: "" }));
     } else {
-      const range = mileageRanges.find(r => JSON.stringify(r.value) === value)
+      const range = mileageRanges.find(
+        (r) => JSON.stringify(r.value) === value
+      );
       if (range) {
-        setFilters(prev => ({
+        setFilters((prev) => ({
           ...prev,
           mileageFrom: range.value.from,
-          mileageTo: range.value.to
-        }))
+          mileageTo: range.value.to,
+        }));
       }
     }
-  }
+  };
 
   const getCurrentPriceRange = () => {
-    const current = priceRanges.find(r => 
-      r.value.from === filters.priceFrom && r.value.to === filters.priceTo
-    )
-    return current ? JSON.stringify(current.value) : ""
-  }
+    const current = priceRanges.find(
+      (r) =>
+        r.value.from === filters.priceFrom && r.value.to === filters.priceTo
+    );
+    return current ? JSON.stringify(current.value) : "";
+  };
 
   const getCurrentMileageRange = () => {
-    const current = mileageRanges.find(r => 
-      r.value.from === filters.mileageFrom && r.value.to === filters.mileageTo
-    )
-    return current ? JSON.stringify(current.value) : ""
-  }
+    const current = mileageRanges.find(
+      (r) =>
+        r.value.from === filters.mileageFrom && r.value.to === filters.mileageTo
+    );
+    return current ? JSON.stringify(current.value) : "";
+  };
 
   const filterCars = () => {
     const filtered = cars.filter((car) => {
       // Make filter
-      if (filters.make && car.make && !car.make.toLowerCase().includes(filters.make.toLowerCase())) {
-        return false
+      if (
+        filters.make &&
+        car.make &&
+        !car.make.toLowerCase().includes(filters.make.toLowerCase())
+      ) {
+        return false;
       }
 
       // Model filter
-      if (filters.model && car.model && !car.model.toLowerCase().includes(filters.model.toLowerCase())) {
-        return false
+      if (
+        filters.model &&
+        car.model &&
+        !car.model.toLowerCase().includes(filters.model.toLowerCase())
+      ) {
+        return false;
       }
 
       // Model Code filter
-      if (filters.modelCode && car.modelCode && !car.modelCode.toLowerCase().includes(filters.modelCode.toLowerCase())) {
-        return false
+      if (
+        filters.modelCode &&
+        car.modelCode &&
+        !car.modelCode.toLowerCase().includes(filters.modelCode.toLowerCase())
+      ) {
+        return false;
       }
 
       // Type filter
-      if (filters.type && car.type && car.type.toLowerCase() !== filters.type.toLowerCase()) {
-        return false
+      if (
+        filters.type &&
+        car.type &&
+        car.type.toLowerCase() !== filters.type.toLowerCase()
+      ) {
+        return false;
       }
 
       // Year range filter
       if (filters.yearFrom && car.year < Number.parseInt(filters.yearFrom)) {
-        return false
+        return false;
       }
       if (filters.yearTo && car.year > Number.parseInt(filters.yearTo)) {
-        return false
+        return false;
       }
 
       // Price range filter
       if (filters.priceFrom && car.price < Number.parseInt(filters.priceFrom)) {
-        return false
+        return false;
       }
       if (filters.priceTo && car.price > Number.parseInt(filters.priceTo)) {
-        return false
+        return false;
       }
 
       // Engine CC filter
-      if (filters.engineCC && car.engineCC && car.engineCC !== Number.parseInt(filters.engineCC)) {
-        return false
+      if (
+        filters.engineCC &&
+        car.engineCC &&
+        car.engineCC !== Number.parseInt(filters.engineCC)
+      ) {
+        return false;
       }
 
       // Fuel filter
-      if (filters.fuel && car.fuel && car.fuel.toLowerCase() !== filters.fuel.toLowerCase()) {
-        return false
+      if (
+        filters.fuel &&
+        car.fuel &&
+        car.fuel.toLowerCase() !== filters.fuel.toLowerCase()
+      ) {
+        return false;
       }
 
       // Mileage range filter
-      if (filters.mileageFrom && car.mileage && car.mileage < Number.parseInt(filters.mileageFrom)) {
-        return false
+      if (
+        filters.mileageFrom &&
+        car.mileage &&
+        car.mileage < Number.parseInt(filters.mileageFrom)
+      ) {
+        return false;
       }
-      if (filters.mileageTo && car.mileage && car.mileage > Number.parseInt(filters.mileageTo)) {
-        return false
+      if (
+        filters.mileageTo &&
+        car.mileage &&
+        car.mileage > Number.parseInt(filters.mileageTo)
+      ) {
+        return false;
       }
 
       // Country filter
-      if (filters.country && car.country && car.country.toLowerCase() !== filters.country.toLowerCase()) {
-        return false
+      if (
+        filters.country &&
+        car.country &&
+        car.country.toLowerCase() !== filters.country.toLowerCase()
+      ) {
+        return false;
       }
 
       // Region filter
-      if (filters.region && car.region && car.region.toLowerCase() !== filters.region.toLowerCase()) {
-        return false
+      if (
+        filters.region &&
+        car.region &&
+        car.region.toLowerCase() !== filters.region.toLowerCase()
+      ) {
+        return false;
       }
 
       // Color filter
@@ -203,12 +249,16 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
         car.exteriorColor &&
         !car.exteriorColor.toLowerCase().includes(filters.color.toLowerCase())
       ) {
-        return false
+        return false;
       }
 
       // Drive filter
-      if (filters.drive && car.drive && car.drive.toLowerCase() !== filters.drive.toLowerCase()) {
-        return false
+      if (
+        filters.drive &&
+        car.drive &&
+        car.drive.toLowerCase() !== filters.drive.toLowerCase()
+      ) {
+        return false;
       }
 
       // Transmission filter
@@ -217,32 +267,42 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
         car.transmission &&
         car.transmission.toLowerCase() !== filters.transmission.toLowerCase()
       ) {
-        return false
+        return false;
       }
 
       // Stock filter
-      if (filters.stock && car.stock && car.stock.toLowerCase() !== filters.stock.toLowerCase()) {
-        return false
+      if (
+        filters.stock &&
+        car.stock &&
+        car.stock.toLowerCase() !== filters.stock.toLowerCase()
+      ) {
+        return false;
       }
 
       // Keywords filter (search in title, make, model, keywords)
       if (filters.keywords) {
-        const searchText = filters.keywords.toLowerCase()
-        const searchFields = [car.title, car.make, car.model, car.keywords, car.modelCode]
+        const searchText = filters.keywords.toLowerCase();
+        const searchFields = [
+          car.title,
+          car.make,
+          car.model,
+          car.keywords,
+          car.modelCode,
+        ]
           .filter((field) => field)
           .join(" ")
-          .toLowerCase()
+          .toLowerCase();
 
         if (!searchFields.includes(searchText)) {
-          return false
+          return false;
         }
       }
 
-      return true
-    })
+      return true;
+    });
 
-    onFilteredCars(filtered)
-  }
+    onFilteredCars(filtered);
+  };
 
   const resetFilters = () => {
     setFilters({
@@ -265,21 +325,33 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
       transmission: "",
       stock: "",
       keywords: "",
-    })
-    onFilteredCars([])
-  }
+    });
+    onFilteredCars([]);
+  };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== "")
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "");
 
   return (
     <div className="bg-white shadow-xl rounded-xl border border-gray-100 overflow-hidden max-w-7xl mx-auto">
       {/* Compact Header */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
         <div className="flex items-center justify-center space-x-2">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
-          <h2 className="text-xl font-bold text-white">Find Japanese Used Cars</h2>
+          <h2 className="text-xl font-bold text-white">
+            Find Japanese Used Cars
+          </h2>
         </div>
       </div>
 
@@ -288,8 +360,18 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
         <div className="mb-6">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
@@ -311,9 +393,11 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
               onChange={(e) => handleFilterChange("make", e.target.value)}
               className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
             >
-              <option value="">All Makes</option>
+              <option value="">All Brand</option>
               {uniqueMakes.map((make) => (
-                <option key={make} value={make}>{make}</option>
+                <option key={make} value={make}>
+                  {make}
+                </option>
               ))}
             </select>
           </div>
@@ -326,7 +410,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">All Models</option>
               {uniqueModels.map((model) => (
-                <option key={model} value={model}>{model}</option>
+                <option key={model} value={model}>
+                  {model}
+                </option>
               ))}
             </select>
           </div>
@@ -339,7 +425,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Vehicle Type</option>
               {uniqueTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
           </div>
@@ -352,7 +440,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Year From</option>
               {yearOptions.map((year) => (
-                <option key={year} value={year}>{year}</option>
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
           </div>
@@ -365,7 +455,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Year To</option>
               {yearOptions.map((year) => (
-                <option key={year} value={year}>{year}</option>
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
           </div>
@@ -378,7 +470,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Price Range</option>
               {priceRanges.map((range, index) => (
-                <option key={index} value={JSON.stringify(range.value)}>{range.label}</option>
+                <option key={index} value={JSON.stringify(range.value)}>
+                  {range.label}
+                </option>
               ))}
             </select>
           </div>
@@ -392,7 +486,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Engine CC</option>
               {uniqueEngineCCs.map((cc) => (
-                <option key={cc} value={cc}>{cc} CC</option>
+                <option key={cc} value={cc}>
+                  {cc} CC
+                </option>
               ))}
             </select>
           </div>
@@ -405,7 +501,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Fuel Type</option>
               {uniqueFuels.map((fuel) => (
-                <option key={fuel} value={fuel}>{fuel}</option>
+                <option key={fuel} value={fuel}>
+                  {fuel}
+                </option>
               ))}
             </select>
           </div>
@@ -413,12 +511,16 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
           <div>
             <select
               value={filters.transmission}
-              onChange={(e) => handleFilterChange("transmission", e.target.value)}
+              onChange={(e) =>
+                handleFilterChange("transmission", e.target.value)
+              }
               className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
             >
               <option value="">Transmission</option>
               {uniqueTransmissions.map((transmission) => (
-                <option key={transmission} value={transmission}>{transmission}</option>
+                <option key={transmission} value={transmission}>
+                  {transmission}
+                </option>
               ))}
             </select>
           </div>
@@ -431,7 +533,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Mileage Range</option>
               {mileageRanges.map((range, index) => (
-                <option key={index} value={JSON.stringify(range.value)}>{range.label}</option>
+                <option key={index} value={JSON.stringify(range.value)}>
+                  {range.label}
+                </option>
               ))}
             </select>
           </div>
@@ -444,7 +548,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Drive Type</option>
               {uniqueDrives.map((drive) => (
-                <option key={drive} value={drive}>{drive}</option>
+                <option key={drive} value={drive}>
+                  {drive}
+                </option>
               ))}
             </select>
           </div>
@@ -457,7 +563,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Color</option>
               {uniqueColors.map((color) => (
-                <option key={color} value={color}>{color}</option>
+                <option key={color} value={color}>
+                  {color}
+                </option>
               ))}
             </select>
           </div>
@@ -471,7 +579,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Country</option>
               {uniqueCountries.map((country) => (
-                <option key={country} value={country}>{country}</option>
+                <option key={country} value={country}>
+                  {country}
+                </option>
               ))}
             </select>
           </div>
@@ -484,7 +594,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Region</option>
               {uniqueRegions.map((region) => (
-                <option key={region} value={region}>{region}</option>
+                <option key={region} value={region}>
+                  {region}
+                </option>
               ))}
             </select>
           </div>
@@ -497,7 +609,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Model Code</option>
               {uniqueModelCodes.map((code) => (
-                <option key={code} value={code}>{code}</option>
+                <option key={code} value={code}>
+                  {code}
+                </option>
               ))}
             </select>
           </div>
@@ -510,7 +624,9 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             >
               <option value="">Stock Status</option>
               {uniqueStocks.map((stock) => (
-                <option key={stock} value={stock}>{stock}</option>
+                <option key={stock} value={stock}>
+                  {stock}
+                </option>
               ))}
             </select>
           </div>
@@ -522,19 +638,39 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
             onClick={filterCars}
             className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-3 rounded-lg hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-200 font-semibold flex items-center justify-center space-x-2 shadow-lg"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
             <span>Search Cars</span>
           </button>
-          
+
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
               className="w-full sm:w-auto text-gray-600 hover:text-red-600 px-6 py-3 rounded-lg border border-gray-300 hover:border-red-300 transition-all duration-200 font-medium flex items-center justify-center space-x-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
               <span>Reset</span>
             </button>
@@ -559,7 +695,7 @@ const SearchFilter = ({ cars = [], onFilteredCars }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SearchFilter
+export default SearchFilter;

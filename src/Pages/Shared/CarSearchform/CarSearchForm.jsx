@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { Filter, X, Search, ChevronDown, ChevronUp } from "lucide-react"
-import { useState, useEffect } from "react"
+import { ChevronDown, ChevronUp, Filter, Search, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function CarSearchForm({ onSearch, allCars = [] }) {
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchParams, setSearchParams] = useState({
     make: "",
     model: "",
@@ -25,43 +25,46 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
     transmission: "",
     stock: "",
     keywords: "",
-  })
+  });
 
   // Extract unique values from allCars for dropdown options
   const getUniqueValues = (field) => {
-    if (!allCars || allCars.length === 0) return []
+    if (!allCars || allCars.length === 0) return [];
     const values = allCars
       .map((car) => {
-        if (field === "color") return car.exteriorColor
-        return car[field]
+        if (field === "color") return car.exteriorColor;
+        return car[field];
       })
       .filter(Boolean)
-      .map((value) => value.toString())
-    return [...new Set(values)].sort()
-  }
+      .map((value) => value.toString());
+    return [...new Set(values)].sort();
+  };
 
-  const makes = getUniqueValues("make")
-  const models = getUniqueValues("model")
-  const modelCodes = getUniqueValues("modelCode")
-  const types = getUniqueValues("type")
-  const fuels = getUniqueValues("fuel")
-  const countries = getUniqueValues("country")
-  const regions = getUniqueValues("region")
-  const colors = getUniqueValues("color")
-  const drives = getUniqueValues("drive")
-  const transmissions = getUniqueValues("transmission")
+  const makes = getUniqueValues("make");
+  const models = getUniqueValues("model");
+  const modelCodes = getUniqueValues("modelCode");
+  const types = getUniqueValues("type");
+  const fuels = getUniqueValues("fuel");
+  const countries = getUniqueValues("country");
+  const regions = getUniqueValues("region");
+  const colors = getUniqueValues("color");
+  const drives = getUniqueValues("drive");
+  const transmissions = getUniqueValues("transmission");
 
   // Get engine CC options from actual car data
-  const engineCCs = allCars.map((car) => car.engineCC).filter((cc) => cc && cc > 0)
-  const uniqueEngineCCs = [...new Set(engineCCs)].sort((a, b) => a - b)
+  const engineCCs = allCars
+    .map((car) => car.engineCC)
+    .filter((cc) => cc && cc > 0);
+  const uniqueEngineCCs = [...new Set(engineCCs)].sort((a, b) => a - b);
 
   // Get year range from actual data
-  const years = allCars.map((car) => car.year).filter((year) => year)
-  const minYear = years.length > 0 ? Math.min(...years) : 2000
-  const maxYear = years.length > 0 ? Math.max(...years) : new Date().getFullYear()
-  const yearOptions = []
+  const years = allCars.map((car) => car.year).filter((year) => year);
+  const minYear = years.length > 0 ? Math.min(...years) : 2000;
+  const maxYear =
+    years.length > 0 ? Math.max(...years) : new Date().getFullYear();
+  const yearOptions = [];
   for (let year = maxYear; year >= minYear; year--) {
-    yearOptions.push(year)
+    yearOptions.push(year);
   }
 
   // Predefined price ranges
@@ -76,7 +79,7 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
     { label: "$50,000 - $75,000", from: "50000", to: "75000" },
     { label: "$75,000 - $100,000", from: "75000", to: "100000" },
     { label: "Above $100,000", from: "100000", to: "" },
-  ]
+  ];
 
   // Predefined mileage ranges
   const mileageRanges = [
@@ -88,62 +91,67 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
     { label: "80,000 - 120,000 km", from: "80000", to: "120000" },
     { label: "120,000 - 200,000 km", from: "120000", to: "200000" },
     { label: "Above 200,000 km", from: "200000", to: "" },
-  ]
+  ];
 
   const handleInputChange = (field, value) => {
     setSearchParams((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handlePriceRangeChange = (value) => {
     if (!value) {
-      setSearchParams((prev) => ({ ...prev, priceFrom: "", priceTo: "" }))
+      setSearchParams((prev) => ({ ...prev, priceFrom: "", priceTo: "" }));
     } else {
-      const range = priceRanges.find((r) => r.label === value)
+      const range = priceRanges.find((r) => r.label === value);
       if (range && range.from !== undefined) {
         setSearchParams((prev) => ({
           ...prev,
           priceFrom: range.from,
           priceTo: range.to,
-        }))
+        }));
       }
     }
-  }
+  };
 
   const handleMileageRangeChange = (value) => {
     if (!value) {
-      setSearchParams((prev) => ({ ...prev, mileageFrom: "", mileageTo: "" }))
+      setSearchParams((prev) => ({ ...prev, mileageFrom: "", mileageTo: "" }));
     } else {
-      const range = mileageRanges.find((r) => r.label === value)
+      const range = mileageRanges.find((r) => r.label === value);
       if (range && range.from !== undefined) {
         setSearchParams((prev) => ({
           ...prev,
           mileageFrom: range.from,
           mileageTo: range.to,
-        }))
+        }));
       }
     }
-  }
+  };
 
   const getCurrentPriceRange = () => {
-    const current = priceRanges.find((r) => r.from === searchParams.priceFrom && r.to === searchParams.priceTo)
-    return current ? current.label : ""
-  }
+    const current = priceRanges.find(
+      (r) => r.from === searchParams.priceFrom && r.to === searchParams.priceTo
+    );
+    return current ? current.label : "";
+  };
 
   const getCurrentMileageRange = () => {
-    const current = mileageRanges.find((r) => r.from === searchParams.mileageFrom && r.to === searchParams.mileageTo)
-    return current ? current.label : ""
-  }
+    const current = mileageRanges.find(
+      (r) =>
+        r.from === searchParams.mileageFrom && r.to === searchParams.mileageTo
+    );
+    return current ? current.label : "";
+  };
 
   const handleSearch = () => {
-    onSearch(searchParams)
+    onSearch(searchParams);
     // Close filter on mobile after search
     if (window.innerWidth < 768) {
-      setIsFilterOpen(false)
+      setIsFilterOpen(false);
     }
-  }
+  };
 
   const handleReset = () => {
     const resetParams = {
@@ -166,19 +174,23 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
       transmission: "",
       stock: "",
       keywords: "",
-    }
-    setSearchParams(resetParams)
-    onSearch(resetParams)
-  }
+    };
+    setSearchParams(resetParams);
+    onSearch(resetParams);
+  };
 
-  const hasActiveFilters = Object.values(searchParams).some((value) => value !== "")
+  const hasActiveFilters = Object.values(searchParams).some(
+    (value) => value !== ""
+  );
 
   // Close filter when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isFilterOpen && window.innerWidth < 1024) {
-        const searchContainer = document.querySelector(".search-form-container")
-        const toggleButton = document.querySelector(".filter-toggle-button")
+        const searchContainer = document.querySelector(
+          ".search-form-container"
+        );
+        const toggleButton = document.querySelector(".filter-toggle-button");
 
         if (
           searchContainer &&
@@ -186,29 +198,29 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
           toggleButton &&
           !toggleButton.contains(event.target)
         ) {
-          setIsFilterOpen(false)
+          setIsFilterOpen(false);
         }
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isFilterOpen])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isFilterOpen]);
 
   // Auto-open filters on desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
-        setIsFilterOpen(true)
+        setIsFilterOpen(true);
       } else {
-        setIsFilterOpen(false)
+        setIsFilterOpen(false);
       }
-    }
+    };
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="bg-white shadow-lg relative w-full overflow-hidden search-form-container">
@@ -236,7 +248,10 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
           {/* Keywords Search - Always visible and prominent */}
           <div className="mb-4 sm:mb-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Search by keywords, make, model..."
@@ -251,13 +266,15 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {/* Make */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Make</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Make
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.make}
                 onChange={(e) => handleInputChange("make", e.target.value)}
               >
-                <option value="">All Makes</option>
+                <option value="">All Brand</option>
                 {makes.map((make) => (
                   <option key={make} value={make}>
                     {make}
@@ -268,7 +285,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
             {/* Model */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Model</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Model
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.model}
@@ -304,7 +323,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
             {/* Type */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Type</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Type
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.type}
@@ -452,7 +473,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
             {/* Region */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Region</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Region
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.region}
@@ -469,7 +492,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
             {/* Color */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Color</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Color
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.color}
@@ -486,7 +511,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
 
             {/* Drive */}
             <div className="min-w-0">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">Drive</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 truncate">
+                Drive
+              </label>
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.drive}
@@ -509,7 +536,9 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
               <select
                 className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm bg-white"
                 value={searchParams.transmission}
-                onChange={(e) => handleInputChange("transmission", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("transmission", e.target.value)
+                }
               >
                 <option value="">All Transmissions</option>
                 {transmissions.map((transmission) => (
@@ -563,24 +592,29 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
               <div className="text-sm text-gray-600 mb-2">Active Filters:</div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(searchParams).map(([key, value]) => {
-                  if (!value) return null
-                  let displayValue = value
+                  if (!value) return null;
+                  let displayValue = value;
                   if (key === "priceFrom" || key === "priceTo") {
-                    displayValue = getCurrentPriceRange()
-                    if (key === "priceTo" && getCurrentPriceRange()) return null
+                    displayValue = getCurrentPriceRange();
+                    if (key === "priceTo" && getCurrentPriceRange())
+                      return null;
                   }
                   if (key === "mileageFrom" || key === "mileageTo") {
-                    displayValue = getCurrentMileageRange()
-                    if (key === "mileageTo" && getCurrentMileageRange()) return null
+                    displayValue = getCurrentMileageRange();
+                    if (key === "mileageTo" && getCurrentMileageRange())
+                      return null;
                   }
                   return (
                     <span
                       key={key}
                       className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"
                     >
-                      {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}: {displayValue}
+                      {key
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                      : {displayValue}
                     </span>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -588,5 +622,5 @@ export default function CarSearchForm({ onSearch, allCars = [] }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
