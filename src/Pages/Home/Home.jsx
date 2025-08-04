@@ -6,7 +6,6 @@ import Banner from "./Banner";
 import FixedPriceStock from "./FixedPriceStock/FixedPriceStock";
 import LowCostStock from "./LowCostStock/LowCostStock";
 import NewArrival from "./NewArrival/NewArrival";
-import Services from "./Services";
 
 import { useAllCars } from "../../hooks/useCars";
 
@@ -17,6 +16,7 @@ import coverImg from "../../assets/images/cover.jpg";
 import logoImg from "../../assets/images/logo.png";
 import Card from "../../components/card/Card";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
+import Services from "./Services";
 
 const Home = () => {
   const [filteredCars, setFilteredCars] = useState([]);
