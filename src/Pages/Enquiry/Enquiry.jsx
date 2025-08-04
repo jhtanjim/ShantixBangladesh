@@ -6,6 +6,7 @@ import {
   exteriorColors,
   seatsOptions,
   transmissionOptions,
+  vehicleTypeOptions,
 } from "../../api/cardata";
 import { portData } from "../../api/portData"; // Import your port data
 import SelectField from "../../components/ui/SelectField";
@@ -24,6 +25,9 @@ const Enquiry = () => {
     engineCC: "",
     transmission: "",
     driveType: "",
+    type: "", // ← MISSING FIELD 1
+    grade: "", // ← MISSING FIELD 2
+    auctionScore: "", // ← MISSING FIELD 3
     exteriorColor: "",
     color: "",
     seats: "",
@@ -325,8 +329,8 @@ const Enquiry = () => {
           Swal.showLoading();
         },
       });
+      // Update your submitInquiry function to include these fields:
 
-      // Prepare data for API
       const apiData = {
         make: formData.make || undefined,
         model: formData.model || undefined,
@@ -336,6 +340,11 @@ const Enquiry = () => {
         engineCC: formData.engineCC ? parseInt(formData.engineCC) : undefined,
         transmission: formData.transmission || undefined,
         driveType: formData.driveType || undefined,
+        type: formData.type || undefined, // ← ADD THIS
+        grade: formData.grade || undefined, // ← ADD THIS
+        auctionScore: formData.auctionScore
+          ? parseInt(formData.auctionScore)
+          : undefined, // ← ADD THIS
         exteriorColor: formData.exteriorColor || undefined,
         color: formData.color || undefined,
         seats: formData.seats ? parseInt(formData.seats) : undefined,
@@ -378,6 +387,9 @@ const Enquiry = () => {
         engineCC: "",
         transmission: "",
         driveType: "",
+        type: "", // ← ADD THIS
+        grade: "", // ← ADD THIS
+        auctionScore: "", // ← ADD THIS
         exteriorColor: "",
         color: "",
         seats: "",
@@ -637,6 +649,49 @@ const Enquiry = () => {
                   value={formData.mileage}
                   onChange={handleChange}
                   placeholder="Enter Mileage (km)"
+                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              {/* Vehicle Type */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Vehicle Type</label>
+                <div className="md:col-span-2">
+                  <SelectField
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    options={vehicleTypeOptions}
+                    placeholder="Select Vehicle Type"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Grade */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Grade</label>
+                <input
+                  type="text"
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleChange}
+                  placeholder="Enter Grade (Ex: S, A, B, C)"
+                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              {/* Auction Score */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <label className="font-medium">Auction Score</label>
+                <input
+                  type="number"
+                  name="auctionScore"
+                  value={formData.auctionScore}
+                  onChange={handleChange}
+                  placeholder="Enter Score (1-10)"
+                  min="1"
+                  max="10"
                   className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                 />
               </div>

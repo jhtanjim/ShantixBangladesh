@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Calendar,
   Car,
@@ -60,16 +62,20 @@ const EnquiryList = () => {
     isError,
     error,
   } = useAllInquiries(cleanFilters);
+
   console.log(inquiriesData);
+
   const { data: inquiryDetails, isLoading: isLoadingDetails } = useInquiry(
     selectedInquiry?.id
   );
+
   const updateInquiryMutation = useUpdateInquiry();
   const deleteInquiryMutation = useDeleteInquiry();
 
   const inquiries = inquiriesData?.data || [];
-  const totalCount = inquiriesData?.total || 0;
-  const totalPages = Math.ceil(totalCount / filters.limit);
+  const totalCount = inquiriesData?.meta?.total || 0;
+  const totalPages =
+    inquiriesData?.meta?.totalPages || Math.ceil(totalCount / filters.limit);
 
   const statusOptions = [
     { value: "", label: "All Status" },
@@ -124,7 +130,6 @@ const EnquiryList = () => {
       RESPONDED: "bg-green-100 text-green-800",
       CLOSED: "bg-gray-100 text-gray-800",
     };
-
     return (
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -158,7 +163,6 @@ const EnquiryList = () => {
           inquiryId,
           updateData: { status: newStatus },
         });
-
         Swal.fire({
           icon: "success",
           title: "Status Updated",
@@ -236,7 +240,6 @@ const EnquiryList = () => {
 
       if (result.isConfirmed) {
         await deleteInquiryMutation.mutateAsync(inquiryId);
-
         Swal.fire({
           icon: "success",
           title: "Deleted",
@@ -252,6 +255,11 @@ const EnquiryList = () => {
         text: error.response?.data?.message || "Failed to delete inquiry",
       });
     }
+  };
+
+  // Helper function to get customer name from email
+  const getCustomerName = (email) => {
+    return email ? email.split("@")[0] : "Unknown";
   };
 
   if (isError) {
@@ -443,6 +451,9 @@ const EnquiryList = () => {
                       Inquiry Details
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Vehicle Info
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -465,21 +476,22 @@ const EnquiryList = () => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {inquiry.name}
+                              {getCustomerName(inquiry.email)}
                             </div>
                             <div className="text-sm text-gray-500 flex items-center">
                               <Mail className="h-3 w-3 mr-1" />
                               {inquiry.email}
                             </div>
-                            {inquiry.phone && (
+                            {inquiry.mobile && (
                               <div className="text-sm text-gray-500 flex items-center">
                                 <Phone className="h-3 w-3 mr-1" />
-                                {inquiry.phone}
+                                {inquiry.mobile}
                               </div>
                             )}
                           </div>
                         </div>
                       </td>
+
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
                           <div className="flex items-center mb-1">
@@ -487,18 +499,55 @@ const EnquiryList = () => {
                             <span className="font-medium">
                               {inquiry.inquiryType}
                             </span>
+                            <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                              {inquiry.customerType}
+                            </span>
                           </div>
-                          <div className="text-gray-600 line-clamp-2">
+                          <div className="text-gray-600 line-clamp-2 max-w-xs">
                             {inquiry.message}
                           </div>
                           {inquiry.country && (
                             <div className="flex items-center mt-1 text-gray-500">
                               <MapPin className="h-3 w-3 mr-1" />
                               {inquiry.country}
+                              {inquiry.port && ` - ${inquiry.port}`}
                             </div>
                           )}
                         </div>
                       </td>
+
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {inquiry.make && inquiry.model && (
+                            <div className="font-medium">
+                              {inquiry.make} {inquiry.model}
+                            </div>
+                          )}
+                          {inquiry.yearFrom && inquiry.yearTo && (
+                            <div className="text-gray-600">
+                              {inquiry.yearFrom === inquiry.yearTo
+                                ? inquiry.yearFrom
+                                : `${inquiry.yearFrom}-${inquiry.yearTo}`}
+                            </div>
+                          )}
+                          {inquiry.engineCC && (
+                            <div className="text-gray-600 text-xs">
+                              {inquiry.engineCC}cc
+                            </div>
+                          )}
+                          {inquiry.transmission && (
+                            <div className="text-gray-600 text-xs">
+                              {inquiry.transmission}
+                            </div>
+                          )}
+                          {inquiry.steering && (
+                            <div className="text-gray-600 text-xs">
+                              {inquiry.steering.replace("_", " ")}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col space-y-2">
                           {getStatusBadge(inquiry.status)}
@@ -518,6 +567,7 @@ const EnquiryList = () => {
                           </select>
                         </div>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
@@ -526,7 +576,13 @@ const EnquiryList = () => {
                         <div className="text-xs text-gray-400">
                           {new Date(inquiry.createdAt).toLocaleTimeString()}
                         </div>
+                        {inquiry.emailSentAt && (
+                          <div className="text-xs text-green-600 mt-1">
+                            Email sent
+                          </div>
+                        )}
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
@@ -577,7 +633,6 @@ const EnquiryList = () => {
                   >
                     Previous
                   </button>
-
                   {[...Array(Math.min(5, totalPages))].map((_, index) => {
                     const page =
                       Math.max(1, Math.min(totalPages - 4, filters.page - 2)) +
@@ -596,7 +651,6 @@ const EnquiryList = () => {
                       </button>
                     );
                   })}
-
                   <button
                     onClick={() => handlePageChange(filters.page + 1)}
                     disabled={filters.page === totalPages}
@@ -613,14 +667,14 @@ const EnquiryList = () => {
         {/* Details Modal */}
         {showDetails && selectedInquiry && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Inquiry Details
                 </h3>
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
                 >
                   <span className="sr-only">Close</span>✕
                 </button>
@@ -632,63 +686,71 @@ const EnquiryList = () => {
                   <p className="mt-2 text-gray-600">Loading details...</p>
                 </div>
               ) : inquiryDetails ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <p className="text-sm text-gray-900">
-                        {inquiryDetails.email}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Phone
-                      </label>
-                      <p className="text-sm text-gray-900">
-                        {inquiryDetails.mobile || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Country
-                      </label>
-                      <p className="text-sm text-gray-900">
-                        {inquiryDetails.country || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Customer Type
-                      </label>
-                      <p className="text-sm text-gray-900">
-                        {inquiryDetails.customerType}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Inquiry Type
-                      </label>
-                      <p className="text-sm text-gray-900">
-                        {inquiryDetails.inquiryType}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Status
-                      </label>
-                      {getStatusBadge(inquiryDetails.status)}
+                <div className="space-y-6">
+                  {/* Customer Information */}
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-3">
+                      Customer Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Email
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.email}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Mobile
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.mobile || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Country
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.country || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Port
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.port || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Customer Type
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.customerType}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Inquiry Type
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {inquiryDetails.inquiryType}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Car Details Section */}
+                  {/* Vehicle Details Section */}
                   {inquiryDetails.inquiryType === "CAR" && (
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">
-                        Car Details
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <h4 className="text-lg font-medium text-gray-900 mb-3">
+                        Vehicle Details
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700">
                             Make
@@ -717,6 +779,32 @@ const EnquiryList = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">
+                            Engine CC
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.engineCC
+                              ? `${inquiryDetails.engineCC}cc`
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Transmission
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.transmission || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Drive Type
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.driveType || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
                             Steering
                           </label>
                           <p className="text-sm text-gray-900">
@@ -727,78 +815,162 @@ const EnquiryList = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">
-                            Port
+                            Exterior Color
                           </label>
-                          <p className="text-sm text-gray-900 capitalize">
-                            {inquiryDetails.port || "N/A"}
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.exteriorColor || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Interior Color
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.color || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Seats
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.seats || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Mileage
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.mileage
+                              ? `${inquiryDetails.mileage.toLocaleString()} km`
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Type
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.type || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Grade
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.grade || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Auction Score
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {inquiryDetails.auctionScore || "N/A"}
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
+                  {/* Message and Response */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Message
-                    </label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md mt-1">
-                      {inquiryDetails.message}
-                    </p>
-                  </div>
-
-                  {inquiryDetails.adminResponse && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Admin Response
-                      </label>
-                      <p className="text-sm text-gray-900 bg-blue-50 p-3 rounded-md mt-1">
-                        {inquiryDetails.adminResponse}
-                      </p>
-                      {inquiryDetails.respondedBy && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Responded by: {inquiryDetails.respondedBy}
-                          {inquiryDetails.respondedAt && (
-                            <span className="ml-2">
-                              on{" "}
-                              {new Date(
-                                inquiryDetails.respondedAt
-                              ).toLocaleString()}
-                            </span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Created At
-                      </label>
-                      <p>
-                        {new Date(inquiryDetails.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Updated At
-                      </label>
-                      <p>
-                        {new Date(inquiryDetails.updatedAt).toLocaleString()}
-                      </p>
-                    </div>
-                    {inquiryDetails.emailSentAt && (
+                    <h4 className="text-lg font-medium text-gray-900 mb-3">
+                      Communication
+                    </h4>
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Email Sent At
+                          Customer Message
                         </label>
-                        <p>
-                          {new Date(
-                            inquiryDetails.emailSentAt
-                          ).toLocaleString()}
+                        <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md mt-1">
+                          {inquiryDetails.message}
                         </p>
                       </div>
-                    )}
+
+                      {inquiryDetails.adminResponse && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Admin Response
+                          </label>
+                          <p className="text-sm text-gray-900 bg-blue-50 p-3 rounded-md mt-1">
+                            {inquiryDetails.adminResponse}
+                          </p>
+                          {inquiryDetails.respondedBy && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Responded by: {inquiryDetails.respondedBy}
+                              {inquiryDetails.respondedAt && (
+                                <span className="ml-2">
+                                  on{" "}
+                                  {new Date(
+                                    inquiryDetails.respondedAt
+                                  ).toLocaleString()}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status and Timestamps */}
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-3">
+                      Status & Timeline
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Status
+                        </label>
+                        {getStatusBadge(inquiryDetails.status)}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Email Status
+                        </label>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            inquiryDetails.isEmailSent
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {inquiryDetails.isEmailSent ? "Sent" : "Not Sent"}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Created At
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {new Date(inquiryDetails.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Updated At
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {new Date(inquiryDetails.updatedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      {inquiryDetails.emailSentAt && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Email Sent At
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {new Date(
+                              inquiryDetails.emailSentAt
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -820,7 +992,7 @@ const EnquiryList = () => {
                 </h3>
                 <button
                   onClick={() => setShowResponseModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
                 >
                   <span className="sr-only">Close</span>✕
                 </button>
@@ -835,8 +1007,14 @@ const EnquiryList = () => {
                     {selectedInquiry.message}
                   </p>
                   <p className="text-xs text-gray-500 mt-2">
-                    From: {selectedInquiry.name} ({selectedInquiry.email})
+                    From: {getCustomerName(selectedInquiry.email)} (
+                    {selectedInquiry.email})
                   </p>
+                  {selectedInquiry.make && selectedInquiry.model && (
+                    <p className="text-xs text-gray-500">
+                      Vehicle: {selectedInquiry.make} {selectedInquiry.model}
+                    </p>
+                  )}
                 </div>
 
                 <div>

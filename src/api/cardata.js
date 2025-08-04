@@ -172,3 +172,11 @@ export const driveTypeOptions = [
     { value: "9", label: "9 Seats" },
     { value: "10+", label: "10+ Seats" },
   ];
+export const vehicleTypeOptions = [
+  { value: "", label: "Select Vehicle Type" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "NON_HYBRID", label: "Non-Hybrid" },
+  { value: "ELECTRIC", label: "Electric" },
+  { value: "PLUG_IN_HYBRID", label: "Plug-in Hybrid" },
+  { value: "OTHER", label: "Other" },
+];
