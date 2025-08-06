@@ -1,6 +1,7 @@
 import {
   Clock,
   Heart,
+  LogIn,
   LogOut,
   Menu,
   Phone,
@@ -187,7 +188,7 @@ const Navbar = () => {
                       }`
                     }
                   >
-                    <User size={14} />
+                    <LogIn size={14} />
                     <span>Login</span>
                   </NavLink>
                   <NavLink
