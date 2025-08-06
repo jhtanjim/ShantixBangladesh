@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
-  colorOptions,
   driveTypeOptions,
-  exteriorColors,
   seatsOptions,
   transmissionOptions,
   vehicleTypeOptions,
@@ -569,34 +567,32 @@ const Enquiry = () => {
                   />
                 </div>
               </div>
+              {/* Exterior Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Exterior Color</label>
-                <select
-                  name="exteriorColor"
-                  value={formData.exteriorColor}
-                  onChange={handleChange}
-                  className="md:col-span-2 border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                >
-                  <option value="">Select Exterior Color</option>
-                  {exteriorColors.map((color) => (
-                    <option key={color} value={color}>
-                      {color}
-                    </option>
-                  ))}
-                </select>
+                <div className="md:col-span-2">
+                  <input
+                    list="exteriorColorOptions"
+                    name="exteriorColor"
+                    value={formData.exteriorColor}
+                    onChange={handleChange}
+                    placeholder="Select or type exterior color"
+                    className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
               </div>
 
               {/* Color */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                 <label className="font-medium">Color</label>
                 <div className="md:col-span-2">
-                  <SelectField
+                  <input
+                    list="colorOptions"
                     name="color"
                     value={formData.color}
                     onChange={handleChange}
-                    options={colorOptions}
-                    placeholder="Select Color"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Select or type color"
+                    className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   />
                 </div>
               </div>

@@ -120,11 +120,13 @@ export const featureOptions = {
 };
 export const driveTypeOptions = [
   { value: "", label: "Select Drive Type" },
-  { value: "2WD", label: "Two-Wheel Drive (2WD)" },
-  { value: "4WD", label: "Four-Wheel Drive (4WD)" },
+  { value: "FWD", label: "Front-Wheel Drive (FWD)" },
+  { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
   { value: "AWD", label: "All-Wheel Drive (AWD)" },
-  
+  { value: "FOUR_WD", label: "Four-Wheel Drive (4WD)" },
+  { value: "OTHER", label: "Other" },
 ];
+
 
    export const transmissionOptions = [
     { value: "", label: "Select Transmission" },
@@ -161,15 +163,9 @@ export const driveTypeOptions = [
   ];
 
  export const seatsOptions = [
-    { value: "", label: "Select Seats" },
     { value: "2", label: "2 Seats" },
     { value: "4", label: "4 Seats" },
-    { value: "5", label: "5 Seats" },
-    { value: "6", label: "6 Seats" },
-    { value: "7", label: "7 Seats" },
-    { value: "8", label: "8 Seats" },
-    { value: "9", label: "9 Seats" },
-    { value: "10+", label: "10+ Seats" },
+   
   ];
 export const vehicleTypeOptions = [
   { value: "", label: "Select Vehicle Type" },
