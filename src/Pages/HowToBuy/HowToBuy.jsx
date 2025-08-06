@@ -183,7 +183,14 @@ const HowToBuy = () => {
         )}
 
         {/* Payment Info */}
-        <h1>Payment Information</h1>
+        <div>
+          {/* Sub-tabs for Payment System */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gray-100 rounded-lg p-2 flex gap-2"></div>
+            <h1>Payment system</h1>
+          </div>
+        </div>
+
         {/* Notes */}
         <div className="mt-16 max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
