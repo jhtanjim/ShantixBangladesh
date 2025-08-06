@@ -155,7 +155,7 @@ const HowToBuy = () => {
             >
               Buy from Stock
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab("payment")}
               className={`px-6 py-3 rounded-md font-medium ${
                 activeTab === "payment"
@@ -164,7 +164,7 @@ const HowToBuy = () => {
               }`}
             >
               Payment System
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -183,13 +183,12 @@ const HowToBuy = () => {
         )}
 
         {/* Payment Info */}
-        <div>
-          {/* Sub-tabs for Payment System */}
+        {/* <div>
           <div className="flex justify-center mb-6">
             <div className="bg-gray-100 rounded-lg p-2 flex gap-2"></div>
             <h1>Payment system</h1>
           </div>
-        </div>
+        </div> */}
 
         {/* Notes */}
         <div className="mt-16 max-w-4xl mx-auto">
@@ -237,10 +236,12 @@ const HowToBuy = () => {
                 <Phone className="w-5 h-5 mr-2" />
                 Call Now
               </a>
-              <button className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 flex items-center justify-center">
-                <Mail className="w-5 h-5 mr-2" />
-                Contact Us
-              </button>
+              <a href="mailto:info@shantix.jp">
+                <button className="cursor-pointer bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 flex items-center justify-center">
+                  <Mail className="w-5 h-5 mr-2" />
+                  Contact Us
+                </button>
+              </a>
             </div>
           </div>
         </div>
