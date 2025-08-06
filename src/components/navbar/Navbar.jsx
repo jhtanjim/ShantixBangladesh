@@ -1,4 +1,13 @@
-import { Clock, Heart, Menu, Phone, Search, User, X } from "lucide-react";
+import {
+  Clock,
+  Heart,
+  LogOut,
+  Menu,
+  Phone,
+  Search,
+  User,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -6,7 +15,6 @@ import { useAuth } from "../../Context/AuthContext";
 import { useShop } from "../../Context/ShopContext";
 import logoImg from "../../assets/images/logo.png";
 
-import useExchangeRate from "../../hooks/useExchangeRate";
 import useUsersRole from "../../hooks/useUsersRole";
 
 const Navbar = () => {
@@ -19,9 +27,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [japanTime, setJapanTime] = useState("");
-
-  const { exchangeRate, convertToJPY, formatCurrency, loading } =
-    useExchangeRate();
+  const { exchangeRate, formatYenPrice } = useShop();
 
   // japan time
   useEffect(() => {
@@ -165,9 +171,10 @@ const Navbar = () => {
                   </NavLink>
                   <button
                     onClick={handleLogout}
-                    className="hover:text-blue-800 transition-colors px-2 py-1 rounded"
+                    className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-1 rounded hover:text-blue-800 transition-colors"
                   >
-                    Logout
+                    <LogOut size={16} className="sm:size-4" />
+                    <span className="hidden sm:inline text-sm">Logout</span>
                   </button>
                 </div>
               ) : (
@@ -175,22 +182,24 @@ const Navbar = () => {
                   <NavLink
                     to="/login"
                     className={({ isActive }) =>
-                      `hover:text-gray-200 transition-colors px-2 py-1 rounded ${
+                      `flex items-center gap-1 hover:text-gray-200 transition-colors px-2 py-1 rounded ${
                         isActive ? "text-gray-200 bg-red-700" : ""
                       }`
                     }
                   >
-                    Login
+                    <User size={14} />
+                    <span>Login</span>
                   </NavLink>
                   <NavLink
                     to="/register"
                     className={({ isActive }) =>
-                      `hover:text-gray-200 transition-colors px-2 py-1 rounded ${
+                      `flex items-center gap-1 hover:text-gray-200 transition-colors px-2 py-1 rounded ${
                         isActive ? "text-gray-200 bg-red-700" : ""
                       }`
                     }
                   >
-                    Register
+                    <User size={14} />
+                    <span>Register</span>
                   </NavLink>
                 </div>
               )}

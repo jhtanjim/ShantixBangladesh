@@ -14,9 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   driveTypes,
-  exteriorColors,
   fuelTypes,
-  interiorColors,
   transmissionTypes,
 } from "../../../../api/cardata";
 import { useCar, useCreateCar, useUpdateCar } from "../../../../hooks/useCars";
@@ -727,21 +725,16 @@ export function CarForm() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Exterior Color <span className="text-red-500">*</span>
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.exteriorColor}
                   onChange={(e) =>
                     handleInputChange("exteriorColor", e.target.value)
                   }
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+                  placeholder="Enter exterior color"
                   required
-                >
-                  <option value="">Select exterior color</option>
-                  {exteriorColors.map((color) => (
-                    <option key={color} value={color}>
-                      {color}
-                    </option>
-                  ))}
-                </select>
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+                />
               </div>
 
               {/* Interior Color */}
@@ -749,18 +742,13 @@ export function CarForm() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Interior Color
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.color}
                   onChange={(e) => handleInputChange("color", e.target.value)}
+                  placeholder="Enter interior color"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                >
-                  <option value="">Select interior color</option>
-                  {interiorColors.map((color) => (
-                    <option key={color} value={color}>
-                      {color}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Stock Number */}

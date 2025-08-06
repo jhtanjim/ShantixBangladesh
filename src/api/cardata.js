@@ -1,7 +1,7 @@
 
 export const fuelTypes = ["Gasoline", "Diesel", "Hybrid", "Electric", "CNG", "LPG"];
-export const transmissionTypes = ["Manual", "Automatic", "CVT", "Semi-Automatic"];
-export const driveTypes = ["FWD", "RWD", "AWD", "4WD"];
+export const transmissionTypes = ["AT ", "MT", "SEMI AT"];
+export const driveTypes = ["2WD", "4WD", "AWD", ];
 export const exteriorColors = [
   "Pearl White",
   "Jet Black",
@@ -120,11 +120,10 @@ export const featureOptions = {
 };
 export const driveTypeOptions = [
   { value: "", label: "Select Drive Type" },
-  { value: "FWD", label: "Front-Wheel Drive (FWD)" },
-  { value: "RWD", label: "Rear-Wheel Drive (RWD)" },
+  { value: "2WD", label: "Two-Wheel Drive (2WD)" },
+  { value: "4WD", label: "Four-Wheel Drive (4WD)" },
   { value: "AWD", label: "All-Wheel Drive (AWD)" },
-  { value: "FOUR_WD", label: "Four-Wheel Drive (4WD)" },
-  { value: "OTHER", label: "Other" },
+  
 ];
 
    export const transmissionOptions = [

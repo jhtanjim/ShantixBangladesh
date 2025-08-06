@@ -21,7 +21,9 @@ export function ShopProvider({ children }) {
     loading,
   } = useExchangeRate();
   // ✅ Hardcoded exchange rate
-  const exchangeRate = exchangeRateFromGoogle;
+  const exchangeRate = exchangeRateFromGoogle
+    ? Math.max(exchangeRateFromGoogle - 6, 1) // minimum fallback
+    : null;
 
   // Get current user data
   useEffect(() => {
@@ -279,7 +281,7 @@ export function ShopProvider({ children }) {
   // Convert USD price to JPY
   const formatYenPrice = (usdPrice) => {
     if (!usdPrice || !exchangeRate) return null;
-    return Math.round(usdPrice * exchangeRate);
+    return Math.round(usdPrice * exchangeRate); // Now using adjusted rate
   };
 
   // Check if user is authenticated

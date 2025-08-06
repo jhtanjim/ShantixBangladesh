@@ -25,6 +25,7 @@ import {
   ShoppingCart,
   Trash2,
   User,
+  X,
   XCircle,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
@@ -49,6 +50,7 @@ const AdminOrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [copiedOrderId, setCopiedOrderId] = useState(null);
   const [expandedCards, setExpandedCards] = useState(new Set());
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // New states for country and port selection
   const [countries, setCountries] = useState([]);
@@ -1405,7 +1407,6 @@ const AdminOrderManagement = () => {
                   </div>
                 </div>
               </div>
-
               {/* Order Information Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 {/* Order Details */}
@@ -1534,7 +1535,6 @@ const AdminOrderManagement = () => {
                   </div>
                 </div>
               </div>
-
               {/* Order Items */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
@@ -1621,7 +1621,8 @@ const AdminOrderManagement = () => {
                   )}
                 </div>
               </div>
-
+              {/* Payment History */}
+              ...
               {/* Payment History */}
               {selectedOrder.paymentTransactions &&
                 selectedOrder.paymentTransactions.length > 0 && (
@@ -1650,11 +1651,17 @@ const AdminOrderManagement = () => {
                                   <p className="text-sm text-gray-600 font-mono">
                                     Transaction ID: {payment.transactionRef}
                                   </p>
+
+                                  {/* Clickable image */}
                                   <img
-                                    className="h-40"
+                                    className="h-40 cursor-pointer rounded"
                                     src={payment.screenshot}
-                                    alt=""
+                                    alt="screenshot"
+                                    onClick={() =>
+                                      setSelectedImage(payment.screenshot)
+                                    }
                                   />
+
                                   <p className="text-xs text-gray-500 mt-1">
                                     {formatDate(payment.createdAt)}
                                   </p>
@@ -1697,7 +1704,6 @@ const AdminOrderManagement = () => {
                     </div>
                   </div>
                 )}
-
               {/* Additional Information */}
               {(selectedOrder.notes || selectedOrder.trackingInfo) && (
                 <div>
@@ -1729,6 +1735,27 @@ const AdminOrderManagement = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/70 bg-opacity-75 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-3xl w-full p-4">
+            <button
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="bg-red-500 w-6 h-6" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="Full screenshot"
+              className="w-full h-auto rounded shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}
