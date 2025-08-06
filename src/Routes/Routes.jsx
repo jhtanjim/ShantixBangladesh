@@ -31,6 +31,7 @@ import ShipSchedule from "../Pages/ShipSchedule/ShipSchedule";
 import ShipScheduleDetails from "../Pages/ShipSchedule/ShipScheduleDetails";
 import UnderConstruction from "../components/UnderConstruction/UnderConstruction";
 // import Cart from "../components/ui/Cart";
+import Auction from "../Pages/Auction/Auction";
 import Wishlist from "../components/ui/wishlist";
 import AdminLayout from "../layout/AdminLayout";
 import Main from "../layout/Main";
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: "/team",
         element: <Team />,
+      },
+      {
+        path: "/auction",
+        element: <Auction />,
       },
       {
         path: "/about",

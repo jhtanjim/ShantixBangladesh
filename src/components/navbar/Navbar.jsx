@@ -95,8 +95,9 @@ const Navbar = () => {
     { href: "/howToBuy", label: "How To Buy" },
     { href: "/enquiry", label: "Inquiry" },
     { href: "/contact", label: "Contact Us" },
-    { href: "/shipSchedule", label: "Ship Schedule" },
-    { href: "/allCars", label: "All Cars" },
+    { href: "/shipSchedule", label: "Ship Schedule & FAQ" },
+    { href: "/auction", label: "Auction" },
+    { href: "/allCars", label: "All Cars & Stock" },
   ];
 
   const navLinks = isAdmin()
@@ -137,11 +138,11 @@ const Navbar = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm order-3">
               <a
-                href="tel:+8801771123456"
+                href="tel:+81-70839-31325"
                 className="hidden sm:flex items-center gap-1 hover:text-gray-200 transition-colors"
               >
                 <Phone size={12} className="sm:size-3.5" />
-                <span className="hidden md:inline">+8801771123456</span>
+                <span className="hidden md:inline">+81-70839-31325</span>
                 <span className="md:hidden">Call</span>
               </a>
 
@@ -381,12 +382,12 @@ const Navbar = () => {
               ))}
 
               <a
-                href="tel:+8801771123456"
+                href="tel:+81-70839-31325"
                 className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Phone size={16} />
-                +8801771123456
+                +81-70839-31325
               </a>
 
               {authState.isAuthenticated && (

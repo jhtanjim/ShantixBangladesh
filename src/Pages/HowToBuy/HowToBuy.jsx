@@ -4,7 +4,6 @@ import {
   CreditCard,
   FileText,
   Mail,
-  MapPin,
   Phone,
   Search,
   Ship,
@@ -102,7 +101,7 @@ const HowToBuy = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
+      {/* <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
         <div className="max-w-6xl mx-auto px-4">
           <h1 className="text-4xl font-bold text-center mb-8">
             How to Buy from Shantix Corporation
@@ -130,7 +129,7 @@ const HowToBuy = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <div className="max-w-6xl mx-auto px-4 py-8">

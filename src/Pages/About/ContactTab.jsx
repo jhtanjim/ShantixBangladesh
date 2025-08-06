@@ -24,6 +24,10 @@ const ContactTab = () => {
                 <Phone className="w-5 h-5 text-blue-600 mr-2" />
                 <span>+81 70 8393 1325</span>
               </div>
+              <div className="flex items-center mt-4">
+                <Phone className="w-5 h-5 text-blue-600 mr-2" />
+                <span>+81 90 8347 9620</span>
+              </div>
               <div className="flex items-center">
                 <Mail className="w-5 h-5 text-blue-600 mr-2" />
                 <span>info@shantix.jp</span>
@@ -41,13 +45,27 @@ const ContactTab = () => {
               <p>533/659, Standard City Plaza (2nd floor),</p>
               <p>Sk Mujib Road, Dewanhat,</p>
               <p>Chattogram, Bangladesh</p>
+
               <div className="flex items-center mt-4">
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
-                <span>+880 1711 123456</span>
+                <span>
+                  {" "}
+                  <span>+880 1896 059750</span>
+                </span>
               </div>
-              <div className="flex items-center">
-                <Mail className="w-5 h-5 text-green-600 mr-2" />
-                <span>bd@shantix.jp</span>
+              <div className="flex items-center mt-4">
+                <Phone className="w-5 h-5 text-green-600 mr-2" />
+                <span>
+                  {" "}
+                  <span>+880 1896 059751</span>
+                </span>
+              </div>
+              <div className="flex items-center mt-4">
+                <Phone className="w-5 h-5 text-green-600 mr-2" />
+                <span>
+                  {" "}
+                  <span>+880 1896 059752</span>
+                </span>
               </div>
             </div>
           </div>
@@ -73,10 +91,10 @@ const ContactTab = () => {
                 Bangladesh Office
               </h4>
               <p className="text-gray-600">
-                Monday - Friday: 9:00 AM - 6:00 PM (BST)
+                Saturday - Thursday: 9:00 AM - 6:00 PM (BST)
               </p>
-              <p className="text-gray-600">Saturday: 9:00 AM - 2:00 PM (BST)</p>
-              <p className="text-gray-600">Sunday: Closed</p>
+
+              <p className="text-gray-600">Friday: Closed</p>
             </div>
           </div>
         </div>

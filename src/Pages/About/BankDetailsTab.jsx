@@ -30,7 +30,7 @@ const BankDetailsTab = () => {
             <span className="font-semibold">Branch Name:</span> MITAKA BRANCH
           </p>
           <p>
-            <span className="font-semibold">Account Number:</span> 222-1580332
+            <span className="font-semibold">Account Number:</span> 1580332
           </p>
           <p>
             <span className="font-semibold">SWIFT Code:</span> BOTKJPJT

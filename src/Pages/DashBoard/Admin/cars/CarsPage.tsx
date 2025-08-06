@@ -293,8 +293,9 @@ export function CarsPage() {
         {cars.length > 0 ? (
           cars.map((car: any) => (
             <div
+              onClick={() => handleViewDetails(car.id)}
               key={car.id}
-              className="bg-white shadow rounded-lg overflow-hidden border border-gray-200"
+              className="cursor-pointer bg-white shadow rounded-lg overflow-hidden border border-gray-200"
             >
               <div className="relative h-48">
                 <img

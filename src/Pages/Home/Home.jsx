@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import Banner from "./Banner";
 import FixedPriceStock from "./FixedPriceStock/FixedPriceStock";
 import LowCostStock from "./LowCostStock/LowCostStock";
 import NewArrival from "./NewArrival/NewArrival";
@@ -16,6 +15,7 @@ import coverImg from "../../assets/images/cover.jpg";
 import logoImg from "../../assets/images/logo.png";
 import Card from "../../components/card/Card";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
+import Banner from "./Banner";
 import Services from "./Services";
 
 const Home = () => {

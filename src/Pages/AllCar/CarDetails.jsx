@@ -346,12 +346,12 @@ const CarDetailsPage = () => {
                 />
                 <CompactSpecCard
                   icon={<Car size={14} />}
-                  label="Model"
+                  label="Model & Package"
                   value={car.model}
                 />
                 <CompactSpecCard
                   icon={<Car size={14} />}
-                  label="Model Code"
+                  label="  Score & Model Code"
                   value={car.modelCode}
                 />
                 <CompactSpecCard
@@ -532,9 +532,13 @@ const CarDetailsPage = () => {
                     <p className="font-medium text-[#003366] text-sm">
                       Locations
                     </p>
-                    <p className="text-gray-600 text-sm">Dhaka, Bangladesh</p>
+                    {/* <p className="text-gray-600 text-sm">
+                      533/659, Standard City Plaza (2nd floor), Sk Mujib Road,
+                      Dewanhat, Chattogram, Bangladesh
+                    </p> */}
                     <p className="text-gray-600 text-sm">
-                      Chattogram, Bangladesh
+                      Shin-Okubo Building 2, 3rd floor, 1-11-1, Hyakunincho,
+                      Shinjuku-ku, Tokyo 169-0073, Japan
                     </p>
                   </div>
                 </div>
@@ -545,8 +549,9 @@ const CarDetailsPage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-[#003366] text-sm">Phone</p>
-                    <p className="text-gray-600 text-sm">+81-45-936-0776</p>
                     <p className="text-gray-600 text-sm">+81-45-932-2376</p>
+                    {/* <p className="text-gray-600 text-sm">+88-01771-123456</p>*/}
+                    <p className="text-gray-600 text-sm">+81 90-8347-9620</p>
                   </div>
                 </div>
 
@@ -556,17 +561,17 @@ const CarDetailsPage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-[#003366] text-sm">Email</p>
-                    <p className="text-gray-600 text-sm">sales@shantix.info</p>
+                    <p className="text-gray-600 text-sm">info@shantix.jp</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              {/* <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-500">Reference ID</p>
                 <p className="font-mono font-bold text-[#003366]">
                   #{car.id.slice(0, 8).toUpperCase()}
                 </p>
-              </div>
+              </div> */}
             </div>
 
             {/* Quick Actions */}

@@ -528,7 +528,7 @@ export function CarForm() {
               {/* Model */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Model <span className="text-red-500">*</span>
+                  Model & Package <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -543,7 +543,7 @@ export function CarForm() {
               {/* Model Code */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Model Code
+                  Score & Model Code
                 </label>
                 <input
                   type="text"

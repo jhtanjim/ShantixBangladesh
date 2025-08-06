@@ -59,17 +59,14 @@ const Footer = () => {
             Shin-Okubo Building 2, 3rd floor, 1-11-1, Hyakunincho, Shinjuku-ku,
             Tokyo 169-0073, Japan
           </p>
-          <p className="text-xl mt-2">
-            533/659, Standard City Plaza (2nd floor), Sk Mujib Road, Dewanhat,
-            Chattogram, Bangladesh
-          </p>
+
           <div className="mt-4 text-xl space-y-2">
             <p>
               <span className="font-bold">📞</span>
-              +88-01771-123456
+              +81-45-932-2376
             </p>
             <p>
-              <span className="font-bold">📞</span>+81-70-8393-1325
+              <span className="font-bold">📞</span>+81 90-8347-9620
             </p>
             <p>
               <span className="font-bold">✉️</span>{" "}
@@ -78,15 +75,6 @@ const Footer = () => {
                 className="hover:underline text-xl"
               >
                 info@shantix.jp
-              </a>
-            </p>
-            <p>
-              <span className="font-bold">✉️</span>{" "}
-              <a
-                href="mailto:bd@shantix.jp"
-                className="hover:underline text-xl"
-              >
-                bd@shantix.jp
               </a>
             </p>
           </div>
