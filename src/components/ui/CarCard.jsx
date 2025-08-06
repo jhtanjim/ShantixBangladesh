@@ -311,9 +311,9 @@ const CarCard = ({ car }) => {
                 )}
 
                 {/* Reference */}
-                <div className="text-sm text-gray-500 mb-4">
+                {/* <div className="text-sm text-gray-500 mb-4">
                   Ref: #{car.id?.toString().slice(0, 8) || "N/A"}
-                </div>
+                </div> */}
               </div>
 
               {/* Action Buttons */}
