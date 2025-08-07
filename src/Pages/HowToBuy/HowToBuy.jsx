@@ -200,21 +200,41 @@ const HowToBuy = () => {
             <ul className="space-y-2 text-gray-700">
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">•</span>
-                All transfer fees must be covered by the sending party
+                Deposits are required before bidding or purchasing.* The amount
+                can be negotiated before the purchase{" "}
               </li>
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">•</span>
-                Deposits are fully refundable within 2 business days of request
+                Deposits are fully refundable* within *2 business days* upon
+                request
               </li>
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">•</span>
-                Stock reservations are held for a maximum of 12 days from order
-                date
+                Reserved vehicles* will be held for a maximum of *12 days* from
+                the order date.
               </li>
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">•</span>
-                All necessary import documents will be provided before vessel
-                arrival
+                All required *import documents* will be provided *before vessel
+                arrival, *only if payment is cleared.
+              </li>
+              <li className="flex items-start">
+                <span className="text-yellow-600 mr-2">•</span>
+                For any *modifications or add-ons* (e.g., Modelista kit,
+                accessories, upgrades), the *buyer must cover all related
+                costs*.
+              </li>
+              <li className="flex items-start">
+                <span className="text-yellow-600 mr-2">•</span>
+                Additional certificates* (e.g., JAAI, or others upon request)
+                will be provided *upon request, and the **cost will be added to
+                the total price*.
+              </li>
+              <li className="flex items-start">
+                <span className="text-yellow-600 mr-2">•</span>
+                After successful purchase, *Shantix Japan will provide up to 30
+                days of free storage. After that, a fee of **$3.50 or ¥500 per
+                day* will be added to the total cost.
               </li>
             </ul>
           </div>
