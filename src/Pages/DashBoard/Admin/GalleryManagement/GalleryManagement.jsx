@@ -638,47 +638,74 @@ const GalleryManagement = () => {
         </div>
       </div>
       {/* Actions Bar */}
+      {/* Actions Bar */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search gallery..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Filter */}
-            <select
-              value={filterActive}
-              onChange={(e) => setFilterActive(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Items</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
-            </select>
+            <div className="w-full sm:w-auto">
+              <select
+                value={filterActive}
+                onChange={(e) => setFilterActive(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Items</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+              </select>
+            </div>
 
             {/* Sort */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="order">Sort by Order</option>
-              <option value="description">Sort by Description</option>
-              <option value="status">Sort by Status</option>
-            </select>
+            <div className="w-full sm:w-auto">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="order">Sort by Order</option>
+                <option value="description">Sort by Description</option>
+                <option value="status">Sort by Status</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
+            {/* Add New Gallery Item Button */}
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+            >
+              <Camera className="w-4 h-4" />
+              Add New Item
+            </button>
+
+            {/* Bulk Upload Button */}
+            <label className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 transition-colors whitespace-nowrap">
+              <Camera className="w-4 h-4" />
+              Bulk Upload
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleBulkUpload}
+                className="hidden"
+              />
+            </label>
+
             {/* View Mode Toggle */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden w-max">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2 flex items-center justify-center ${
