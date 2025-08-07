@@ -43,7 +43,9 @@ const AuctionService = () => (
       Japanese vehicles at competitive wholesale prices — straight from the
       source.
     </p>
-    <p className="font-semibold mb-2">We are proud members of:</p>
+    <p className="font-semibold mb-2">
+      We are proud members of all major auction networks in Japan including
+    </p>
     <p className="mb-4">
       USS | TAA | ARAI | CAA | JU | AUCNET | ASNET | JAA | I-AUC and more
     </p>
@@ -67,9 +69,13 @@ const AuctionService = () => (
         grade, and pricing)
       </li>
       <li>
-        Place a Bid (Set your maximum budget and let us handle the bidding)
+        Place a Bid (Set your maximum budget and let us handle the bidding for
+        you)
       </li>
-      <li>Win and Purchase (We complete the purchase and handle export)</li>
+      <li>
+        Win and Purchase (Once successful, we will complete the purchase and
+        handle export)
+      </li>
     </ol>
   </section>
 );
@@ -82,12 +88,20 @@ const MemberLogin = () => (
       🚗 Access Over 150,000 Cars Weekly from Japan's Top Auction Houses! Once
       registered, our customers can:
     </p>
+    <p className="mb-4">
+      At Shantix Japan, we are preparing to offer you exclusive live access to
+      the top auction platforms in Japan. Once registered, our customers will be
+      able to:
+    </p>
     <ul className="list-disc list-inside space-y-1 mb-4">
-      <li>🔍 Browse real-time vehicle listings</li>
-      <li>📈 Place live or proxy bids</li>
-      <li>🧾 View auction sheets and details</li>
-      <li>💬 Get expert bidding support</li>
-      <li>🌐 Monitor bids from anywhere in the world</li>
+      <li>
+        🔍 Browse real-time vehicle listings from USS, TAA, ARAI, CAA, JU,
+        AUCNET, I-AUC, and more
+      </li>
+      <li>• 📈 Place live or proxy bids through our portal</li>
+      <li>🧾 View auction sheets and vehicle details before bidding</li>
+      <li>• 💬 Get expert bidding support from our dedicated team</li>
+      <li>• 🌐 Monitor bids live from anywhere in the world</li>
     </ul>
     <p className="font-semibold mb-2">
       🚧 COMING SOON: Full Auction Login Portal with Real-Time Access
@@ -99,24 +113,41 @@ const MemberLogin = () => (
       <li>Deposit & refund policies</li>
       <li>Translation & auction sheet explanation</li>
     </ul>
+    <h4 className="font-semibold mb-2">📩 Contact us anytime for support.</h4>
   </section>
 );
 
 const AuctionCalendar = () => (
   <section>
     <h2 className="text-2xl font-bold mb-4">📅 JAPAN CAR AUCTION CALENDAR</h2>
+    <h2 className="text-2xl font-bold mb-4">
+      📩 Contact us anytime for support.
+    </h2>
+    <h2 className="text-2xl font-bold mb-4">
+      🔧 Powered by Shantix Japan – Member of All Leading Auction Halls.
+    </h2>
     <p className="mb-4">
-      We provide access to all major vehicle auctions held throughout Japan. Our
-      upcoming Auction Calendar will help you:
+      At Shantix Japan, we provide access to all major vehicle auctions held
+      throughout Japan. Our upcoming Auction Calendar will help you:
     </p>
     <ul className="list-disc list-inside mb-4">
-      <li>✅ Know auction days</li>
-      <li>✅ Plan your bidding</li>
-      <li>✅ Stay updated with schedules</li>
-      <li>✅ Browse by region (e.g., Kanto, Kansai, Kyushu...)</li>
+      <li>✅ Know which auction happens on which day</li>
+      <li>✅ Plan your bidding in advance</li>
+      <li>
+        ✅ Stay updated with auction schedules for USS, TAA, JU, ARAI, AUCNET,
+        HONDA, CAA and more
+      </li>
+      <li>
+        ✅ Browse auctions by region – Hokkaido, Tohoku, Kanto, Chubu, Kansai,
+        Kyushu, etc.
+      </li>
     </ul>
+    <h2 className="text-2xl font-bold mb-4">
+      📦 With hundreds of auctions happening weekly, you’ll never miss a deal
+      again!
+    </h2>
     <p className="font-semibold mb-2">
-      🔜 Coming Soon: Live Auction Calendar Table
+      🔜 Coming Soon: An easy-to-use Live Auction Calendar Table with
     </p>
     <ul className="list-disc list-inside mb-4">
       <li>Auction House Name</li>
@@ -124,147 +155,322 @@ const AuctionCalendar = () => (
       <li>Auction Day(s)</li>
       <li>Special Sales & Closures</li>
     </ul>
+    <h2 className="text-2xl font-bold mb-4">📌 Stay Informed, Bid Smart! </h2>
+    <p className="font-semibold mb-2">
+      Our team constantly updates the calendar with any schedule changes from
+      auction houses. You’ll be able to:
+    </p>
+    <ul className="list-disc list-inside mb-4">
+      <li>View weekly events</li>
+      <li>Check upcoming major sales</li>
+      <li>Plan deposits & bidding accordingly</li>
+      <li>Access VIP events and priority lots</li>
+    </ul>
+
     <p className="italic">
-      💡 Tip from Shantix Japan: "The key to getting the best vehicle at the
-      best price is knowing when and where to bid."
+      💡 Tip from Shantix Japan: “The key to getting the best vehicle at the
+      best price is knowing when and where to bid.”
+    </p>
+    <p className="font-semibold mb-2">
+      Our team constantly updates the calendar with any schedule changes from
+      auction houses. You’ll be able to:
     </p>
   </section>
 );
 
 const AuctionTerms = () => (
-  <section>
+  <section className="max-w-4xl mx-auto px-4 py-6">
     <h2 className="text-2xl font-bold mb-4">📜 AUCTION TERMS & CONDITIONS</h2>
-    <p className="mb-2">🏢 Operated by Shantix Japan</p>
-    <ul className="space-y-3 mb-4">
+    <p className="mb-4">🏢 Operated by Shantix Japan</p>
+    <p className="mb-6">
+      We act as your trusted agent in Japan, giving you access to bid on
+      vehicles directly from Japan’s leading auction houses including USS, TAA,
+      ARAI, JU, AUCNET, and more.
+    </p>
+    <p className="mb-6">
+      Participation in our auction service is subject to the following terms and
+      conditions:
+    </p>
+
+    <ul className="space-y-6 mb-8">
       <li>
         <strong>1️⃣ Registration & Membership</strong>
-        <br />
-        • Clients must register.
-        <br />
-        • A refundable deposit is required.
-        <br />• Login credentials provided upon verification.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>
+            Clients must register with Shantix Japan to access bidding services.
+          </li>
+          <li>
+            A refundable security deposit is required before bidding (see
+            deposit table below).
+          </li>
+          <li>Login credentials will be provided once verified.</li>
+        </ul>
       </li>
+
       <li>
         <strong>2️⃣ Security Deposit</strong>
-        <br />
-        <table className="table-auto border border-gray-400 mt-2 mb-2 text-sm">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border px-2 py-1">FOB Price</th>
-              <th className="border px-2 py-1">Deposit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border px-2 py-1">Up to JPY 1,000,000</td>
-              <td className="border px-2 py-1">JPY 100,000</td>
-            </tr>
-            <tr>
-              <td className="border px-2 py-1">1,010,000 – 1,500,000</td>
-              <td className="border px-2 py-1">JPY 200,000</td>
-            </tr>
-            <tr>
-              <td className="border px-2 py-1">1,510,000 – 2,000,000</td>
-              <td className="border px-2 py-1">JPY 300,000</td>
-            </tr>
-          </tbody>
-        </table>
-        • Fully refundable before winning a car.
+        <div className="overflow-x-auto mt-2 mb-2">
+          <table className="table-auto border border-gray-400 text-sm">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border px-3 py-2">FOB Price Range</th>
+                <th className="border px-3 py-2">Required Deposit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border px-3 py-2">Up to JPY 1,000,000</td>
+                <td className="border px-3 py-2">JPY 100,000</td>
+              </tr>
+              <tr>
+                <td className="border px-3 py-2">JPY 1,010,000 – 1,500,000</td>
+                <td className="border px-3 py-2">JPY 200,000</td>
+              </tr>
+              <tr>
+                <td className="border px-3 py-2">JPY 1,510,000 – 2,000,000</td>
+                <td className="border px-3 py-2">JPY 300,000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul className="list-disc ml-5 space-y-1">
+          <li>
+            This deposit is fully refundable before a car is won or confirmed
+            for purchase.
+          </li>
+          <li>
+            If the bid is successful, the deposit will be adjusted towards the
+            payment upon request.
+          </li>
+        </ul>
       </li>
+
       <li>
         <strong>3️⃣ Bidding Rules</strong>
-        <br />
-        • All bids are final.
-        <br />
-        • Max bid limit allowed.
-        <br />• Submit before the deadline.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>All bids are final and cannot be cancelled once placed.</li>
+          <li>Bids must be submitted before the auction deadline.</li>
+          <li>
+            You may submit a maximum bid limit, and our system/agents will bid
+            on your behalf.
+          </li>
+        </ul>
       </li>
+
       <li>
         <strong>4️⃣ Vehicle Condition</strong>
-        <br />
-        • Sold as-is based on inspection report.
-        <br />• No claims accepted post-purchase.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>
+            All vehicles are sold as-is, based on the auction sheet inspection
+            report.
+          </li>
+          <li>
+            Shantix Japan provides translation and guidance, but final decisions
+            are made by the buyer.
+          </li>
+          <li>
+            No claims will be accepted once the vehicle is won, unless clear
+            auction fraud is proven.
+          </li>
+        </ul>
       </li>
+
       <li>
         <strong>5️⃣ Payment Terms</strong>
-        <br />
-        • Full payment within 5 business days.
-        <br />• Late payment may result in penalties.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>
+            Full payment (FOB or CIF) must be made within 5 business days after
+            winning the auction.
+          </li>
+          <li>Late payments may result in penalties or loss of the deposit.</li>
+          <li>Bank details will be provided on the invoice.</li>
+        </ul>
       </li>
+
       <li>
         <strong>6️⃣ Cancellation Policy</strong>
-        <br />
-        • Penalties: JPY 80,000 to 150,000.
-        <br />• In some cases, full payment still required.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>
+            Bidding cancellations after a win will result in penalty charges by
+            the auction house.
+          </li>
+          <li>
+            Penalties vary from JPY 80,000 to 150,000, depending on the vehicle
+            and auction policy.
+          </li>
+          <li>
+            In some cases, cancellation is not allowed, and full payment may
+            still be required.
+          </li>
+        </ul>
       </li>
+
       <li>
         <strong>7️⃣ Shipping & Documentation</strong>
-        <br />
-        • Shipping after payment.
-        <br />• We provide all export documents.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>Shipping will be arranged once full payment is received.</li>
+          <li>
+            We provide all export documents: Invoice, Export Certificate, Bill
+            of Lading, and Translation (if needed).
+          </li>
+          <li>Estimated shipping time: 1–3 weeks after auction win.</li>
+        </ul>
       </li>
+
       <li>
         <strong>8️⃣ Refund Policy</strong>
-        <br />
-        • Deposits refundable if no car is won.
-        <br />• Processed within 3–5 working days.
+        <ul className="list-disc ml-5 mt-2 space-y-1">
+          <li>Deposits are fully refundable if you decide not to purchase.</li>
+          <li>Refund requests will be processed within 3–5 working days.</li>
+          <li>No refund is applicable after a successful bid or purchase.</li>
+        </ul>
       </li>
     </ul>
-    <p className="text-red-600 font-medium">
-      ❗Important: Buying from auction is a serious commitment.
+
+    <p className="text-red-600 font-semibold mb-4">
+      ❗Important Notice: Buying from auction is a serious commitment. Make sure
+      to review vehicle condition and be confident about your bid.
     </p>
-    <p className="mt-2">
-      📧 info@shantix.jp | 📞 +8170 8393 1325 | 📱 WhatsApp Support: [Link Here]
+
+    <p className="text-sm">
+      📩 Questions or Need Help?
+      <br />
+      📧{" "}
+      <a href="mailto:info@shantix.jp" className="text-blue-600 underline">
+        info@shantix.jp
+      </a>
+      <br />
+      📞{" "}
+      <a href="tel:+817083931325" className="text-blue-600 underline">
+        +81 70 8393 1325
+      </a>
+      <br />
+      📱 WhatsApp Support:{" "}
+      <a
+        href="https://wa.me/817083931325"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline"
+      >
+        Chat on WhatsApp
+      </a>
     </p>
   </section>
 );
 
 const AuctionFAQ = () => (
-  <section>
-    <h2 className="text-2xl font-bold mb-4">❓ Auction FAQ – Shantix Japan</h2>
-    <ul className="space-y-2">
+  <section className="space-y-4">
+    <h2 className="text-2xl font-bold mb-2">🧾 Auction FAQ – Shantix Japan</h2>
+    <p className="text-lg mb-4">Everything You Need to Know Before Bidding</p>
+
+    <ul className="space-y-3">
       <li>
-        🔹 <strong>Who can buy?</strong> Anyone – dealers or individuals.
+        🔹 <strong>1. Who can buy from the Japanese car auctions?</strong>
+        <br />
+        Anyone! Whether you’re a dealer or individual, you can register and buy
+        through Shantix Japan.
       </li>
       <li>
-        🔹 <strong>License needed?</strong> No – we buy on your behalf.
+        🔹 <strong>2. Do I need a license to buy from auction?</strong>
+        <br />
+        No, you don’t need a license. We buy on your behalf.
       </li>
       <li>
-        🔹 <strong>How to register?</strong> Fill out the form, get approved,
-        and receive login.
+        🔹 <strong>3. How do I register?</strong>
+        <br />
+        Fill out our online form. After approval, we’ll send you your auction
+        login.
       </li>
       <li>
-        🔹 <strong>Registration fee?</strong> None. It's free.
+        🔹 <strong>4. Is there any registration fee?</strong>
+        <br />
+        No. Registration is 100% free.
       </li>
       <li>
-        🔹 <strong>Deposit needed?</strong> Yes – refundable.
+        🔹 <strong>5. Do I need to pay before bidding?</strong>
+        <br />
+        Yes. A refundable deposit is required to activate bidding access.
       </li>
       <li>
-        🔹 <strong>Deposit amount?</strong> JPY 100K–300K depending on car
-        value.
+        🔹 <strong>6. How much is the deposit?</strong>
+        <br />• JPY 100,000 for cars under 1 million
+        <br />• JPY 200,000–300,000 for higher value vehicles
       </li>
       <li>
-        🔹 <strong>Deposit refundable?</strong> Yes, unless you win a car.
+        🔹 <strong>7. Is the deposit refundable?</strong>
+        <br />
+        Yes. Fully refundable if you don’t win or purchase any vehicle.
       </li>
       <li>
-        🔹 <strong>Can I cancel bid?</strong> No. Bids are final.
+        🔹 <strong>8. Can I cancel my bid?</strong>
+        <br />
+        No. Once placed, bids cannot be canceled.
       </li>
       <li>
-        🔹 <strong>Condition info?</strong> Yes – auction sheet + our
-        translation.
+        🔹 <strong>9. How do I know the condition of the car?</strong>
+        <br />
+        Each vehicle has an auction sheet with full inspection details. We
+        translate and explain it for you.
       </li>
       <li>
-        🔹 <strong>Live auction?</strong> Yes, after deposit and registration.
+        🔹 <strong>10. Can I join live auction?</strong>
+        <br />
+        Yes. After registration and deposit, we give you live auction access
+        (USS, TAA, ARAI, JU etc.)
       </li>
       <li>
-        🔹 <strong>How often?</strong> Daily, across Japan. Use our calendar.
+        🔹 <strong>11. How often do auctions happen?</strong>
+        <br />
+        Every day, across different auction houses. Check our upcoming Auction
+        Calendar.
       </li>
       <li>
-        🔹 <strong>Payment timeline?</strong> Within 5 working days after
-        winning.
+        🔹 <strong>12. What is the payment timeline after a win?</strong>
+        <br />
+        Payment must be completed within 5 working days of winning the vehicle.
       </li>
       <li>
-        🔹 <strong>Photos before bidding?</strong> Yes – photos and full specs.
+        🔹 <strong>13. Can I see car photos before bidding?</strong>
+        <br />
+        Yes. You’ll see photos, auction sheet, and full specs before bidding.
+      </li>
+      <li>
+        🔹 <strong>14. What happens after I win a car?</strong>
+        <br />
+        We send the invoice, collect payment, and arrange shipping to your port.
+      </li>
+      <li>
+        🔹 <strong>15. Can I choose CIF or FOB?</strong>
+        <br />
+        Yes, we offer both FOB and CIF pricing. You choose what works for you.
+      </li>
+      <li>
+        🔹 <strong>16. How long does shipping take?</strong>
+        <br />
+        Usually 2–3 weeks after auction win, depending on port availability.
+      </li>
+      <li>
+        🔹 <strong>17. Do you provide all export documents?</strong>
+        <br />
+        Yes. You’ll receive Invoice, Export Certificate, Bill of Lading, and
+        Translation.
+      </li>
+      <li>
+        🔹 <strong>18. How do I contact support?</strong>
+        <br />
+        📧 info@shantix.jp
+        <br />
+        📞 +81 70-8393-1325
+        <br />
+        📱 WhatsApp Support:{" "}
+        <a
+          href="https://wa.me/817083931325"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          Chat on WhatsApp
+        </a>
       </li>
     </ul>
   </section>
