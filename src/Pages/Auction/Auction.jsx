@@ -1,9 +1,17 @@
-import { Calendar, Car, FileText, HelpCircle, Users } from "lucide-react";
+import {
+  Calendar,
+  Car,
+  FileText,
+  HelpCircle,
+  Sheet,
+  Users,
+  Verified,
+} from "lucide-react";
 import { useState } from "react";
 
 const TabNavigation = ({ tabs, activeTab, setActiveTab }) => {
   return (
-    <div className="max-w-screen-lg mx-auto px-4 mb-8">
+    <div className="container mx-auto px-4 mb-8">
       <div className="bg-white rounded-lg shadow-lg p-2">
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => {
@@ -475,6 +483,285 @@ const AuctionFAQ = () => (
     </ul>
   </section>
 );
+const AuctionSheet = () => (
+  <section className="max-w-4xl mx-auto px-4 py-6 text-sm md:text-base leading-relaxed">
+    <h2 className="text-2xl font-bold mb-4">📄 AUCTION SHEET EXPLANATION</h2>
+    <p className="mb-4 font-semibold">
+      Understand What You're Bidding On – With Confidence
+    </p>
+    <p className="mb-4">
+      When buying a vehicle from a Japanese auto auction, the auction sheet is
+      your most important tool. It provides a full inspection report by a
+      certified inspector, including:
+    </p>
+    <ul className="list-disc list-inside mb-6 space-y-1">
+      <li>✅ Vehicle condition</li>
+      <li>✅ Accident history</li>
+      <li>✅ Exterior & interior marks</li>
+      <li>✅ Mileage verification</li>
+      <li>✅ Mechanical notes</li>
+    </ul>
+    <p className="mb-6">
+      At Shantix Japan, we help you analyze and translate the sheet so you make
+      informed decisions before bidding.
+    </p>
+
+    <h3 className="text-xl font-semibold mb-2">
+      🧭 Auction Grade (Overall Condition)
+    </h3>
+    <table className="w-full mb-6 border text-left">
+      <thead>
+        <tr className="bg-gray-200">
+          <th className="p-2 border">Grade</th>
+          <th className="p-2 border">Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="p-2 border">5</td>
+          <td className="p-2 border">Excellent condition, near-new</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">4.5</td>
+          <td className="p-2 border">Very good condition</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">4</td>
+          <td className="p-2 border">Good condition, minor wear/tear</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">3.5</td>
+          <td className="p-2 border">Average condition, some scratches</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">3</td>
+          <td className="p-2 border">Fair, visible signs of use/damage</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">2</td>
+          <td className="p-2 border">Poor condition, needs repair</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">R / RA</td>
+          <td className="p-2 border">Repaired or accident history</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">***</td>
+          <td className="p-2 border">Ungraded or dealer-submitted sheet</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 className="text-xl font-semibold mb-2">🚗 Exterior Condition Marks</h3>
+    <table className="w-full mb-6 border text-left">
+      <thead>
+        <tr className="bg-gray-200">
+          <th className="p-2 border">Symbol</th>
+          <th className="p-2 border">Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="p-2 border">A1, A2, A3</td>
+          <td className="p-2 border">Scratch (small to large)</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">U1, U2, U3</td>
+          <td className="p-2 border">Dent (small to large)</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">W1, W2</td>
+          <td className="p-2 border">Wavy panel / repaired paint</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">S1, S2</td>
+          <td className="p-2 border">Rust (light to moderate)</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">X</td>
+          <td className="p-2 border">Panel needs replacement</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">XX</td>
+          <td className="p-2 border">Entire panel replaced</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">C1, C2</td>
+          <td className="p-2 border">Corrosion</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">P</td>
+          <td className="p-2 border">Paint faded/peeling</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 className="text-xl font-semibold mb-2">🪑 Interior Condition</h3>
+    <table className="w-full mb-4 border text-left">
+      <thead>
+        <tr className="bg-gray-200">
+          <th className="p-2 border">Grade</th>
+          <th className="p-2 border">Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="p-2 border">A</td>
+          <td className="p-2 border">Excellent (like new)</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">B</td>
+          <td className="p-2 border">Good, some minor wear</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">C</td>
+          <td className="p-2 border">Average, visible stains or marks</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">D</td>
+          <td className="p-2 border">Dirty or damaged interior</td>
+        </tr>
+        <tr>
+          <td className="p-2 border">E</td>
+          <td className="p-2 border">Major interior issues</td>
+        </tr>
+      </tbody>
+    </table>
+    <p className="mb-6">
+      <span className="font-semibold">Inspector Notes May Include:</span>
+      <br />
+      • Cigarette burns
+      <br />
+      • Stains
+      <br />
+      • Dashboard cracks
+      <br />• Missing parts
+    </p>
+
+    <h3 className="text-xl font-semibold mb-2">🛞 Wheel & Tire Condition</h3>
+    <p className="mb-2">Auction sheets may also show:</p>
+    <ul className="list-disc list-inside mb-4 space-y-1">
+      <li>Tire Tread Level (in mm)</li>
+      <li>Uneven wear or cracking</li>
+      <li>Scratches on alloy rims</li>
+      <li>Wheel replacement or upgrade info</li>
+    </ul>
+    <p className="mb-6">
+      <span className="font-semibold">Common Wheel Notes:</span>
+      <br />
+      • AW = Alloy Wheels
+      <br />
+      • SC = Scratched
+      <br />
+      • RW = Replaced Wheels
+      <br />• W1/W2 = Wheel scratches (minor/medium)
+    </p>
+
+    <h3 className="text-xl font-semibold mb-2">
+      🔍 What We Do at Shantix Japan
+    </h3>
+    <ul className="list-disc list-inside mb-6 space-y-1">
+      <li>✅ Translate every auction sheet into Japanese to English</li>
+      <li>✅ Highlight important defects</li>
+      <li>✅ Provide recommendations before bidding</li>
+      <li>✅ Offer video or image-based explanations upon request</li>
+    </ul>
+
+    <hr className="my-6" />
+
+    <h3 className="text-xl font-semibold mb-2">
+      📞 Need Help Reading a Sheet?
+    </h3>
+    <p className="mb-1">Contact our auction support team:</p>
+    <p>
+      📧{" "}
+      <a href="mailto:info@shantix.jp" className="text-blue-600 underline">
+        info@shantix.jp
+      </a>
+    </p>
+    <p>📞 +81 70-8393-1325</p>
+    <a
+      href="https://wa.me/+81708391325"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      WhatsApp Support
+    </a>
+  </section>
+);
+
+const AuctionVerification = () => (
+  <section className="max-w-4xl mx-auto px-4 py-6 text-sm md:text-base leading-relaxed">
+    <h2 className="text-2xl font-bold mb-4">🧾 Auction Sheet Verification</h2>
+    <p className="mb-4 font-semibold">
+      Buy With Confidence — Verify Before You Buy!
+    </p>
+    <p className="mb-4">
+      At Shantix Japan, we are committed to full transparency when it comes to
+      Japanese used cars. We understand how important it is for our customers to
+      know the true condition and history of a vehicle before making a purchase.
+    </p>
+    <p className="mb-6">
+      That’s why we’re introducing our Auction Sheet Verification service — a
+      simple and secure way for you to confirm the authenticity of auction
+      sheets directly from the Japanese auction houses.
+    </p>
+
+    <h3 className="text-xl font-semibold mb-2">✅ What is an Auction Sheet?</h3>
+    <p className="mb-2">
+      An auction sheet is an official document issued by Japanese auto auction
+      houses. It contains detailed information such as:
+    </p>
+    <ul className="list-disc list-inside mb-6 space-y-1">
+      <li>• Vehicle condition (interior/exterior)</li>
+      <li>• Mileage verification</li>
+      <li>• Accident or repair history</li>
+      <li>• Equipment and features</li>
+      <li>• Grading and inspection summary</li>
+    </ul>
+
+    <h3 className="text-xl font-semibold mb-2">
+      🔍 Why Verify an Auction Sheet?
+    </h3>
+    <p className="mb-2">
+      Unfortunately, in the used car market, fake or altered auction sheets are
+      common. Our verification system ensures that:
+    </p>
+    <ul className="list-disc list-inside mb-6 space-y-1">
+      <li>• The auction sheet you received is 100% authentic</li>
+      <li>• All vehicle details match the official auction record</li>
+      <li>• You avoid scams and make safe, informed decisions</li>
+    </ul>
+
+    <h3 className="text-xl font-semibold mb-2">
+      🔒 How It Works (Coming Soon)
+    </h3>
+    <ol className="list-decimal list-inside mb-4 space-y-1">
+      <li>Upload the auction sheet or input the Auction Lot Number</li>
+      <li>
+        Our system will cross-check it with official data from Japanese auctions
+      </li>
+      <li>You’ll get a confirmation result within minutes</li>
+    </ol>
+    <p className="mb-6">
+      💡 <span className="font-semibold">Note:</span> This service will be
+      available soon — stay tuned!
+    </p>
+
+    <h3 className="text-xl font-semibold mb-2">📞 Need Help?</h3>
+    <p>
+      If you want us to manually verify an auction sheet, contact us on
+      WhatsApp: <span className="font-semibold">+81 70 8393 1325</span> or email
+      us at{" "}
+      <span className="text-blue-600 underline">
+        <a href="mailto:info@shantix.jp" className="text-blue-600 underline">
+          info@shantix.jp
+        </a>
+      </span>
+      . Our team will assist you promptly.
+    </p>
+  </section>
+);
 
 const Auction = () => {
   const [activeTab, setActiveTab] = useState("service");
@@ -509,6 +796,18 @@ const Auction = () => {
       label: " Auction FAQ ",
       icon: HelpCircle,
       component: <AuctionFAQ />,
+    },
+    {
+      id: "sheet",
+      label: " Auction Sheet Explanation ",
+      icon: Sheet,
+      component: <AuctionSheet />,
+    },
+    {
+      id: "verification",
+      label: " Auction Sheet Verification ",
+      icon: Verified,
+      component: <AuctionVerification />,
     },
   ];
 

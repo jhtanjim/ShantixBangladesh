@@ -10,7 +10,7 @@ import { useAllCars } from "../../hooks/useCars";
 
 // Import your assets
 import { IoShieldCheckmarkOutline } from "react-icons/io5";
-import banner2 from "../../assets/images/Banner2.jpg";
+import banner2 from "../../assets/images/banner/category1.jpg";
 import coverImg from "../../assets/images/cover.jpg";
 import logoImg from "../../assets/images/logo.png";
 import Card from "../../components/card/Card";
@@ -109,7 +109,7 @@ const Home = () => {
       <Banner />
 
       {/* Search Filter Section */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         <SearchFilter cars={allCars} onFilteredCars={handleFilteredCars} />
       </div>
 
@@ -193,12 +193,13 @@ const Home = () => {
           <NewArrival />
 
           {/* Banner Section */}
-          <div className="relative w-full min-h-[620px] bg-black overflow-hidden my-40">
+          <div className="relative w-full min-h-[750px] bg-black/90 overflow-hidden my-40">
             <img
               src={banner2 || "/placeholder.svg"}
               alt="Background"
-              className="w-full h-[700px] opacity-30 absolute top-0 left-0"
+              className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
+
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center h-full px-6 md:px-30 py-10">
               {/* Left Side */}
               <div className="flex flex-col md:mt-80 md:flex-row items-center text-white space-y-4 md:space-y-0 md:space-x-4">

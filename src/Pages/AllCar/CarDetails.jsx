@@ -346,12 +346,12 @@ const CarDetailsPage = () => {
                 />
                 <CompactSpecCard
                   icon={<Car size={14} />}
-                  label="Model & Package"
+                  label="Package"
                   value={car.model}
                 />
                 <CompactSpecCard
                   icon={<Car size={14} />}
-                  label="  Score & Model Code"
+                  label="Model Code"
                   value={car.modelCode}
                 />
                 <CompactSpecCard

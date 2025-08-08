@@ -526,7 +526,7 @@ export function CarForm() {
               {/* Model */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Model & Package <span className="text-red-500">*</span>
+                  Package <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -541,7 +541,7 @@ export function CarForm() {
               {/* Model Code */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Score & Model Code
+                  Model Code
                 </label>
                 <input
                   type="text"
@@ -662,7 +662,7 @@ export function CarForm() {
                   }
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 >
-                  <option value="">Select transmission</option>
+                  <option value="">Select Transmission</option>
                   {transmissionTypes.map((trans) => (
                     <option key={trans} value={trans}>
                       {trans}
@@ -681,7 +681,7 @@ export function CarForm() {
                   onChange={(e) => handleInputChange("drive", e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 >
-                  <option value="">Select drive type</option>
+                  <option value="">Select Drive Type</option>
                   {driveTypes.map((drive) => (
                     <option key={drive} value={drive}>
                       {drive}
@@ -699,7 +699,7 @@ export function CarForm() {
                   type="number"
                   value={formData.seats}
                   onChange={(e) => handleInputChange("seats", e.target.value)}
-                  placeholder="Enter number of seats (e.g., 5)"
+                  placeholder="Enter No of Seats (e.g., 5)"
                   min="2"
                   max="9"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
@@ -715,7 +715,7 @@ export function CarForm() {
                   type="number"
                   value={formData.mileage}
                   onChange={(e) => handleInputChange("mileage", e.target.value)}
-                  placeholder="Enter mileage (e.g., 50,000 km)"
+                  placeholder="Enter Mileage (e.g., 50,000 km)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
@@ -731,7 +731,7 @@ export function CarForm() {
                   onChange={(e) =>
                     handleInputChange("exteriorColor", e.target.value)
                   }
-                  placeholder="Enter exterior color"
+                  placeholder="Enter Exterior Color"
                   required
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
@@ -746,7 +746,7 @@ export function CarForm() {
                   type="text"
                   value={formData.color}
                   onChange={(e) => handleInputChange("color", e.target.value)}
-                  placeholder="Enter interior color"
+                  placeholder="Enter Interior Color"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
@@ -760,7 +760,7 @@ export function CarForm() {
                   type="text"
                   value={formData.stock}
                   onChange={(e) => handleInputChange("stock", e.target.value)}
-                  placeholder="Enter stock number (e.g., STK-001)"
+                  placeholder="Enter Stock Number (e.g., STK-001)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
@@ -774,7 +774,7 @@ export function CarForm() {
                   type="text"
                   value={formData.country}
                   onChange={(e) => handleInputChange("country", e.target.value)}
-                  placeholder="Enter country (e.g., Japan, USA)"
+                  placeholder="Enter Country (e.g., Japan, USA)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
@@ -788,7 +788,7 @@ export function CarForm() {
                   type="text"
                   value={formData.region}
                   onChange={(e) => handleInputChange("region", e.target.value)}
-                  placeholder="Enter region (e.g., Tokyo, California)"
+                  placeholder="Enter Region (e.g., Tokyo, California)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>

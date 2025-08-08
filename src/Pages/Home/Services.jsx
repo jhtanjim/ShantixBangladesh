@@ -6,7 +6,7 @@ import {
   Lightbulb,
   Users,
 } from "lucide-react";
-import banner2 from "../../assets/images/Banner2.jpg";
+import banner2 from "../../assets/images/banner/category2.jpg";
 
 const Services = () => {
   const serviceItems = [
@@ -49,12 +49,12 @@ const Services = () => {
   ];
 
   return (
-    <div className="relative py-20 px-6 bg-black overflow-hidden">
+    <div className="relative py-40 px-6 bg-gray-900 overflow-hidden">
       {/* Background Image */}
       <img
         src={banner2}
         alt="Background"
-        className="absolute top-0 left-0 w-full h-full object-cover opacity-80"
+        className="absolute top-0 left-0 w-full h-full object-cover" // Changed back to object-cover
       />
 
       {/* Overlay */}
@@ -66,7 +66,7 @@ const Services = () => {
           {serviceItems.map((service, index) => (
             <div
               key={index}
-              className="flex items-start space-x-4  p-6 rounded-lg"
+              className="flex items-start space-x-4 p-6 rounded-lg"
             >
               <div className="flex-shrink-0 my-auto">{service.icon}</div>
               <div>

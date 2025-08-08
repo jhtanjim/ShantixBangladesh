@@ -4,18 +4,25 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import banner1 from "../../assets/images/banner/1 Banner.jpg";
+import banner2 from "../../assets/images/banner/2 Banner.jpg";
+import banner3 from "../../assets/images/banner/3 Banner.jpg";
+import banner4 from "../../assets/images/banner/4 Banner.jpg";
+import banner5 from "../../assets/images/banner/5 Banner.jpg";
+import banner6 from "../../assets/images/banner/6Banner.jpg";
+// import {
+//   default as bannerImg1,
+//   default as bannerImg2,
+//   default as bannerImg3,
+// } from "../../assets/images/banner.jpg";
 
-import {
-  default as bannerImg1,
-  default as bannerImg2,
-  default as bannerImg3,
-} from "../../assets/images/banner.jpg";
-
-const banners = [bannerImg1, bannerImg2, bannerImg3];
+const banners = [banner1, banner2, banner3, banner4, banner5, banner6];
 
 const Banner = () => {
   return (
-    <section className="relative h-[300px] sm:h-[400px] md:h-[500px] w-full bg-black">
+    <section className="h-full w-full">
+      {" "}
+      {/* Set specific height */}
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
         spaceBetween={0}
@@ -24,34 +31,16 @@ const Banner = () => {
         loop={true}
         pagination={{ clickable: true }}
         navigation
-        className="h-full"
+        className="w-full h-full"
       >
         {banners.map((img, index) => (
           <SwiperSlide key={index}>
-            <div className="relative h-full w-full">
+            <div className="relative w-full h-full">
               <img
                 src={img}
                 alt={`Banner ${index + 1}`}
-                className="h-full w-full object-cover opacity-60"
+                className="w-full h-full object-cover" // Use object-cover with fixed height
               />
-              <div className="absolute inset-0 bg-black/30 flex items-center">
-                <div className="container mx-auto px-4">
-                  <div className="text-end">
-                    <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-6xl lg:text-8xl mb-2 md:mb-4">
-                      Fixed Price
-                    </h1>
-                    <p
-                      className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-extrabold mb-4 md:mb-6"
-                      style={{
-                        color: "transparent",
-                        WebkitTextStroke: "1px white",
-                      }}
-                    >
-                      Stock
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </SwiperSlide>
         ))}
@@ -59,5 +48,4 @@ const Banner = () => {
     </section>
   );
 };
-
 export default Banner;

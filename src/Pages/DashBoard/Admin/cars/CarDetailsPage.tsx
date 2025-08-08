@@ -321,12 +321,12 @@ export function CarDetailsPage() {
               />
               <CompactSpecCard
                 icon={<Car size={12} className="sm:w-3.5 sm:h-3.5" />}
-                label="Model & Package"
+                label="Package"
                 value={car.model}
               />
               <CompactSpecCard
                 icon={<Car size={12} className="sm:w-3.5 sm:h-3.5" />}
-                label="Score & Model Code"
+                label="Model Code"
                 value={car.modelCode}
               />
               <CompactSpecCard
