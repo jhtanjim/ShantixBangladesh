@@ -549,7 +549,7 @@ export function CarForm() {
                   type="text"
                   value={formData.model}
                   onChange={(e) => handleInputChange("model", e.target.value)}
-                  placeholder="Enter model (e.g., Corolla Cross)"
+                  placeholder="Enter package (e.g., Ex or Z Leather)"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200"
                   required
                 />
@@ -781,7 +781,23 @@ export function CarForm() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
-
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Auction Score
+                </label>
+                <input
+                  type="number"
+                  value={formData.auctionScore}
+                  onChange={(e) =>
+                    handleInputChange("auctionScore", e.target.value)
+                  }
+                  placeholder="Enter auction score (e.g., 5 or 4.5"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+                />
+              </div>
               {/* Country */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -806,24 +822,6 @@ export function CarForm() {
                   value={formData.region}
                   onChange={(e) => handleInputChange("region", e.target.value)}
                   placeholder="Enter Region (e.g., Tokyo, California)"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Auction Score (0-10)
-                </label>
-                <input
-                  type="number"
-                  value={formData.auctionScore}
-                  onChange={(e) =>
-                    handleInputChange("auctionScore", e.target.value)
-                  }
-                  placeholder="Enter auction score (0-10)"
-                  min="0"
-                  max="10"
-                  step="0.1"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>
