@@ -265,12 +265,12 @@ export function CarForm() {
       formData.auctionScore &&
       (isNaN(formData.auctionScore) ||
         Number(formData.auctionScore) < 0 ||
-        Number(formData.auctionScore) > 5)
+        Number(formData.auctionScore) > 10)
     ) {
       return await Swal.fire({
         icon: "warning",
         title: "Invalid Auction Score",
-        text: "Please enter a valid auction score (0-5)",
+        text: "Please enter a valid auction score (0-10)",
         confirmButtonColor: "#ffc107",
       });
     }
@@ -812,7 +812,7 @@ export function CarForm() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Auction Score (0-5)
+                  Auction Score (0-10)
                 </label>
                 <input
                   type="number"
@@ -820,9 +820,9 @@ export function CarForm() {
                   onChange={(e) =>
                     handleInputChange("auctionScore", e.target.value)
                   }
-                  placeholder="Enter auction score (0-5)"
+                  placeholder="Enter auction score (0-10)"
                   min="0"
-                  max="5"
+                  max="10"
                   step="0.1"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
