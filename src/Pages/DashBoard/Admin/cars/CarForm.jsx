@@ -60,6 +60,8 @@ export function CarForm() {
     region: "",
     keywords: "",
     price: "",
+    auctionScore: "",
+
     isActive: true,
     features: [],
   });
@@ -90,6 +92,8 @@ export function CarForm() {
         country: car.country || "",
         region: car.region || "",
         keywords: car.keywords || "",
+        auctionScore: car.auctionScore || "",
+
         price: car.price || 0,
         isActive: car.isActive !== undefined ? car.isActive : true,
         // Clean features by only keeping type and name properties
@@ -256,7 +260,20 @@ export function CarForm() {
         confirmButtonColor: "#ffc107",
       });
     }
-
+    // 3. Add validation in handleSubmit function (around line 310, after existing validations)
+    if (
+      formData.auctionScore &&
+      (isNaN(formData.auctionScore) ||
+        Number(formData.auctionScore) < 0 ||
+        Number(formData.auctionScore) > 5)
+    ) {
+      return await Swal.fire({
+        icon: "warning",
+        title: "Invalid Auction Score",
+        text: "Please enter a valid auction score (0-5)",
+        confirmButtonColor: "#ffc107",
+      });
+    }
     if (!formData.model.trim()) {
       return await Swal.fire({
         icon: "warning",
@@ -789,6 +806,24 @@ export function CarForm() {
                   value={formData.region}
                   onChange={(e) => handleInputChange("region", e.target.value)}
                   placeholder="Enter Region (e.g., Tokyo, California)"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Auction Score (0-5)
+                </label>
+                <input
+                  type="number"
+                  value={formData.auctionScore}
+                  onChange={(e) =>
+                    handleInputChange("auctionScore", e.target.value)
+                  }
+                  placeholder="Enter auction score (0-5)"
+                  min="0"
+                  max="5"
+                  step="0.1"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-500 transition-all duration-200"
                 />
               </div>

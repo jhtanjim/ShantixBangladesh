@@ -374,6 +374,11 @@ export function CarDetailsPage() {
                 label="Stock"
                 value={car.stock}
               />
+              <CompactSpecCard
+                icon={<Shield size={12} className="sm:w-3.5 sm:h-3.5" />}
+                label="Auction Score"
+                value={car.auctionScore}
+              />
             </div>
           </div>
         </div>
