@@ -39,113 +39,101 @@ export default function AllCars() {
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
 
-  // Get all cars data from API
-  const { data: allCars = [], isLoading, isError } = useAllCars();
-  console.log(allCars);
+  // Build API filters from searchParams and pagination
+  const apiFilters = useMemo(() => {
+    const filters = {
+      page: 1, // Always get page 1 since we're fetching all cars
+      limit: 1000, // Set a high limit to get all cars, or use pagination properly
+    };
 
-  // Filter and sort cars based on search parameters
-  const filteredAndSortedCars = useMemo(() => {
+    // Add search filters if they exist
+    if (searchParams.keywords) filters.search = searchParams.keywords;
+    if (searchParams.make) filters.make = searchParams.make;
+    if (searchParams.model) filters.model = searchParams.model;
+    if (searchParams.type) filters.type = searchParams.type;
+    if (searchParams.fuel) filters.fuel = searchParams.fuel;
+    if (searchParams.color) filters.color = searchParams.color;
+    if (searchParams.drive) filters.drive = searchParams.drive;
+    if (searchParams.transmission)
+      filters.transmission = searchParams.transmission;
+    if (searchParams.country) filters.country = searchParams.country;
+    if (searchParams.region) filters.region = searchParams.region;
+    if (searchParams.engineCC) filters.engineCC = searchParams.engineCC;
+    if (searchParams.stock) filters.stock = searchParams.stock;
+
+    // Price filters
+    if (searchParams.priceFrom)
+      filters.minPrice = Number.parseFloat(searchParams.priceFrom);
+    if (searchParams.priceTo)
+      filters.maxPrice = Number.parseFloat(searchParams.priceTo);
+
+    // Year filters
+    if (searchParams.yearFrom)
+      filters.minYear = Number.parseInt(searchParams.yearFrom);
+    if (searchParams.yearTo)
+      filters.maxYear = Number.parseInt(searchParams.yearTo);
+
+    // Mileage filter (assuming API supports it)
+    if (searchParams.mileageFrom || searchParams.mileageTo) {
+      // You might need to handle mileage filtering on frontend if API doesn't support it
+      filters.mileage = searchParams.mileageFrom || searchParams.mileageTo;
+    }
+
+    // Sort parameters
+    if (sortBy !== "default") {
+      switch (sortBy) {
+        case "price-low":
+          filters.sortBy = "price";
+          filters.sort = "asc";
+          break;
+        case "price-high":
+          filters.sortBy = "price";
+          filters.sort = "desc";
+          break;
+        case "newest":
+          filters.sortBy = "createdAt";
+          filters.sort = "desc";
+          break;
+        case "year-new":
+          filters.sortBy = "year";
+          filters.sort = "desc";
+          break;
+        case "year-old":
+          filters.sortBy = "year";
+          filters.sort = "asc";
+          break;
+        case "mileage-low":
+          filters.sortBy = "mileage";
+          filters.sort = "asc";
+          break;
+        case "mileage-high":
+          filters.sortBy = "mileage";
+          filters.sort = "desc";
+          break;
+      }
+    }
+
+    return filters;
+  }, [searchParams, sortBy]);
+
+  // Get all cars data from API with filters
+  const { data: carsResponse, isLoading, isError } = useAllCars(apiFilters);
+
+  // Handle the response structure (adjust based on your API response format)
+  const allCars =
+    carsResponse?.cars || carsResponse?.data || carsResponse || [];
+  const totalCars = carsResponse?.total || allCars.length;
+
+  console.log("API Response:", carsResponse);
+  console.log("All Cars:", allCars);
+
+  // For client-side filtering (if you still need some filters not supported by API)
+  const filteredCars = useMemo(() => {
     if (!allCars.length) return [];
 
-    const filtered = allCars.filter((car) => {
-      // Keywords search
-      if (searchParams.keywords) {
-        const keywords = searchParams.keywords.toLowerCase();
-        const searchableText = [
-          car.title,
-          car.make,
-          car.model,
-          car.modelCode,
-          car.type,
-          car.fuel,
-          car.exteriorColor,
-          car.transmission,
-          ...(car.features || []).map((f) => f.name || f),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        if (!searchableText.includes(keywords)) return false;
-      }
-
-      // Make filter
-      if (
-        searchParams.make &&
-        car.make?.toLowerCase() !== searchParams.make.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Model filter
-      if (
-        searchParams.model &&
-        car.model?.toLowerCase() !== searchParams.model.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Model Code filter
-      if (
-        searchParams.modelCode &&
-        car.modelCode?.toLowerCase() !== searchParams.modelCode.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Year range filter
-      if (
-        searchParams.yearFrom &&
-        car.year < Number.parseInt(searchParams.yearFrom)
-      ) {
-        return false;
-      }
-      if (
-        searchParams.yearTo &&
-        car.year > Number.parseInt(searchParams.yearTo)
-      ) {
-        return false;
-      }
-
-      // Price range filter
-      if (
-        searchParams.priceFrom &&
-        car.price < Number.parseFloat(searchParams.priceFrom)
-      ) {
-        return false;
-      }
-      if (
-        searchParams.priceTo &&
-        car.price > Number.parseFloat(searchParams.priceTo)
-      ) {
-        return false;
-      }
-
-      // Type filter
-      if (
-        searchParams.type &&
-        car.type?.toLowerCase() !== searchParams.type.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Engine CC filter
-      if (
-        searchParams.engineCC &&
-        car.engineCC?.toString() !== searchParams.engineCC
-      ) {
-        return false;
-      }
-
-      // Fuel filter
-      if (
-        searchParams.fuel &&
-        car.fuel?.toLowerCase() !== searchParams.fuel.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Mileage range filter
+    return allCars.filter((car) => {
+      // Additional client-side filters if needed
+      // Mileage range filter (if not handled by API)
       if (
         searchParams.mileageFrom &&
         car.mileage < Number.parseInt(searchParams.mileageFrom)
@@ -159,96 +147,23 @@ export default function AllCars() {
         return false;
       }
 
-      // Country filter
+      // Model Code filter (if not handled by API)
       if (
-        searchParams.country &&
-        car.country?.toLowerCase() !== searchParams.country.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Region filter
-      if (
-        searchParams.region &&
-        car.region?.toLowerCase() !== searchParams.region.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Color filter
-      if (
-        searchParams.color &&
-        car.exteriorColor?.toLowerCase() !== searchParams.color.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Drive filter
-      if (
-        searchParams.drive &&
-        car.drive?.toLowerCase() !== searchParams.drive.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Transmission filter
-      if (
-        searchParams.transmission &&
-        car.transmission?.toLowerCase() !==
-          searchParams.transmission.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Stock filter
-      if (
-        searchParams.stock &&
-        car.stock?.toLowerCase() !== searchParams.stock.toLowerCase()
+        searchParams.modelCode &&
+        car.modelCode?.toLowerCase() !== searchParams.modelCode.toLowerCase()
       ) {
         return false;
       }
 
       return true;
     });
+  }, [allCars, searchParams]);
 
-    // Sort the filtered results
-    switch (sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-        break;
-      case "price-high":
-        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
-        break;
-      case "newest":
-        filtered.sort(
-          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        );
-        break;
-      case "year-new":
-        filtered.sort((a, b) => (b.year || 0) - (a.year || 0));
-        break;
-      case "year-old":
-        filtered.sort((a, b) => (a.year || 0) - (b.year || 0));
-        break;
-      case "mileage-low":
-        filtered.sort((a, b) => (a.mileage || 0) - (b.mileage || 0));
-        break;
-      case "mileage-high":
-        filtered.sort((a, b) => (b.mileage || 0) - (a.mileage || 0));
-        break;
-      default:
-        // Keep original order
-        break;
-    }
-
-    return filtered;
-  }, [allCars, searchParams, sortBy]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredAndSortedCars.length / itemsPerPage);
+  // Pagination for display
+  const totalPages = Math.ceil(filteredCars.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentCars = filteredAndSortedCars.slice(startIndex, endIndex);
+  const currentCars = filteredCars.slice(startIndex, endIndex);
 
   // Cart and wishlist functions
   const addToCart = useCallback((car) => {
@@ -313,6 +228,7 @@ export default function AllCars() {
       keywords: "",
     });
     setCurrentPage(1);
+    setSortBy("default");
   };
 
   // Generate pagination numbers
@@ -372,9 +288,7 @@ export default function AllCars() {
             Browse our extensive collection of quality vehicles
           </p>
           <p className="text-base sm:text-lg opacity-75">
-            {isLoading
-              ? "Loading..."
-              : `${filteredAndSortedCars.length} cars available`}
+            {isLoading ? "Loading..." : `${filteredCars.length} cars available`}
           </p>
         </div>
       </div>
@@ -388,37 +302,12 @@ export default function AllCars() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1}-
-              {Math.min(endIndex, filteredAndSortedCars.length)} of{" "}
-              {filteredAndSortedCars.length} cars
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredCars.length)}{" "}
+              of {filteredCars.length} cars
             </div>
           </div>
 
           <div className="flex items-center gap-4 w-full sm:w-auto">
-            {/* View Toggle */}
-            {/* <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1">
-              <button
-                onClick={() => setViewType("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewType === "list"
-                    ? "bg-red-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <List size={16} />
-              </button>
-              <button
-                onClick={() => setViewType("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewType === "grid"
-                    ? "bg-red-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <Grid size={16} />
-              </button>
-            </div> */}
-
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2 flex-1 sm:flex-initial">
               <SortAsc size={16} className="text-gray-500 hidden sm:block" />
@@ -453,7 +342,7 @@ export default function AllCars() {
             </div>
             <p className="text-gray-500">Please try again later</p>
           </div>
-        ) : filteredAndSortedCars.length === 0 ? (
+        ) : filteredCars.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-lg font-medium mb-2 text-gray-600">
               No cars found

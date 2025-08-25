@@ -58,7 +58,7 @@ const CarCard = ({ car }) => {
   const [orderLoading, setOrderLoading] = useState(false);
   const { mutate: createOrder } = useCreateOrder();
 
-  console.log(car);
+  // console.log(car);
 
   const handleWishlistToggle = async (e) => {
     e.preventDefault();
